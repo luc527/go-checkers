@@ -26,7 +26,7 @@ const (
 	King = Kind(true)
 )
 
-func (b *CompactBoard) Has(row, col int) bool {
+func (b *CompactBoard) Occupied(row, col int) bool {
 	i := row*8 + col
 	return b.HasPiece&(1<<i) != 0
 }
@@ -90,7 +90,7 @@ func (board *CompactBoard) String() string {
 	var sb strings.Builder
 	for row := 0; row < 8; row++ {
 		for col := 0; col < 8; col++ {
-			if !board.Has(row, col) {
+			if !board.Occupied(row, col) {
 				if CellColor(row, col) == Black {
 					sb.WriteRune('.')
 				} else {
