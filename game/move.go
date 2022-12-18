@@ -65,28 +65,37 @@ func (move SimpleMove) crowned() bool {
 
 // TODO Do() could detect when a move is invalid and return a bool
 
-func (move *SimpleMove) Do(board *Board) {
-	fromRow, fromCol, toRow, toCol := move.coords()
-	pieceColor, pieceKind := board.Take(fromRow, fromCol)
+func SimpleMoveDo(fromRow, fromCol, toRow, toCol uint8, board *Board) (crowned bool) {
+	color, kind := board.Take(fromRow, fromCol)
 
-	toCrowningRow := (pieceColor == White && toRow == 0) || (pieceColor == Black && toRow == 7)
-	doCrown := pieceKind == Pawn && toCrowningRow
-	moveCrowned := *move | (1 << (8 + 1))
-
-	// hopefully cmovs
-	if doCrown {
-		pieceKind = King
-		*move = moveCrowned
+	toCrowningRow := (color == White && toRow == 0) || (color == Black && toRow == 7)
+	crowned = kind == Pawn && toCrowningRow
+	if crowned {
+		kind = King
 	}
 
-	board.Set(toRow, toCol, pieceColor, pieceKind)
+	board.Set(toRow, toCol, color, kind)
+	return
+}
+
+func SimpleMoveUndo(fromRow, fromCol, toRow, toCol uint8, crowned bool, board *Board) {
+	color, kind := board.Take(toRow, toCol)
+	if crowned {
+		kind = Pawn
+	}
+	board.Set(fromRow, fromCol, color, kind)
+}
+
+func (move *SimpleMove) Do(board *Board) {
+	fromRow, fromCol, toRow, toCol := move.coords()
+	crowned := SimpleMoveDo(fromRow, fromCol, toRow, toCol, board)
+	if crowned {
+		*move |= 1 << (8 + 1)
+	}
 }
 
 func (move *SimpleMove) Undo(board *Board) {
 	fromRow, fromCol, toRow, toCol := move.coords()
-	pieceColor, pieceKind := board.Take(toRow, toCol)
-	if move.crowned() {
-		pieceKind = Pawn
-	}
-	board.Set(fromRow, fromCol, pieceColor, pieceKind)
+	crowned := move.crowned()
+	SimpleMoveUndo(fromRow, fromCol, toRow, toCol, crowned, board)
 }
