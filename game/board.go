@@ -141,7 +141,9 @@ func (board *Board) String() string {
 				sb.WriteRune(char)
 			}
 		}
-		sb.WriteRune('\n')
+		if row < 7 {
+			sb.WriteRune('\n')
+		}
 	}
 	return sb.String()
 }

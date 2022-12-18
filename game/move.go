@@ -7,10 +7,14 @@ import (
 
 type SimpleMove uint16
 
-// for testing
+// for testing, TODO remove?
 func NewSimpleMove(fromRow, fromCol, toRow, toCol uint8) *SimpleMove {
-	bits := SimpleMove(0)
-	move := &bits
+	move := MakeSimpleMove(fromRow, fromCol, toRow, toCol)
+	return &move
+}
+
+func MakeSimpleMove(fromRow, fromCol, toRow, toCol uint8) SimpleMove {
+	move := SimpleMove(0)
 	move.Set(fromRow, fromCol, toRow, toCol)
 	return move
 }
@@ -62,8 +66,6 @@ func (move SimpleMove) crowned() bool {
 	bit := (move >> (8 + 1)) & 1
 	return bit != 0
 }
-
-// TODO Do() could detect when a move is invalid and return a bool
 
 func SimpleMoveDo(fromRow, fromCol, toRow, toCol uint8, board *Board) (crowned bool) {
 	color, kind := board.Take(fromRow, fromCol)
