@@ -1,4 +1,4 @@
-package board
+package game
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type CompactBoard struct {
+type Board struct {
 	HasPiece uint64
 	Cells0   uint64
 	Cells1   uint64
@@ -19,6 +19,14 @@ const (
 	White = Color(true)
 )
 
+func (c Color) String() string {
+	if c == Black {
+		return "Black"
+	} else {
+		return "White"
+	}
+}
+
 type Kind bool
 
 const (
@@ -26,18 +34,32 @@ const (
 	King = Kind(true)
 )
 
-func (b *CompactBoard) Occupied(row, col int) bool {
+func (k Kind) String() string {
+	if k == Pawn {
+		return "Pawn"
+	} else {
+		return "King"
+	}
+}
+
+func (b *Board) Occupied(row, col uint8) bool {
 	i := row*8 + col
 	return b.HasPiece&(1<<i) != 0
 }
 
-func (b *CompactBoard) Clear(row, col int) {
+func (b *Board) Clear(row, col uint8) {
 	i := row*8 + col
 	b.HasPiece &^= (1 << i)
 }
 
-func (b *CompactBoard) Get(row, col int) (color Color, kind Kind) {
-	// hopefully the compiler turns this into 2 CMOVs
+func (b *Board) Get(row, col uint8) (color Color, kind Kind) {
+
+	// for catching programming errors, could be removed later
+	if !b.Occupied(row, col) {
+		panic(fmt.Sprintf("calling Get on empty board cell (%v, %v)", row, col))
+	}
+
+	// hopefully cmovs
 	cells := b.Cells0
 	r := row
 	if row >= 4 {
@@ -52,7 +74,15 @@ func (b *CompactBoard) Get(row, col int) (color Color, kind Kind) {
 	return
 }
 
-func (b *CompactBoard) Set(row, col int, color Color, kind Kind) {
+// get and clear
+func (b *Board) Take(row, col uint8) (color Color, kind Kind) {
+	// TODO could inline + optimize?
+	color, kind = b.Get(row, col)
+	b.Clear(row, col)
+	return
+}
+
+func (b *Board) Set(row, col uint8, color Color, kind Kind) {
 
 	b.HasPiece |= 1 << (row*8 + col)
 
@@ -78,7 +108,7 @@ func (b *CompactBoard) Set(row, col int, color Color, kind Kind) {
 	}
 }
 
-func CellColor(row, col int) Color {
+func CellColor(row, col uint8) Color {
 	if (row+col)%2 == 0 {
 		return White
 	} else {
@@ -86,10 +116,10 @@ func CellColor(row, col int) Color {
 	}
 }
 
-func (board *CompactBoard) String() string {
+func (board *Board) String() string {
 	var sb strings.Builder
-	for row := 0; row < 8; row++ {
-		for col := 0; col < 8; col++ {
+	for row := uint8(0); row < 8; row++ {
+		for col := uint8(0); col < 8; col++ {
 			if !board.Occupied(row, col) {
 				if CellColor(row, col) == Black {
 					sb.WriteRune('.')
@@ -116,19 +146,19 @@ func (board *CompactBoard) String() string {
 	return sb.String()
 }
 
-func InitialBoard() *CompactBoard {
-	var b CompactBoard
+func InitialBoard() *Board {
+	var b Board
 
-	for row := 0; row < 3; row++ {
-		for col := 0; col < 8; col++ {
+	for row := uint8(0); row < 3; row++ {
+		for col := uint8(0); col < 8; col++ {
 			if CellColor(row, col) == Black {
 				b.Set(row, col, Black, Pawn)
 			}
 		}
 	}
 
-	for row := 5; row < 8; row++ {
-		for col := 0; col < 8; col++ {
+	for row := uint8(5); row < 8; row++ {
+		for col := uint8(0); col < 8; col++ {
 			if CellColor(row, col) == Black {
 				b.Set(row, col, White, Pawn)
 			}
@@ -138,8 +168,8 @@ func InitialBoard() *CompactBoard {
 	return &b
 }
 
-func RandomBoard() *CompactBoard {
-	var b CompactBoard
+func RandomBoard() *Board {
+	var b Board
 
 	b.HasPiece = rand.Uint64()
 	b.Cells0 = rand.Uint64()
@@ -148,7 +178,7 @@ func RandomBoard() *CompactBoard {
 	return &b
 }
 
-func (b *CompactBoard) Debug() {
+func (b *Board) Debug() {
 	fmt.Println("HasPiece")
 	for r := 0; r < 8; r++ {
 		for c := 0; c < 8; c++ {
