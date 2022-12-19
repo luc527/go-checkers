@@ -2,15 +2,8 @@ package game
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
 )
-
-type Board struct {
-	HasPiece uint64
-	Cells0   uint64
-	Cells1   uint64
-}
 
 type Color bool
 
@@ -42,14 +35,32 @@ func (k Kind) String() string {
 	}
 }
 
+func CellColor(row, col uint8) Color {
+	if (row+col)%2 == 0 {
+		return White
+	} else {
+		return Black
+	}
+}
+
+//
+// Board
+//
+
+type Board struct {
+	hasPiece uint64
+	cells0   uint64
+	cells1   uint64
+}
+
 func (b *Board) Occupied(row, col uint8) bool {
 	i := row*8 + col
-	return b.HasPiece&(1<<i) != 0
+	return b.hasPiece&(1<<i) != 0
 }
 
 func (b *Board) Clear(row, col uint8) {
 	i := row*8 + col
-	b.HasPiece &^= (1 << i)
+	b.hasPiece &^= (1 << i)
 }
 
 func (b *Board) Get(row, col uint8) (color Color, kind Kind) {
@@ -60,10 +71,10 @@ func (b *Board) Get(row, col uint8) (color Color, kind Kind) {
 	}
 
 	// hopefully cmovs
-	cells := b.Cells0
+	cells := b.cells0
 	r := row
 	if row >= 4 {
-		cells = b.Cells1
+		cells = b.cells1
 		r = row - 4
 	}
 
@@ -84,7 +95,7 @@ func (b *Board) Take(row, col uint8) (color Color, kind Kind) {
 
 func (b *Board) Set(row, col uint8, color Color, kind Kind) {
 
-	b.HasPiece |= 1 << (row*8 + col)
+	b.hasPiece |= 1 << (row*8 + col)
 
 	on0 := row < 4
 	row %= 4
@@ -100,19 +111,11 @@ func (b *Board) Set(row, col uint8, color Color, kind Kind) {
 	}
 
 	if on0 {
-		b.Cells0 &^= 3 << base
-		b.Cells0 |= pat
+		b.cells0 &^= 3 << base
+		b.cells0 |= pat
 	} else {
-		b.Cells1 &^= 3 << base
-		b.Cells1 |= pat
-	}
-}
-
-func CellColor(row, col uint8) Color {
-	if (row+col)%2 == 0 {
-		return White
-	} else {
-		return Black
+		b.cells1 &^= 3 << base
+		b.cells1 |= pat
 	}
 }
 
@@ -170,21 +173,11 @@ func InitialBoard() *Board {
 	return &b
 }
 
-func RandomBoard() *Board {
-	var b Board
-
-	b.HasPiece = rand.Uint64()
-	b.Cells0 = rand.Uint64()
-	b.Cells1 = rand.Uint64()
-
-	return &b
-}
-
 func (b *Board) Debug() {
-	fmt.Println("HasPiece")
+	fmt.Println("hasPiece")
 	for r := 0; r < 8; r++ {
 		for c := 0; c < 8; c++ {
-			has := (b.HasPiece & (1 << (r*8 + c))) != 0
+			has := (b.hasPiece & (1 << (r*8 + c))) != 0
 			if has {
 				fmt.Print("1 ")
 			} else {
@@ -194,11 +187,11 @@ func (b *Board) Debug() {
 		fmt.Println()
 	}
 
-	fmt.Println("Cells0")
+	fmt.Println("cells0")
 	for r := 0; r < 4; r++ {
 		for c := 0; c < 8; c++ {
-			a := (b.Cells0 & (1 << (r*16 + c*2))) != 0
-			b := (b.Cells0 & (1 << (1 + (r*16 + c*2)))) != 0
+			a := (b.cells0 & (1 << (r*16 + c*2))) != 0
+			b := (b.cells0 & (1 << (1 + (r*16 + c*2)))) != 0
 			if a {
 				fmt.Print("1")
 			} else {
@@ -213,11 +206,11 @@ func (b *Board) Debug() {
 		fmt.Println()
 	}
 
-	fmt.Println("Cells1")
+	fmt.Println("cells1")
 	for r := 0; r < 4; r++ {
 		for c := 0; c < 8; c++ {
-			a := (b.Cells1 & (1 << (r*16 + c*2))) != 0
-			b := (b.Cells1 & (1 << (1 + (r*16 + c*2)))) != 0
+			a := (b.cells1 & (1 << (r*16 + c*2))) != 0
+			b := (b.cells1 & (1 << (1 + (r*16 + c*2)))) != 0
 			if a {
 				fmt.Print("1")
 			} else {

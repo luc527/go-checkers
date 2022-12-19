@@ -7,28 +7,20 @@ import (
 
 func main() {
 
-	b := game.InitialBoard()
+	// board := game.InitialBoard()
+	board := new(game.Board)
+	board.Set(1, 0, game.White, game.Pawn)
+	fmt.Println(board)
 
-	for col := uint8(0); col < 8; col++ {
-		b.Clear(2, col)
-	}
+	moves := game.GenerateSimpleMoves(board, game.White)
+	fmt.Println("simple moves:", moves)
 
-	for col := uint8(0); col < 8; col++ {
-		b.Clear(5, col)
-	}
-
-	b.Set(3, 3, game.White, game.King)
-
-	simpleMoves := game.GenerateSimpleMoves(b, game.White)
-
-	fmt.Println("Simple moves", simpleMoves)
-
-	for _, move := range simpleMoves {
-		fmt.Printf("doing %v\n", move.String())
-		move.Do(b)
-		fmt.Println(b)
-		fmt.Printf("undoing %v\n", move.String())
-		move.Undo(b)
-		fmt.Println(b)
+	for _, move := range moves {
+		fmt.Println("doing", move.String())
+		move.Do(board)
+		fmt.Println(board)
+		fmt.Println("undoing", move.String())
+		move.Undo(board)
+		fmt.Println(board)
 	}
 }
