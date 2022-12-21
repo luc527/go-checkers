@@ -1,110 +1,110 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
-// First the simple implementation
-// Then optimize it with bit fiddling and so on
-// so we actually get to compare and see how much of an improvement we get from doing that
+type coord struct {
+	row int8
+	col int8
+}
 
-var directionUp = []int8{-1}
-var directionDown = []int8{1}
-var directionsBoth = []int8{1, -1}
+type move struct {
+	from coord
+	to   coord
+}
 
 type SimpleMove struct {
-	FromRow uint8
-	FromCol uint8
-	ToRow   uint8
-	ToCol   uint8
-	Crowned bool
+	move
+	crowned bool
+}
+
+type capture struct {
+	coord
+	color Color
+	kind  Kind
+}
+
+type CaptureMove struct {
+	from     coord
+	sequence []coord
+	captures []capture
+	crowned  bool
+}
+
+func (coord coord) String() string {
+	return fmt.Sprintf("(%v, %v)", coord.row, coord.col)
 }
 
 func (move SimpleMove) String() string {
 	c := ""
-	if move.Crowned {
+	if move.crowned {
 		c = "crowned"
 	}
-	return fmt.Sprintf("(%v, %v) -> (%v, %v) %s", move.FromRow, move.FromCol, move.ToRow, move.ToCol, c)
+	return fmt.Sprintf("%v -> %v %s", move.from, move.to, c)
 }
 
 func (move *SimpleMove) Do(board *Board) {
-	color, kind := board.Take(move.FromRow, move.FromCol)
-	toCrowningRow := (color == White && move.ToRow == 0) || (color == Black && move.ToRow == 7)
-	doCrown := kind == Pawn && toCrowningRow
-	if doCrown {
-		move.Crowned = true
+	color, kind := board.Take(move.from.row, move.from.col)
+	if move.crowned {
 		kind = King
 	}
-	board.Set(move.ToRow, move.ToCol, color, kind)
+	board.Set(move.to.row, move.to.col, color, kind)
 }
 
 func (move *SimpleMove) Undo(board *Board) {
-	color, kind := board.Take(move.ToRow, move.ToCol)
-	uncrown := move.Crowned
-	if uncrown {
+	color, kind := board.Take(move.to.row, move.to.col)
+	if move.crowned {
 		kind = Pawn
 	}
-	board.Set(move.FromRow, move.FromCol, color, kind)
+	board.Set(move.from.row, move.from.col, color, kind)
 }
 
-func GenerateSimpleMoves(board *Board, player Color) []SimpleMove {
+func (move CaptureMove) String() string {
+	strsequence := make([]string, 0, 1+len(move.sequence))
+	strsequence = append(strsequence, move.from.String())
+	for _, coord := range move.sequence {
+		strsequence = append(strsequence, coord.String())
+	}
+	sequenceJoined := strings.Join(strsequence, " -> ")
 
-	// TODO we generate moves much more often than read all board positions sequentially
-	// would make more sense for the board to store a list of white positions with cells and a list of black positions with cells
+	strcaptures := make([]string, 0, len(move.captures))
+	for _, coord := range move.captures {
+		strcaptures = append(strcaptures, coord.String())
+	}
+	capturesJoined := strings.Join(strcaptures, ", ")
 
-	// this way we fill the cache with just what we need, instead of filling with the whole board
-
-	// (although the whole board already probably fits, so I don't know how much of an improvement we would get)
-
-	var moves []SimpleMove
-
-	for row := uint8(0); row < 8; row++ {
-		for col := uint8(0); col < 8; col++ {
-
-			if !board.Occupied(row, col) {
-				continue
-			}
-
-			color, kind := board.Get(row, col)
-			if color != player {
-				continue
-			}
-
-			reach := int8(1)
-			if kind == King {
-				reach = 127 // arbitrary large number for unlimited reach
-			}
-
-			rowOffsets := directionsBoth
-			if kind != King {
-				rowOffsets = directionUp
-				if color != White {
-					rowOffsets = directionDown
-				}
-			}
-
-			for _, rowOffset := range rowOffsets {
-				for _, colOffset := range directionsBoth {
-
-					for distance := int8(1); distance <= reach; distance++ {
-						destRow := uint8(int8(row) + distance*rowOffset)
-						destCol := uint8(int8(col) + distance*colOffset)
-
-						if destRow > 7 || destCol > 7 {
-							break
-						}
-
-						if board.Occupied(destRow, destCol) {
-							break
-						}
-
-						moves = append(moves, SimpleMove{row, col, destRow, destCol, false})
-					}
-
-				}
-			}
-
-		}
+	crowned := ""
+	if move.crowned {
+		crowned = ", Crowned"
 	}
 
-	return moves
+	return fmt.Sprintf("Sequence %v, Captures %v%v", sequenceJoined, capturesJoined, crowned)
+}
+
+func (move *CaptureMove) Do(board *Board) {
+	for _, capture := range move.captures {
+		board.Clear(capture.row, capture.col)
+	}
+
+	color, kind := board.Take(move.from.row, move.from.col)
+	if move.crowned {
+		kind = King
+	}
+	final := move.sequence[len(move.sequence)-1]
+	board.Set(final.row, final.col, color, kind)
+}
+
+func (move *CaptureMove) Undo(board *Board) {
+	final := move.sequence[len(move.sequence)-1]
+	color, kind := board.Take(final.row, final.col)
+	if move.crowned {
+		kind = Pawn
+	}
+	board.Set(move.from.row, move.from.col, color, kind)
+
+	for _, capture := range move.captures {
+		board.Set(capture.row, capture.col, capture.color, capture.kind)
+	}
 }

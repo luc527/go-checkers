@@ -35,7 +35,7 @@ func (k Kind) String() string {
 	}
 }
 
-func CellColor(row, col uint8) Color {
+func CellColor(row, col int8) Color {
 	if (row+col)%2 == 0 {
 		return White
 	} else {
@@ -53,17 +53,20 @@ type Board struct {
 	cells1   uint64
 }
 
-func (b *Board) Occupied(row, col uint8) bool {
+func (b *Board) Occupied(row, col int8) bool {
+	if !Inbounds(row, col) {
+		panic(fmt.Sprintf("(%v, %v) out of bounds", row, col))
+	}
 	i := row*8 + col
 	return b.hasPiece&(1<<i) != 0
 }
 
-func (b *Board) Clear(row, col uint8) {
+func (b *Board) Clear(row, col int8) {
 	i := row*8 + col
 	b.hasPiece &^= (1 << i)
 }
 
-func (b *Board) Get(row, col uint8) (color Color, kind Kind) {
+func (b *Board) Get(row, col int8) (color Color, kind Kind) {
 
 	// for catching programming errors, could be removed later
 	if !b.Occupied(row, col) {
@@ -86,14 +89,14 @@ func (b *Board) Get(row, col uint8) (color Color, kind Kind) {
 }
 
 // get and clear
-func (b *Board) Take(row, col uint8) (color Color, kind Kind) {
+func (b *Board) Take(row, col int8) (color Color, kind Kind) {
 	// TODO could inline + optimize?
 	color, kind = b.Get(row, col)
 	b.Clear(row, col)
 	return
 }
 
-func (b *Board) Set(row, col uint8, color Color, kind Kind) {
+func (b *Board) Set(row, col int8, color Color, kind Kind) {
 
 	b.hasPiece |= 1 << (row*8 + col)
 
@@ -121,8 +124,8 @@ func (b *Board) Set(row, col uint8, color Color, kind Kind) {
 
 func (board *Board) String() string {
 	var sb strings.Builder
-	for row := uint8(0); row < 8; row++ {
-		for col := uint8(0); col < 8; col++ {
+	for row := int8(0); row < 8; row++ {
+		for col := int8(0); col < 8; col++ {
 			if !board.Occupied(row, col) {
 				if CellColor(row, col) == Black {
 					sb.WriteRune('.')
@@ -154,16 +157,16 @@ func (board *Board) String() string {
 func InitialBoard() *Board {
 	var b Board
 
-	for row := uint8(0); row < 3; row++ {
-		for col := uint8(0); col < 8; col++ {
+	for row := int8(0); row < 3; row++ {
+		for col := int8(0); col < 8; col++ {
 			if CellColor(row, col) == Black {
 				b.Set(row, col, Black, Pawn)
 			}
 		}
 	}
 
-	for row := uint8(5); row < 8; row++ {
-		for col := uint8(0); col < 8; col++ {
+	for row := int8(5); row < 8; row++ {
+		for col := int8(0); col < 8; col++ {
 			if CellColor(row, col) == Black {
 				b.Set(row, col, White, Pawn)
 			}
@@ -173,55 +176,11 @@ func InitialBoard() *Board {
 	return &b
 }
 
-func (b *Board) Debug() {
-	fmt.Println("hasPiece")
-	for r := 0; r < 8; r++ {
-		for c := 0; c < 8; c++ {
-			has := (b.hasPiece & (1 << (r*8 + c))) != 0
-			if has {
-				fmt.Print("1 ")
-			} else {
-				fmt.Print("0 ")
-			}
-		}
-		fmt.Println()
-	}
+func IsCrowningRow(color Color, row int8) bool {
+	return (row == 0 && color == White) || (row == 7 && color == Black)
+}
 
-	fmt.Println("cells0")
-	for r := 0; r < 4; r++ {
-		for c := 0; c < 8; c++ {
-			a := (b.cells0 & (1 << (r*16 + c*2))) != 0
-			b := (b.cells0 & (1 << (1 + (r*16 + c*2)))) != 0
-			if a {
-				fmt.Print("1")
-			} else {
-				fmt.Print("0")
-			}
-			if b {
-				fmt.Print("1 ")
-			} else {
-				fmt.Print("0 ")
-			}
-		}
-		fmt.Println()
-	}
-
-	fmt.Println("cells1")
-	for r := 0; r < 4; r++ {
-		for c := 0; c < 8; c++ {
-			a := (b.cells1 & (1 << (r*16 + c*2))) != 0
-			b := (b.cells1 & (1 << (1 + (r*16 + c*2)))) != 0
-			if a {
-				fmt.Print("1")
-			} else {
-				fmt.Print("0")
-			}
-			if b {
-				fmt.Print("1 ")
-			} else {
-				fmt.Print("0 ")
-			}
-		}
-		fmt.Println()
-	}
+func Inbounds(row, col int8) bool {
+	// hopefully gets inlined
+	return row >= 0 && row < 8 && col >= 0 && col < 8
 }

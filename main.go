@@ -7,9 +7,10 @@ import (
 
 func main() {
 
-	// board := game.InitialBoard()
-	board := new(game.Board)
-	board.Set(1, 0, game.White, game.Pawn)
+	board := game.InitialBoard()
+	// board := new(game.Board)
+	// board.Set(1, 0, game.White, game.Pawn)
+
 	fmt.Println(board)
 
 	moves := game.GenerateSimpleMoves(board, game.White)
