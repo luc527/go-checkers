@@ -128,7 +128,7 @@ func (board *Board) String() string {
 		for col := int8(0); col < 8; col++ {
 			if !board.Occupied(row, col) {
 				if CellColor(row, col) == Black {
-					sb.WriteRune('.')
+					sb.WriteRune('_')
 				} else {
 					sb.WriteRune(' ')
 				}
