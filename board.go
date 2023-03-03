@@ -45,7 +45,7 @@ func newEmptyBoard() *board {
 	return &board{}
 }
 
-func tileColor(row, col uint8) color {
+func tileColor(row, col byte) color {
 	if (row+col)%2 == 0 {
 		return kWhite
 	} else {
@@ -54,15 +54,15 @@ func tileColor(row, col uint8) color {
 }
 
 func placeInitialPieces(b *board) {
-	for row := uint8(0); row <= 2; row++ {
-		for col := uint8(0); col < 8; col++ {
+	for row := byte(0); row <= 2; row++ {
+		for col := byte(0); col < 8; col++ {
 			if tileColor(row, col) == kBlack {
 				b.set(row, col, kWhite, kPawn)
 			}
 		}
 	}
-	for row := uint8(5); row <= 7; row++ {
-		for col := uint8(0); col < 8; col++ {
+	for row := byte(5); row <= 7; row++ {
+		for col := byte(0); col < 8; col++ {
 			if tileColor(row, col) == kBlack {
 				b.set(row, col, kBlack, kPawn)
 			}
@@ -70,11 +70,11 @@ func placeInitialPieces(b *board) {
 	}
 }
 
-func (b *board) clear(row, col uint8) {
+func (b *board) clear(row, col byte) {
 	b.occupied &^= uint64(1 << (uint64(row)*8 + uint64(col)))
 }
 
-func (b *board) set(row, col uint8, c color, k kind) {
+func (b *board) set(row, col byte, c color, k kind) {
 	x := uint64(1 << (uint64(row)*8 + uint64(col)))
 
 	b.occupied |= x
@@ -92,22 +92,22 @@ func (b *board) set(row, col uint8, c color, k kind) {
 	}
 }
 
-func (b *board) crown(row, col uint8) {
+func (b *board) crown(row, col byte) {
 	x := uint64(1 << (uint64(row)*8 + uint64(col)))
 	b.king |= x
 }
 
-func (b *board) uncrown(row, col uint8) {
+func (b *board) uncrown(row, col byte) {
 	x := uint64(1 << (uint64(row)*8 + uint64(col)))
 	b.king &^= x
 }
 
-func (b *board) isOccupied(row, col uint8) bool {
+func (b *board) isOccupied(row, col byte) bool {
 	x := uint64(1 << (uint64(row)*8 + uint64(col)))
 	return b.occupied&x != 0
 }
 
-func (b *board) get(row, col uint8) (c color, k kind) {
+func (b *board) get(row, col byte) (c color, k kind) {
 	n := uint64(row)*8 + uint64(col)
 	x := uint64(1 << n)
 	k = kind((b.king & x) >> n)

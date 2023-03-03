@@ -8,7 +8,7 @@ import (
 // I guess this is inspired by https://www.computerenhance.com/p/clean-code-horrible-performance
 // a little edgy, I know, but I wanted to try it out
 
-type instructionType uint8
+type instructionType byte
 
 const (
 	moveInstruction = instructionType(iota)

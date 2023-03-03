@@ -50,7 +50,7 @@ func TestMakeCaptureInstruction(t *testing.T) {
 		k        kind
 	}
 
-	cases := [...]testCase{
+	cases := []testCase{
 		{1, 2, kWhite, kKing},
 		{3, 1, kBlack, kPawn},
 		{2, 2, kWhite, kPawn},
