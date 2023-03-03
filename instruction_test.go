@@ -153,7 +153,7 @@ func TestMoveInstruction(t *testing.T) {
 	} else {
 		ac, ak := b.get(frow, fcol)
 		if ac != c || ak != k {
-			t.Errorf("piece changed after undo move, was %s %s now is %s %c", c, k, ac, ak)
+			t.Errorf("piece changed after undo move, was %s %s now is %s %s", c, k, ac, ak)
 		}
 	}
 }
