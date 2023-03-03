@@ -1,9 +1,44 @@
 package main
 
+import (
+	"bytes"
+)
+
+// the board is 8x8, so we can just use a uint64 for each property that might be true or false for a tile
 type board struct {
 	occupied uint64
 	white    uint64
 	king     uint64
+}
+
+func pieceToRune(c color, k kind) rune {
+	if c == kWhite {
+		if k == kKing {
+			return '@'
+		}
+		return 'o'
+	}
+	if k == kKing {
+		return '#'
+	}
+	return 'x'
+}
+
+func (b *board) String() string {
+	buf := new(bytes.Buffer)
+	sep := ""
+	for row := byte(0); row < 8; row++ {
+		buf.WriteString(sep)
+		for col := byte(0); col < 8; col++ {
+			if b.isOccupied(row, col) {
+				buf.WriteRune(pieceToRune(b.get(row, col)))
+			} else {
+				buf.WriteRune('.')
+			}
+		}
+		sep = "\n"
+	}
+	return buf.String()
 }
 
 func newEmptyBoard() *board {
@@ -73,9 +108,10 @@ func (b *board) isOccupied(row, col uint8) bool {
 }
 
 func (b *board) get(row, col uint8) (c color, k kind) {
-	x := uint64(1 << (uint64(row)*8 + uint64(col)))
-	k = kind(b.king & x)
-	c = color(b.white & x)
+	n := uint64(row)*8 + uint64(col)
+	x := uint64(1 << n)
+	k = kind((b.king & x) >> n)
+	c = color((b.white & x) >> n)
 	return
 }
 

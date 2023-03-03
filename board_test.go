@@ -31,34 +31,48 @@ func TestNewEmptyBoard(t *testing.T) {
 	}
 }
 
-func TestSetSingle(t *testing.T) {
+func TestSet(t *testing.T) {
 	board := newEmptyBoard()
 
-	board.set(2, 2, kWhite, kPawn)
-
-	if !board.isOccupied(2, 2) {
-		t.Error("(2, 2) should be occupied but it isn't")
-	} else {
-		c, k := board.get(2, 2)
-		if c != kWhite || k != kPawn {
-			t.Errorf("piece at (2, 2) should be a white pawn but it is a %s %s", c, k)
-		}
+	type testCase struct {
+		row, col byte
+		c        color
+		k        kind
 	}
 
-	board.set(5, 4, kBlack, kKing)
+	cases := []testCase{
+		{2, 2, kWhite, kKing},
+		{3, 3, kBlack, kKing},
+		{1, 5, kBlack, kPawn},
+		{7, 4, kWhite, kPawn},
+	}
 
-	if !board.isOccupied(5, 4) {
-		t.Error("(5, 4) should be occupied but it isn't")
-	} else {
-		c, k := board.get(5, 4)
-		if c != kBlack || k != kKing {
-			t.Errorf("piece at (5, 4) should be a black king but it is a %s %s", c, k)
-		}
+	for _, c := range cases {
+		row, col, color, kind := c.row, c.col, c.c, c.k
+		board.set(row, col, color, kind)
 	}
 
 	if board.isOccupied(1, 1) {
 		t.Error("(1, 1) should not be occupied but it is")
 	}
+
+	for _, c := range cases {
+		row, col, color, kind := c.row, c.col, c.c, c.k
+		if !board.isOccupied(row, col) {
+			t.Errorf("(%d, %d) should be occupied but isn't", row, col)
+		} else {
+			actualColor, actualKind := board.get(row, col)
+			if actualColor != color || actualKind != kind {
+				t.Errorf(
+					"piece at (%d, %d) should be a %s %s but is a %s %s",
+					row, col,
+					color, kind,
+					actualColor, actualKind,
+				)
+			}
+		}
+	}
+
 }
 
 func TestClear(t *testing.T) {

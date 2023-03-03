@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestMakeCrownInstruction(t *testing.T) {
 	var row, col byte
@@ -83,6 +85,80 @@ func TestMakeCaptureInstruction(t *testing.T) {
 	}
 
 }
+
+func TestCrownInstruction(t *testing.T) {
+	b := newEmptyBoard()
+
+	var row, col byte
+	row, col = 5, 4
+
+	b.set(row, col, kWhite, kPawn)
+
+	i := makeCrownInstruction(row, col)
+	is := []instruction{i}
+
+	performInstructions(b, is)
+
+	_, newKind := b.get(row, col)
+	if newKind != kKing {
+		t.Errorf("crown instruction failed, %d %d still a pawn", row, col)
+	}
+
+	undoInstructions(b, is)
+
+	_, oldKind := b.get(row, col)
+	if oldKind != kPawn {
+		t.Errorf("undo of crown instruction failed, %d %d still a king", row, col)
+	}
+}
+
+func TestMoveInstruction(t *testing.T) {
+	b := newEmptyBoard()
+
+	var frow, fcol byte //from
+	var trow, tcol byte //to
+
+	frow, fcol = 3, 7
+	trow, tcol = 4, 6
+	c, k := kBlack, kKing
+
+	b.set(frow, fcol, c, k)
+
+	i := makeMoveInstruction(frow, fcol, trow, tcol)
+	is := []instruction{i}
+
+	performInstructions(b, is)
+
+	if b.isOccupied(frow, fcol) {
+		t.Errorf("after move, source should be empty")
+	}
+
+	if !b.isOccupied(trow, tcol) {
+		t.Errorf("after move, destination should be occupied")
+	} else {
+		ac, ak := b.get(trow, tcol)
+		if ac != c || ak != k {
+			t.Errorf("piece changed after move, was %s %s now is %s %s", c, k, ac, ak)
+		}
+	}
+
+	undoInstructions(b, is)
+
+	if b.isOccupied(trow, tcol) {
+		t.Errorf("after undo move, destination should be empty")
+	}
+
+	if !b.isOccupied(frow, fcol) {
+		t.Errorf("after undo move, source should be occupied")
+	} else {
+		ac, ak := b.get(frow, fcol)
+		if ac != c || ak != k {
+			t.Errorf("piece changed after undo move, was %s %s now is %s %c", c, k, ac, ak)
+		}
+	}
+}
+
+// TODO test capture instruction
 
 // TODO test performance and undo of each single type of instruction
 // TODO test performance of a sequence, hardcoded example

@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 // I guess this is inspired by https://www.computerenhance.com/p/clean-code-horrible-performance
 // a little edgy, I know, but I wanted to try it out
@@ -26,6 +29,10 @@ func (t instructionType) String() string {
 	}
 }
 
+// instruction should contain all information needed to undo it
+// that's the reason for storing the color and kind of the captured piece
+// when you'd just need the coordinate for actually removing the piece
+
 type instruction struct {
 	t   instructionType
 	row byte
@@ -35,6 +42,18 @@ type instruction struct {
 	// color, kind for captureInstruction
 	// unused for crownInstruction
 	d [2]byte
+}
+
+func (i instruction) String() string {
+	buf := new(bytes.Buffer)
+	fmt.Fprintf(buf, "instruction(%s) (%d, %d)", i.t.String(), i.row, i.col)
+	if i.t == moveInstruction {
+		fmt.Fprintf(buf, " (%d, %d)", i.d[0], i.d[1])
+	} else if i.t == captureInstruction {
+		fmt.Fprintf(buf, " %s %s", color(i.d[0]), kind(i.d[1]))
+	}
+	fmt.Fprintf(buf, "\n")
+	return buf.String()
 }
 
 func makeMoveInstruction(sourceRow, sourceCol, destinationRow, destinationCol byte) instruction {
@@ -73,6 +92,9 @@ func performInstructions(b *board, is []instruction) {
 			row, col := i.row, i.col
 			capturedColor, capturedKind := color(i.d[0]), kind(i.d[1])
 			actualColor, actualKind := b.get(row, col)
+
+			// TODO return err instead of panicking
+
 			if capturedColor != actualColor || capturedKind != actualKind {
 				panic(fmt.Sprintf(
 					"performed capture instruction of %s %s on row %d %d but piece is a %s %s",
