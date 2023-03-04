@@ -1,5 +1,7 @@
 package main
 
+// TODO add log to tests, run with go test -v
+
 import (
 	"testing"
 )
@@ -158,9 +160,128 @@ func TestMoveInstruction(t *testing.T) {
 	}
 }
 
-// TODO test capture instruction
+func TestCaptureInstruction(t *testing.T) {
+	b := newEmptyBoard()
 
-// TODO test performance and undo of each single type of instruction
-// TODO test performance of a sequence, hardcoded example
-// TODO test undo of a sequence, hardcoded example
-// TODO test performance + undo of random instructions, checking whether startState == endState
+	var row, col byte
+	row, col = 3, 6
+	color, kind := kWhite, kPawn
+
+	b.set(row, col, color, kind)
+
+	t.Log("Before capture:")
+	t.Log(b)
+
+	i := makeCaptureInstruction(row, col, color, kind)
+	is := []instruction{i}
+
+	performInstructions(b, is)
+
+	t.Log("After capture:")
+	t.Log(b)
+
+	if b.isOccupied(row, col) {
+		t.Errorf("(%d, %d) should be empty after capture, is occupied", row, col)
+	}
+
+	undoInstructions(b, is)
+
+	t.Log("After undoing capture:")
+	t.Log(b)
+
+	if !b.isOccupied(row, col) {
+		t.Errorf("(%d, %d) should be occupied after undoing the capture, is empty", row, col)
+	} else {
+		actualColor, actualKind := b.get(row, col)
+		if actualColor != color || actualKind != kind {
+			t.Errorf(
+				"expected (%d, %d) to contain a %s %s after undoing the capture, but it contains a %s %s",
+				row, col,
+				color, kind,
+				actualColor, actualKind,
+			)
+		}
+	}
+}
+
+func TestInstructionSequence(t *testing.T) {
+
+	b := newEmptyBoard()
+
+	b.set(3, 5, kWhite, kPawn)
+	b.set(1, 0, kBlack, kKing)
+	b.set(2, 2, kBlack, kPawn)
+
+	t.Log("Before:")
+	t.Log("\n" + b.String())
+
+	before := b.copy()
+
+	is := []instruction{
+		makeMoveInstruction(3, 5, 2, 4),
+		makeCrownInstruction(2, 4),
+		makeCaptureInstruction(2, 4, kWhite, kKing),
+		makeMoveInstruction(1, 0, 4, 6),
+		makeMoveInstruction(2, 2, 3, 5),
+		makeCrownInstruction(3, 5),
+	}
+
+	performInstructions(b, is)
+
+	t.Log("After:")
+	t.Log("\n" + b.String())
+
+	assertOccupied(b, t, 3, 5)
+	assertContains(b, t, 3, 5, kBlack, kKing)
+	assertOccupied(b, t, 4, 6)
+	assertContains(b, t, 4, 6, kBlack, kKing)
+	assertEmpty(b, t, 1, 0)
+	assertEmpty(b, t, 2, 2)
+	assertEmpty(b, t, 2, 4)
+
+	undoInstructions(b, is)
+
+	t.Log("After undo:")
+	t.Log("\n" + b.String())
+
+	for row := byte(0); row < 8; row++ {
+		for col := byte(0); col < 8; col++ {
+			wantOccupied := before.isOccupied(row, col)
+			gotOccupied := b.isOccupied(row, col)
+
+			if wantOccupied != gotOccupied {
+				t.Errorf("row %d col %d should be occupied(%v) but is occupied(%v)", row, col, wantOccupied, gotOccupied)
+			} else if gotOccupied {
+				wantColor, wantKind := before.get(row, col)
+				gotColor, gotKind := b.get(row, col)
+
+				if wantColor != gotColor || wantKind != gotKind {
+					t.Errorf("row %d col %d should contain %s %s but contains %s %s", row, col, wantColor, wantKind, gotColor, gotKind)
+				}
+			}
+		}
+	}
+}
+
+// TODO refactor other tests to use these assertions
+
+func assertOccupied(b *board, t *testing.T, row, col byte) {
+	if !b.isOccupied(row, col) {
+		t.Errorf("row %d col %d should be occupied", row, col)
+	}
+}
+
+func assertContains(b *board, t *testing.T, row, col byte, c color, k kind) {
+	ac, ak := b.get(row, col)
+	if ac != c || ak != k {
+		t.Errorf("row %d col %d should contain %s %s but contains %s %s", row, col, c, k, ac, ak)
+	}
+}
+
+func assertEmpty(b *board, t *testing.T, row, col byte) {
+	if b.isOccupied(row, col) {
+		t.Errorf("row %d col %d should be empty", row, col)
+	}
+}
+
+// TODO test random instruction sequence
