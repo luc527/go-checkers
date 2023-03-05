@@ -2,12 +2,27 @@ package main
 
 import "fmt"
 
+// TODO the generateXxx procedures should take a color, duh
+
 func main() {
+
+	// TODO make some proper unit tests for this
+
 	b := new(board)
 
-	b.set(5, 5, kWhite, kKing)
-	b.set(2, 2, kBlack, kKing)
-	b.set(0, 7, kWhite, kKing)
+	b.set(2, 2, kWhite, kPawn)
+	b.set(3, 3, kBlack, kPawn)
 
+	fmt.Println("before:")
 	fmt.Println(b)
+
+	var iss [][]instruction
+	iss = generateCaptureMoves(iss, b)
+
+	fmt.Println("after (should be the same):")
+	fmt.Println(b)
+	fmt.Printf("instructions (%d):\n", len(iss))
+	for _, is := range iss {
+		fmt.Println(is)
+	}
 }
