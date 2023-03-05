@@ -4,6 +4,43 @@ import (
 	"bytes"
 )
 
+type color byte
+
+type kind byte
+
+const (
+	kBlack = color(0)
+	kWhite = color(1)
+	kPawn  = kind(0)
+	kKing  = kind(1)
+)
+
+var crowningRow = [2]byte{
+	int(kBlack): 0,
+	int(kWhite): 7,
+}
+
+var forward = [2]int8{
+	int(kBlack): -1,
+	int(kWhite): +1,
+}
+
+func (c color) String() string {
+	if c == kWhite {
+		return "white"
+	} else {
+		return "black"
+	}
+}
+
+func (k kind) String() string {
+	if k == kKing {
+		return "king"
+	} else {
+		return "pawn"
+	}
+}
+
 // the board is 8x8, so we can just use a uint64 for each property that might be true or false for a tile
 type board struct {
 	occupied uint64

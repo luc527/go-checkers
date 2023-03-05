@@ -6,11 +6,11 @@ import (
 	"testing"
 )
 
-func TestMakeCrownInstruction(t *testing.T) {
+func TestMakeCrownIns(t *testing.T) {
 	var row, col byte
 	row, col = 5, 6
-	i := makeCrownInstruction(row, col)
-	if i.t != crownInstruction {
+	i := makeCrownIns(row, col)
+	if i.t != crownIns {
 		t.Errorf("expected instruction to be of type crown, is %s", i.t)
 		return
 	}
@@ -19,7 +19,7 @@ func TestMakeCrownInstruction(t *testing.T) {
 	}
 }
 
-func TestMakeMoveInstruction(t *testing.T) {
+func TestMakeMoveIns(t *testing.T) {
 	var srow, scol byte
 	var drow, dcol byte
 
@@ -27,9 +27,9 @@ func TestMakeMoveInstruction(t *testing.T) {
 	srow, scol = 1, 3
 	drow, dcol = 2, 5
 
-	i := makeMoveInstruction(srow, scol, drow, dcol)
+	i := makeMoveIns(srow, scol, drow, dcol)
 
-	if i.t != moveInstruction {
+	if i.t != moveIns {
 		t.Errorf("expected type move but is of type %s", i.t)
 		return
 	}
@@ -45,7 +45,7 @@ func TestMakeMoveInstruction(t *testing.T) {
 	}
 }
 
-func TestMakeCaptureInstruction(t *testing.T) {
+func TestMakeCaptureIns(t *testing.T) {
 	type testCase struct {
 		row, col byte
 		c        color
@@ -61,9 +61,9 @@ func TestMakeCaptureInstruction(t *testing.T) {
 
 	for _, test := range cases {
 		row, col, c, k := test.row, test.col, test.c, test.k
-		i := makeCaptureInstruction(row, col, c, k)
+		i := makeCaptureIns(row, col, c, k)
 
-		if i.t != captureInstruction {
+		if i.t != captureIns {
 			t.Errorf("expected type capture but got type %s", i.t)
 			return
 		}
@@ -88,7 +88,7 @@ func TestMakeCaptureInstruction(t *testing.T) {
 
 }
 
-func TestCrownInstruction(t *testing.T) {
+func TestCrownIns(t *testing.T) {
 	b := newEmptyBoard()
 
 	var row, col byte
@@ -96,8 +96,8 @@ func TestCrownInstruction(t *testing.T) {
 
 	b.set(row, col, kWhite, kPawn)
 
-	i := makeCrownInstruction(row, col)
-	is := []instruction{i}
+	i := makeCrownIns(row, col)
+	is := []ins{i}
 
 	performInstructions(b, is)
 
@@ -114,7 +114,7 @@ func TestCrownInstruction(t *testing.T) {
 	}
 }
 
-func TestMoveInstruction(t *testing.T) {
+func TestMoveIns(t *testing.T) {
 	b := newEmptyBoard()
 
 	var frow, fcol byte //from
@@ -126,8 +126,8 @@ func TestMoveInstruction(t *testing.T) {
 
 	b.set(frow, fcol, c, k)
 
-	i := makeMoveInstruction(frow, fcol, trow, tcol)
-	is := []instruction{i}
+	i := makeMoveIns(frow, fcol, trow, tcol)
+	is := []ins{i}
 
 	performInstructions(b, is)
 
@@ -160,7 +160,7 @@ func TestMoveInstruction(t *testing.T) {
 	}
 }
 
-func TestCaptureInstruction(t *testing.T) {
+func TestCaptureIns(t *testing.T) {
 	b := newEmptyBoard()
 
 	var row, col byte
@@ -172,8 +172,8 @@ func TestCaptureInstruction(t *testing.T) {
 	t.Log("Before capture:")
 	t.Log(b)
 
-	i := makeCaptureInstruction(row, col, color, kind)
-	is := []instruction{i}
+	i := makeCaptureIns(row, col, color, kind)
+	is := []ins{i}
 
 	performInstructions(b, is)
 
@@ -204,7 +204,7 @@ func TestCaptureInstruction(t *testing.T) {
 	}
 }
 
-func TestInstructionSequence(t *testing.T) {
+func TestInsSequence(t *testing.T) {
 
 	b := newEmptyBoard()
 
@@ -217,13 +217,13 @@ func TestInstructionSequence(t *testing.T) {
 
 	before := b.copy()
 
-	is := []instruction{
-		makeMoveInstruction(3, 5, 2, 4),
-		makeCrownInstruction(2, 4),
-		makeCaptureInstruction(2, 4, kWhite, kKing),
-		makeMoveInstruction(1, 0, 4, 6),
-		makeMoveInstruction(2, 2, 3, 5),
-		makeCrownInstruction(3, 5),
+	is := []ins{
+		makeMoveIns(3, 5, 2, 4),
+		makeCrownIns(2, 4),
+		makeCaptureIns(2, 4, kWhite, kKing),
+		makeMoveIns(1, 0, 4, 6),
+		makeMoveIns(2, 2, 3, 5),
+		makeCrownIns(3, 5),
 	}
 
 	performInstructions(b, is)
