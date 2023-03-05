@@ -41,7 +41,6 @@ func (k kind) String() string {
 	}
 }
 
-// the board is 8x8, so we can just use a uint64 for each property that might be true or false for a tile
 type board struct {
 	occupied uint64
 	white    uint64
@@ -63,9 +62,15 @@ func pieceToRune(c color, k kind) rune {
 
 func (b *board) String() string {
 	buf := new(bytes.Buffer)
-	sep := ""
+
+	buf.WriteRune(' ')
+	for col := byte(0); col < 8; col++ {
+		buf.WriteRune('0' + rune(col))
+	}
+
 	for row := byte(0); row < 8; row++ {
-		buf.WriteString(sep)
+		buf.WriteString("\n")
+		buf.WriteRune('0' + rune(row))
 		for col := byte(0); col < 8; col++ {
 			if b.isOccupied(row, col) {
 				buf.WriteRune(pieceToRune(b.get(row, col)))
@@ -73,8 +78,16 @@ func (b *board) String() string {
 				buf.WriteRune('.')
 			}
 		}
-		sep = "\n"
+		buf.WriteRune('0' + rune(row))
 	}
+
+	buf.WriteRune('\n')
+	buf.WriteRune(' ')
+	for col := byte(0); col < 8; col++ {
+		buf.WriteRune('0' + rune(col))
+	}
+	buf.WriteRune('\n')
+
 	return buf.String()
 }
 

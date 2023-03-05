@@ -26,17 +26,14 @@ func generateSimplePawnMoves(iss [][]instruction, b *board, row, col byte, color
 func generateSimpleKingMoves(iss [][]instruction, b *board, row, col byte, color color) [][]instruction {
 	for _, roff := range dirBoth {
 		for _, coff := range dirBoth {
-			for dist := int8(1); ; dist++ {
+			dist := int8(1)
+			for {
 				drow, dcol := byte(int8(row)+dist*roff), byte(int8(col)+dist*coff)
-				if drow > 8 || dcol > 8 || b.isOccupied(drow, dcol) {
+				if drow >= 8 || dcol >= 8 || b.isOccupied(drow, dcol) {
 					break
 				}
 
-				var is []instruction
-				is = append(is, makeMoveInstruction(row, col, drow, dcol))
-				if drow == crowningRow[color] {
-					is = append(is, makeCrownInstruction(drow, dcol))
-				}
+				is := []instruction{makeMoveInstruction(row, col, drow, dcol)}
 				iss = append(iss, is)
 
 				dist++
@@ -47,6 +44,8 @@ func generateSimpleKingMoves(iss [][]instruction, b *board, row, col byte, color
 	return iss
 }
 
+// should always be called like append:
+// iss = generateSimpleMoves(iss, b)
 func generateSimpleMoves(iss [][]instruction, b *board) [][]instruction {
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {

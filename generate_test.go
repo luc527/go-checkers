@@ -38,8 +38,19 @@ func compareGeneratedInstructions(
 	return
 }
 
+func assertEqualInstructionLists(t *testing.T, got [][]instruction, want [][]instruction) {
+	extra, missing := compareGeneratedInstructions(got, want)
+	if len(extra) > 0 {
+		t.Errorf("generated extra instruction lists:\n%s", strings.Join(extra, "\n"))
+	}
+	if len(missing) > 0 {
+		t.Errorf("missing instruction lists:\n%s", strings.Join(missing, "\n"))
+	}
+}
+
 func TestSimplePawnMove(t *testing.T) {
 	b := new(board)
+
 	b.set(1, 1, kWhite, kPawn)
 	// no possibilities
 	b.set(0, 0, kWhite, kPawn)
@@ -51,7 +62,22 @@ func TestSimplePawnMove(t *testing.T) {
 	// crowning
 	b.set(6, 6, kWhite, kPawn)
 
-	// TODO test black
+	//
+	// black
+	//
+
+	b.set(6, 1, kBlack, kPawn)
+	// no possibilities
+	b.set(7, 0, kBlack, kPawn)
+	// one possibility occupied
+	b.set(7, 2, kBlack, kPawn)
+	// against the (left and right) walls
+	b.set(4, 0, kBlack, kPawn)
+	b.set(4, 7, kBlack, kPawn)
+	// crowning
+	b.set(1, 5, kBlack, kPawn)
+
+	t.Log("\n" + b.String())
 
 	var movesGot [][]instruction
 	movesGot = generateSimpleMoves(movesGot, b)
@@ -70,12 +96,78 @@ func TestSimplePawnMove(t *testing.T) {
 			makeMoveInstruction(6, 6, 7, 5),
 			makeCrownInstruction(7, 5),
 		},
+		{makeMoveInstruction(6, 1, 5, 0)},
+		{makeMoveInstruction(6, 1, 5, 2)},
+		{makeMoveInstruction(7, 2, 6, 3)},
+		{makeMoveInstruction(4, 0, 3, 1)},
+		{makeMoveInstruction(4, 7, 3, 6)},
+		{
+			makeMoveInstruction(1, 5, 0, 6),
+			makeCrownInstruction(0, 6),
+		},
+		{
+			makeMoveInstruction(1, 5, 0, 4),
+			makeCrownInstruction(0, 4),
+		},
 	}
-	extra, missing := compareGeneratedInstructions(movesGot, movesWant)
-	if len(extra) > 0 {
-		t.Errorf("generated extra instruction lists:\n%s", strings.Join(extra, "\n"))
+	assertEqualInstructionLists(t, movesGot, movesWant)
+}
+
+func TestSimpleKingMove(t *testing.T) {
+
+	b := new(board)
+
+	b.set(5, 5, kWhite, kKing)
+	b.set(2, 2, kBlack, kKing)
+	b.set(0, 7, kWhite, kKing)
+
+	t.Log("\n" + b.String())
+
+	var movesGot [][]instruction
+	movesGot = generateSimpleMoves(movesGot, b)
+
+	movesWant := [][]instruction{
+		//
+		// moving the white king at (5, 5)
+		//
+		// down, right
+		{makeMoveInstruction(5, 5, 6, 6)},
+		{makeMoveInstruction(5, 5, 7, 7)},
+		// down, left
+		{makeMoveInstruction(5, 5, 6, 4)},
+		{makeMoveInstruction(5, 5, 7, 3)},
+		// up, left
+		{makeMoveInstruction(5, 5, 4, 4)},
+		{makeMoveInstruction(5, 5, 3, 3)}, // gets stopped by the black king (no (2,2), (1,1), (0,0))
+		// up, right
+		{makeMoveInstruction(5, 5, 4, 6)},
+		{makeMoveInstruction(5, 5, 3, 7)},
+		//
+		// moving the black king at (2, 2)
+		//
+		// down, right
+		{makeMoveInstruction(2, 2, 3, 3)},
+		{makeMoveInstruction(2, 2, 4, 4)}, // gets stopped by the white king (no (5,5) etc.)
+		// down, left
+		{makeMoveInstruction(2, 2, 3, 1)},
+		{makeMoveInstruction(2, 2, 4, 0)},
+		// up, right
+		{makeMoveInstruction(2, 2, 1, 3)},
+		{makeMoveInstruction(2, 2, 0, 4)},
+		// up, left
+		{makeMoveInstruction(2, 2, 1, 1)},
+		{makeMoveInstruction(2, 2, 0, 0)},
+		//
+		// moving the white king at (0, 7)
+		//
+		{makeMoveInstruction(0, 7, 1, 6)},
+		{makeMoveInstruction(0, 7, 2, 5)},
+		{makeMoveInstruction(0, 7, 3, 4)},
+		{makeMoveInstruction(0, 7, 4, 3)},
+		{makeMoveInstruction(0, 7, 5, 2)},
+		{makeMoveInstruction(0, 7, 6, 1)},
+		{makeMoveInstruction(0, 7, 7, 0)},
 	}
-	if len(missing) > 0 {
-		t.Errorf("didn't generate these instruction lists:\n%s", strings.Join(missing, "\n"))
-	}
+
+	assertEqualInstructionLists(t, movesGot, movesWant)
 }
