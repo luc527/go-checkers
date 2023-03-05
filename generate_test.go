@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func compareGeneratedInstructions(
+func compareGeneratedMoves(
 	got [][]instruction,
 	want [][]instruction,
 ) (
@@ -39,7 +39,7 @@ func compareGeneratedInstructions(
 }
 
 func assertEqualMoves(t *testing.T, got [][]instruction, want [][]instruction) {
-	extra, missing := compareGeneratedInstructions(got, want)
+	extra, missing := compareGeneratedMoves(got, want)
 	if len(extra) > 0 {
 		t.Errorf("generated extra instruction lists:\n%s", strings.Join(extra, "\n"))
 	}
