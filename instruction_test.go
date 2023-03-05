@@ -89,7 +89,7 @@ func TestMakeCaptureInstruction(t *testing.T) {
 }
 
 func TestCrownInstruction(t *testing.T) {
-	b := newEmptyBoard()
+	b := new(board)
 
 	var row, col byte
 	row, col = 5, 4
@@ -115,7 +115,7 @@ func TestCrownInstruction(t *testing.T) {
 }
 
 func TestMoveInstruction(t *testing.T) {
-	b := newEmptyBoard()
+	b := new(board)
 
 	var frow, fcol byte //from
 	var trow, tcol byte //to
@@ -161,7 +161,7 @@ func TestMoveInstruction(t *testing.T) {
 }
 
 func TestCaptureInstruction(t *testing.T) {
-	b := newEmptyBoard()
+	b := new(board)
 
 	var row, col byte
 	row, col = 3, 6
@@ -206,7 +206,7 @@ func TestCaptureInstruction(t *testing.T) {
 
 func TestInsSequence(t *testing.T) {
 
-	b := newEmptyBoard()
+	b := new(board)
 
 	b.set(3, 5, kWhite, kPawn)
 	b.set(1, 0, kBlack, kKing)

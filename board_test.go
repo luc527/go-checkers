@@ -21,7 +21,7 @@ func TestKindString(t *testing.T) {
 }
 
 func TestNewEmptyBoard(t *testing.T) {
-	board := newEmptyBoard()
+	board := new(board)
 	for row := uint8(0); row < 8; row++ {
 		for col := uint8(0); col < 8; col++ {
 			if board.isOccupied(row, col) {
@@ -32,7 +32,7 @@ func TestNewEmptyBoard(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
-	board := newEmptyBoard()
+	board := new(board)
 
 	type testCase struct {
 		row, col byte
@@ -76,7 +76,7 @@ func TestSet(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
-	board := newEmptyBoard()
+	board := new(board)
 
 	board.set(5, 4, kBlack, kKing)
 
@@ -114,7 +114,7 @@ func TestInitialPieces(t *testing.T) {
 		{bla, nil, bla, nil, bla, nil, bla, nil},
 	}
 
-	b := newEmptyBoard()
+	b := new(board)
 	placeInitialPieces(b)
 
 	for row := uint8(0); row < 8; row++ {

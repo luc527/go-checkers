@@ -39,7 +39,7 @@ func compareGeneratedInstructions(
 }
 
 func TestSimplePawnMove(t *testing.T) {
-	b := newEmptyBoard()
+	b := new(board)
 	b.set(1, 1, kWhite, kPawn)
 	// no possibilities
 	b.set(0, 0, kWhite, kPawn)

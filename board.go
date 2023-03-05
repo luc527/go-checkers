@@ -78,10 +78,6 @@ func (b *board) String() string {
 	return buf.String()
 }
 
-func newEmptyBoard() *board {
-	return &board{}
-}
-
 func tileColor(row, col byte) color {
 	if (row+col)%2 == 0 {
 		return kWhite
