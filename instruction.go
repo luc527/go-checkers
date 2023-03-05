@@ -29,7 +29,6 @@ func (t instructionType) String() string {
 
 // instruction should contain all information needed to undo it
 // that's the reason for storing the color and kind of the captured piece
-// when you'd just need the coordinate for actually removing the piece
 
 type instruction struct {
 	t   instructionType
