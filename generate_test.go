@@ -179,6 +179,7 @@ func TestCapturePawnMove(t *testing.T) {
 	b.set(4, 5, kBlack, kPawn) // black pawn that can be captured
 	b.set(4, 3, kBlack, kKing) // black king that can be captured in sequence
 	b.set(2, 3, kBlack, kPawn) // alternative black pawn that can be captured in sequence
+	b.set(2, 1, kWhite, kPawn) // can't capture this one
 
 	b.set(6, 3, kBlack, kKing) // could be another capture
 	b.set(7, 4, kWhite, kPawn) // were it not for this piece
