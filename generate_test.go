@@ -6,8 +6,8 @@ import (
 )
 
 func compareGeneratedInstructions(
-	got []instructionList,
-	want []instructionList,
+	got [][]instruction,
+	want [][]instruction,
 ) (
 	extra []string,
 	missing []string,
@@ -15,12 +15,12 @@ func compareGeneratedInstructions(
 
 	gotMap := make(map[string]bool)
 	for _, is := range got {
-		gotMap[is.String()] = true
+		gotMap[instructionsToString(is)] = true
 	}
 
 	wantMap := make(map[string]bool)
 	for _, is := range want {
-		wantMap[is.String()] = true
+		wantMap[instructionsToString(is)] = true
 	}
 
 	for is := range gotMap {
@@ -38,14 +38,6 @@ func compareGeneratedInstructions(
 	return
 }
 
-func instructionListsString(iss []instructionList) string {
-	ss := make([]string, len(iss))
-	for _, is := range iss {
-		ss = append(ss, is.String())
-	}
-	return strings.Join(ss, "\n")
-}
-
 func TestSimplePawnMove(t *testing.T) {
 	b := newEmptyBoard()
 	b.set(1, 1, kWhite, kPawn)
@@ -61,8 +53,10 @@ func TestSimplePawnMove(t *testing.T) {
 
 	// TODO test black
 
-	movesGot := callGenerateSimpleMoves(b)
-	movesWant := []instructionList{
+	var movesGot [][]instruction
+	movesGot = generateSimpleMoves(movesGot, b)
+
+	movesWant := [][]instruction{
 		{makeMoveInstruction(1, 1, 2, 2)},
 		{makeMoveInstruction(1, 1, 2, 0)},
 		{makeMoveInstruction(0, 2, 1, 3)},

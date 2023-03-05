@@ -2,10 +2,10 @@ package main
 
 var dirBoth = [2]int8{-1, +1}
 
-func generateSimplePawnMoves(b *board, row, col byte, color color, ch chan<- []instruction) {
+func generateSimplePawnMoves(iss [][]instruction, b *board, row, col byte, color color) [][]instruction {
 	drow := byte(int8(row) + forward[color])
 	if drow >= 8 {
-		return
+		return iss
 	}
 	crown := crowningRow[color] == drow
 	for _, dir := range dirBoth {
@@ -18,11 +18,12 @@ func generateSimplePawnMoves(b *board, row, col byte, color color, ch chan<- []i
 		if crown {
 			is = append(is, makeCrownInstruction(drow, dcol))
 		}
-		ch <- is
+		iss = append(iss, is)
 	}
+	return iss
 }
 
-func generateSimpleKingMoves(b *board, row, col byte, color color, ch chan<- []instruction) {
+func generateSimpleKingMoves(iss [][]instruction, b *board, row, col byte, color color) [][]instruction {
 	for _, roff := range dirBoth {
 		for _, coff := range dirBoth {
 			for dist := int8(1); ; dist++ {
@@ -36,15 +37,17 @@ func generateSimpleKingMoves(b *board, row, col byte, color color, ch chan<- []i
 				if drow == crowningRow[color] {
 					is = append(is, makeCrownInstruction(drow, dcol))
 				}
-				ch <- is
+				iss = append(iss, is)
 
 				dist++
 			}
 		}
 	}
+
+	return iss
 }
 
-func generateSimpleMoves(b *board, ch chan<- []instruction) {
+func generateSimpleMoves(iss [][]instruction, b *board) [][]instruction {
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
 			if !b.isOccupied(row, col) {
@@ -53,29 +56,12 @@ func generateSimpleMoves(b *board, ch chan<- []instruction) {
 
 			color, kind := b.get(row, col)
 			if kind == kPawn {
-				generateSimplePawnMoves(b, row, col, color, ch)
+				iss = generateSimplePawnMoves(iss, b, row, col, color)
 			} else {
-				generateSimpleKingMoves(b, row, col, color, ch)
+				iss = generateSimpleKingMoves(iss, b, row, col, color)
 			}
 		}
 	}
-}
 
-func callGenerateSimpleMoves(b *board) []instructionList {
-	var iss []instructionList
-	done := make(chan struct{})
-	ch := make(chan []instruction)
-	go func() {
-		generateSimpleMoves(b, ch)
-		done <- struct{}{}
-	}()
-	// idk yet if generateSimpleMoves should close the channel
-	for {
-		select {
-		case is := <-ch:
-			iss = append(iss, is)
-		case <-done:
-			return iss
-		}
-	}
+	return iss
 }

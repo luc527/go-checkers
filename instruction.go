@@ -42,8 +42,6 @@ type instruction struct {
 	d [2]byte
 }
 
-type instructionList []instruction
-
 func (i instruction) String() string {
 	buf := new(bytes.Buffer)
 	fmt.Fprintf(buf, "{%s instruction (%d, %d)", i.t.String(), i.row, i.col)
@@ -56,7 +54,7 @@ func (i instruction) String() string {
 	return buf.String()
 }
 
-func (is instructionList) String() string {
+func instructionsToString(is []instruction) string {
 	ss := make([]string, 0, len(is))
 	for _, i := range is {
 		ss = append(ss, i.String())
