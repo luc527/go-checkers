@@ -171,3 +171,49 @@ func TestSimpleKingMove(t *testing.T) {
 
 	assertEqualInstructionLists(t, movesGot, movesWant)
 }
+
+func TestCapturePawnMove(t *testing.T) {
+	b := new(board)
+
+	b.set(5, 6, kWhite, kPawn)
+	b.set(4, 5, kBlack, kPawn) // black pawn that can be captured
+	b.set(4, 3, kBlack, kKing) // black king that can be captured in sequence
+	b.set(2, 3, kBlack, kPawn) // alternative black pawn that can be captured in sequence
+
+	b.set(6, 3, kBlack, kKing) // could be another capture
+	b.set(7, 4, kWhite, kPawn) // were it not for this piece
+	// this piece at (7, 4) can also capture
+
+	t.Log("\n" + b.String())
+
+	movesGot := generateCaptureMoves(nil, b)
+
+	movesWant := [][]instruction{
+		{
+			makeMoveInstruction(4, 5, 6, 7),
+			makeCaptureInstruction(5, 6, kWhite, kPawn),
+		},
+		{
+			makeMoveInstruction(5, 6, 3, 4),
+			makeCaptureInstruction(4, 5, kBlack, kPawn),
+			makeMoveInstruction(3, 4, 1, 2),
+			makeCaptureInstruction(2, 3, kBlack, kPawn),
+		},
+		{
+			makeMoveInstruction(5, 6, 3, 4),
+			makeCaptureInstruction(4, 5, kBlack, kPawn),
+			makeMoveInstruction(3, 4, 5, 2),
+			makeCaptureInstruction(4, 3, kBlack, kKing),
+		},
+		{
+			makeMoveInstruction(7, 4, 5, 2),
+			makeCaptureInstruction(6, 3, kBlack, kKing),
+			makeMoveInstruction(5, 2, 3, 4),
+			makeCaptureInstruction(4, 3, kBlack, kKing),
+			makeMoveInstruction(3, 4, 1, 2),
+			makeCaptureInstruction(2, 3, kBlack, kPawn),
+		},
+	}
+
+	assertEqualInstructionLists(t, movesGot, movesWant)
+}

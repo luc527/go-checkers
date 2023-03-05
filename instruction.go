@@ -44,9 +44,9 @@ type instruction struct {
 
 func (i instruction) String() string {
 	buf := new(bytes.Buffer)
-	fmt.Fprintf(buf, "{%s instruction (%d, %d)", i.t.String(), i.row, i.col)
+	fmt.Fprintf(buf, "{%s (%d, %d)", i.t.String(), i.row, i.col)
 	if i.t == moveInstruction {
-		fmt.Fprintf(buf, " (%d, %d)", i.d[0], i.d[1])
+		fmt.Fprintf(buf, " to (%d, %d)", i.d[0], i.d[1])
 	} else if i.t == captureInstruction {
 		fmt.Fprintf(buf, " %s %s", color(i.d[0]), kind(i.d[1]))
 	}
