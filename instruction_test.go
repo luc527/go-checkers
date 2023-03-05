@@ -9,8 +9,8 @@ import (
 func TestMakeCrownIns(t *testing.T) {
 	var row, col byte
 	row, col = 5, 6
-	i := makeCrownIns(row, col)
-	if i.t != crownIns {
+	i := makeCrownInstruction(row, col)
+	if i.t != crownInstruction {
 		t.Errorf("expected instruction to be of type crown, is %s", i.t)
 		return
 	}
@@ -27,9 +27,9 @@ func TestMakeMoveIns(t *testing.T) {
 	srow, scol = 1, 3
 	drow, dcol = 2, 5
 
-	i := makeMoveIns(srow, scol, drow, dcol)
+	i := makeMoveInstruction(srow, scol, drow, dcol)
 
-	if i.t != moveIns {
+	if i.t != moveInstruction {
 		t.Errorf("expected type move but is of type %s", i.t)
 		return
 	}
@@ -61,9 +61,9 @@ func TestMakeCaptureIns(t *testing.T) {
 
 	for _, test := range cases {
 		row, col, c, k := test.row, test.col, test.c, test.k
-		i := makeCaptureIns(row, col, c, k)
+		i := makeCaptureInstruction(row, col, c, k)
 
-		if i.t != captureIns {
+		if i.t != captureInstruction {
 			t.Errorf("expected type capture but got type %s", i.t)
 			return
 		}
@@ -96,8 +96,8 @@ func TestCrownIns(t *testing.T) {
 
 	b.set(row, col, kWhite, kPawn)
 
-	i := makeCrownIns(row, col)
-	is := []ins{i}
+	i := makeCrownInstruction(row, col)
+	is := []instruction{i}
 
 	performInstructions(b, is)
 
@@ -126,8 +126,8 @@ func TestMoveIns(t *testing.T) {
 
 	b.set(frow, fcol, c, k)
 
-	i := makeMoveIns(frow, fcol, trow, tcol)
-	is := []ins{i}
+	i := makeMoveInstruction(frow, fcol, trow, tcol)
+	is := []instruction{i}
 
 	performInstructions(b, is)
 
@@ -172,8 +172,8 @@ func TestCaptureIns(t *testing.T) {
 	t.Log("Before capture:")
 	t.Log(b)
 
-	i := makeCaptureIns(row, col, color, kind)
-	is := []ins{i}
+	i := makeCaptureInstruction(row, col, color, kind)
+	is := []instruction{i}
 
 	performInstructions(b, is)
 
@@ -217,13 +217,13 @@ func TestInsSequence(t *testing.T) {
 
 	before := b.copy()
 
-	is := []ins{
-		makeMoveIns(3, 5, 2, 4),
-		makeCrownIns(2, 4),
-		makeCaptureIns(2, 4, kWhite, kKing),
-		makeMoveIns(1, 0, 4, 6),
-		makeMoveIns(2, 2, 3, 5),
-		makeCrownIns(3, 5),
+	is := []instruction{
+		makeMoveInstruction(3, 5, 2, 4),
+		makeCrownInstruction(2, 4),
+		makeCaptureInstruction(2, 4, kWhite, kKing),
+		makeMoveInstruction(1, 0, 4, 6),
+		makeMoveInstruction(2, 2, 3, 5),
+		makeCrownInstruction(3, 5),
 	}
 
 	performInstructions(b, is)

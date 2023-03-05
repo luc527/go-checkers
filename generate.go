@@ -2,7 +2,7 @@ package main
 
 var dirBoth = [2]int8{-1, +1}
 
-func generateSimplePawnMoves(b *board, row, col byte, color color, ch chan<- []ins) {
+func generateSimplePawnMoves(b *board, row, col byte, color color, ch chan<- []instruction) {
 	drow := byte(int8(row) + forward[color])
 	if drow >= 8 {
 		return
@@ -13,16 +13,16 @@ func generateSimplePawnMoves(b *board, row, col byte, color color, ch chan<- []i
 		if dcol >= 8 || b.isOccupied(drow, dcol) {
 			continue
 		}
-		var is []ins
-		is = append(is, makeMoveIns(row, col, drow, dcol))
+		var is []instruction
+		is = append(is, makeMoveInstruction(row, col, drow, dcol))
 		if crown {
-			is = append(is, makeCrownIns(drow, dcol))
+			is = append(is, makeCrownInstruction(drow, dcol))
 		}
 		ch <- is
 	}
 }
 
-func generateSimpleKingMoves(b *board, row, col byte, color color, ch chan<- []ins) {
+func generateSimpleKingMoves(b *board, row, col byte, color color, ch chan<- []instruction) {
 	for _, roff := range dirBoth {
 		for _, coff := range dirBoth {
 			for dist := int8(1); ; dist++ {
@@ -31,10 +31,10 @@ func generateSimpleKingMoves(b *board, row, col byte, color color, ch chan<- []i
 					break
 				}
 
-				var is []ins
-				is = append(is, makeMoveIns(row, col, drow, dcol))
+				var is []instruction
+				is = append(is, makeMoveInstruction(row, col, drow, dcol))
 				if drow == crowningRow[color] {
-					is = append(is, makeCrownIns(drow, dcol))
+					is = append(is, makeCrownInstruction(drow, dcol))
 				}
 				ch <- is
 
@@ -44,7 +44,7 @@ func generateSimpleKingMoves(b *board, row, col byte, color color, ch chan<- []i
 	}
 }
 
-func generateSimpleMoves(b *board, ch chan<- []ins) {
+func generateSimpleMoves(b *board, ch chan<- []instruction) {
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
 			if !b.isOccupied(row, col) {
@@ -61,10 +61,10 @@ func generateSimpleMoves(b *board, ch chan<- []ins) {
 	}
 }
 
-func callGenerateSimpleMoves(b *board) []insList {
-	var iss []insList
+func callGenerateSimpleMoves(b *board) []instructionList {
+	var iss []instructionList
 	done := make(chan struct{})
-	ch := make(chan []ins)
+	ch := make(chan []instruction)
 	go func() {
 		generateSimpleMoves(b, ch)
 		done <- struct{}{}

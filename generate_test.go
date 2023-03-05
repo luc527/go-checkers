@@ -6,8 +6,8 @@ import (
 )
 
 func compareGeneratedInstructions(
-	got []insList,
-	want []insList,
+	got []instructionList,
+	want []instructionList,
 ) (
 	extra []string,
 	missing []string,
@@ -38,7 +38,7 @@ func compareGeneratedInstructions(
 	return
 }
 
-func insListsString(iss []insList) string {
+func instructionListsString(iss []instructionList) string {
 	ss := make([]string, len(iss))
 	for _, is := range iss {
 		ss = append(ss, is.String())
@@ -62,19 +62,19 @@ func TestSimplePawnMove(t *testing.T) {
 	// TODO test black
 
 	movesGot := callGenerateSimpleMoves(b)
-	movesWant := []insList{
-		{makeMoveIns(1, 1, 2, 2)},
-		{makeMoveIns(1, 1, 2, 0)},
-		{makeMoveIns(0, 2, 1, 3)},
-		{makeMoveIns(1, 7, 2, 6)},
-		{makeMoveIns(3, 0, 4, 1)},
+	movesWant := []instructionList{
+		{makeMoveInstruction(1, 1, 2, 2)},
+		{makeMoveInstruction(1, 1, 2, 0)},
+		{makeMoveInstruction(0, 2, 1, 3)},
+		{makeMoveInstruction(1, 7, 2, 6)},
+		{makeMoveInstruction(3, 0, 4, 1)},
 		{
-			makeMoveIns(6, 6, 7, 7),
-			makeCrownIns(7, 7),
+			makeMoveInstruction(6, 6, 7, 7),
+			makeCrownInstruction(7, 7),
 		},
 		{
-			makeMoveIns(6, 6, 7, 5),
-			makeCrownIns(7, 5),
+			makeMoveInstruction(6, 6, 7, 5),
+			makeCrownInstruction(7, 5),
 		},
 	}
 	extra, missing := compareGeneratedInstructions(movesGot, movesWant)
