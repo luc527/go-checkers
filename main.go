@@ -10,8 +10,8 @@ func main() {
 
 	b := new(board)
 
-	b.set(2, 2, kWhite, kPawn)
-	b.set(3, 3, kBlack, kPawn)
+	b.set(2, 2, whiteColor, pawnKind)
+	b.set(3, 3, blackColor, pawnKind)
 
 	fmt.Println("before:")
 	fmt.Println(b)

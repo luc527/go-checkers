@@ -3,19 +3,19 @@ package main
 import "testing"
 
 func TestColorString(t *testing.T) {
-	if kWhite.String() != "white" {
+	if whiteColor.String() != "white" {
 		t.Fail()
 	}
-	if kBlack.String() != "black" {
+	if blackColor.String() != "black" {
 		t.Fail()
 	}
 }
 
 func TestKindString(t *testing.T) {
-	if kKing.String() != "king" {
+	if kingKind.String() != "king" {
 		t.Fail()
 	}
-	if kPawn.String() != "pawn" {
+	if pawnKind.String() != "pawn" {
 		t.Fail()
 	}
 }
@@ -41,10 +41,10 @@ func TestSet(t *testing.T) {
 	}
 
 	cases := []testCase{
-		{2, 2, kWhite, kKing},
-		{3, 3, kBlack, kKing},
-		{1, 5, kBlack, kPawn},
-		{7, 4, kWhite, kPawn},
+		{2, 2, whiteColor, kingKind},
+		{3, 3, blackColor, kingKind},
+		{1, 5, blackColor, pawnKind},
+		{7, 4, whiteColor, pawnKind},
 	}
 
 	for _, c := range cases {
@@ -78,7 +78,7 @@ func TestSet(t *testing.T) {
 func TestClear(t *testing.T) {
 	board := new(board)
 
-	board.set(5, 4, kBlack, kKing)
+	board.set(5, 4, blackColor, kingKind)
 
 	board.clear(5, 4)
 
@@ -100,8 +100,8 @@ func TestInitialPieces(t *testing.T) {
 		k kind
 	}
 
-	whi := &piece{c: kWhite, k: kPawn}
-	bla := &piece{c: kBlack, k: kPawn}
+	whi := &piece{c: whiteColor, k: pawnKind}
+	bla := &piece{c: blackColor, k: pawnKind}
 
 	initial := [8][8]*piece{
 		{nil, whi, nil, whi, nil, whi, nil, whi},

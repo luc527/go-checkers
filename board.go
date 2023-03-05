@@ -9,24 +9,24 @@ type color byte
 type kind byte
 
 const (
-	kBlack = color(0)
-	kWhite = color(1)
-	kPawn  = kind(0)
-	kKing  = kind(1)
+	blackColor = color(0)
+	whiteColor = color(1)
+	pawnKind   = kind(0)
+	kingKind   = kind(1)
 )
 
 var crowningRow = [2]byte{
-	int(kBlack): 0,
-	int(kWhite): 7,
+	int(blackColor): 0,
+	int(whiteColor): 7,
 }
 
 var forward = [2]int8{
-	int(kBlack): -1,
-	int(kWhite): +1,
+	int(blackColor): -1,
+	int(whiteColor): +1,
 }
 
 func (c color) String() string {
-	if c == kWhite {
+	if c == whiteColor {
 		return "white"
 	} else {
 		return "black"
@@ -34,7 +34,7 @@ func (c color) String() string {
 }
 
 func (k kind) String() string {
-	if k == kKing {
+	if k == kingKind {
 		return "king"
 	} else {
 		return "pawn"
@@ -48,13 +48,13 @@ type board struct {
 }
 
 func pieceToRune(c color, k kind) rune {
-	if c == kWhite {
-		if k == kKing {
+	if c == whiteColor {
+		if k == kingKind {
 			return '@'
 		}
 		return 'o'
 	}
-	if k == kKing {
+	if k == kingKind {
 		return '#'
 	}
 	return 'x'
@@ -93,24 +93,24 @@ func (b *board) String() string {
 
 func tileColor(row, col byte) color {
 	if (row+col)%2 == 0 {
-		return kWhite
+		return whiteColor
 	} else {
-		return kBlack
+		return blackColor
 	}
 }
 
 func placeInitialPieces(b *board) {
 	for row := byte(0); row <= 2; row++ {
 		for col := byte(0); col < 8; col++ {
-			if tileColor(row, col) == kBlack {
-				b.set(row, col, kWhite, kPawn)
+			if tileColor(row, col) == blackColor {
+				b.set(row, col, whiteColor, pawnKind)
 			}
 		}
 	}
 	for row := byte(5); row <= 7; row++ {
 		for col := byte(0); col < 8; col++ {
-			if tileColor(row, col) == kBlack {
-				b.set(row, col, kBlack, kPawn)
+			if tileColor(row, col) == blackColor {
+				b.set(row, col, blackColor, pawnKind)
 			}
 		}
 	}
@@ -125,13 +125,13 @@ func (b *board) set(row, col byte, c color, k kind) {
 
 	b.occupied |= x
 
-	if c == kWhite {
+	if c == whiteColor {
 		b.white |= x
 	} else {
 		b.white &^= x
 	}
 
-	if k == kKing {
+	if k == kingKind {
 		b.king |= x
 	} else {
 		b.king &^= x

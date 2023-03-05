@@ -30,16 +30,16 @@ func randomAction(b boardInterface) {
 		if b.isOccupied(r, c) {
 			color, kind := b.get(r, c)
 
-			if color == kWhite {
-				color = kBlack
+			if color == whiteColor {
+				color = blackColor
 			} else {
-				color = kWhite
+				color = whiteColor
 			}
 
-			if kind == kKing {
-				kind = kPawn
+			if kind == kingKind {
+				kind = pawnKind
 			} else {
-				kind = kKing
+				kind = kingKind
 			}
 
 			b.set(r, c, color, kind)

@@ -51,31 +51,31 @@ func assertEqualInstructionLists(t *testing.T, got [][]instruction, want [][]ins
 func TestSimplePawnMove(t *testing.T) {
 	b := new(board)
 
-	b.set(1, 1, kWhite, kPawn)
+	b.set(1, 1, whiteColor, pawnKind)
 	// no possibilities
-	b.set(0, 0, kWhite, kPawn)
+	b.set(0, 0, whiteColor, pawnKind)
 	// one possibility occupied
-	b.set(0, 2, kWhite, kPawn)
+	b.set(0, 2, whiteColor, pawnKind)
 	// against the (left and right) walls
-	b.set(1, 7, kWhite, kPawn)
-	b.set(3, 0, kWhite, kPawn)
+	b.set(1, 7, whiteColor, pawnKind)
+	b.set(3, 0, whiteColor, pawnKind)
 	// crowning
-	b.set(6, 6, kWhite, kPawn)
+	b.set(6, 6, whiteColor, pawnKind)
 
 	//
 	// black
 	//
 
-	b.set(6, 1, kBlack, kPawn)
+	b.set(6, 1, blackColor, pawnKind)
 	// no possibilities
-	b.set(7, 0, kBlack, kPawn)
+	b.set(7, 0, blackColor, pawnKind)
 	// one possibility occupied
-	b.set(7, 2, kBlack, kPawn)
+	b.set(7, 2, blackColor, pawnKind)
 	// against the (left and right) walls
-	b.set(4, 0, kBlack, kPawn)
-	b.set(4, 7, kBlack, kPawn)
+	b.set(4, 0, blackColor, pawnKind)
+	b.set(4, 7, blackColor, pawnKind)
 	// crowning
-	b.set(1, 5, kBlack, kPawn)
+	b.set(1, 5, blackColor, pawnKind)
 
 	t.Log("\n" + b.String())
 
@@ -117,9 +117,9 @@ func TestSimpleKingMove(t *testing.T) {
 
 	b := new(board)
 
-	b.set(5, 5, kWhite, kKing)
-	b.set(2, 2, kBlack, kKing)
-	b.set(0, 7, kWhite, kKing)
+	b.set(5, 5, whiteColor, kingKind)
+	b.set(2, 2, blackColor, kingKind)
+	b.set(0, 7, whiteColor, kingKind)
 
 	t.Log("\n" + b.String())
 
@@ -175,15 +175,14 @@ func TestSimpleKingMove(t *testing.T) {
 func TestCapturePawnMove(t *testing.T) {
 	b := new(board)
 
-	b.set(5, 6, kWhite, kPawn)
-	b.set(4, 5, kBlack, kPawn) // black pawn that can be captured
-	b.set(4, 3, kBlack, kKing) // black king that can be captured in sequence
-	b.set(2, 3, kBlack, kPawn) // alternative black pawn that can be captured in sequence
-	b.set(2, 1, kWhite, kPawn) // can't capture this one
+	b.set(4, 6, blackColor, pawnKind)
+	b.set(3, 5, whiteColor, pawnKind)
+	b.set(3, 3, whiteColor, kingKind)
+	b.set(1, 3, whiteColor, pawnKind)
+	b.set(1, 1, blackColor, pawnKind)
 
-	b.set(6, 3, kBlack, kKing) // could be another capture
-	b.set(7, 4, kWhite, kPawn) // were it not for this piece
-	// this piece at (7, 4) can also capture
+	b.set(5, 3, whiteColor, kingKind)
+	b.set(6, 4, blackColor, pawnKind)
 
 	t.Log("\n" + b.String())
 
@@ -191,28 +190,30 @@ func TestCapturePawnMove(t *testing.T) {
 
 	movesWant := [][]instruction{
 		{
-			makeMoveInstruction(4, 5, 6, 7),
-			makeCaptureInstruction(5, 6, kWhite, kPawn),
+			makeMoveInstruction(3, 5, 5, 7),
+			makeCaptureInstruction(4, 6, blackColor, pawnKind),
 		},
 		{
-			makeMoveInstruction(5, 6, 3, 4),
-			makeCaptureInstruction(4, 5, kBlack, kPawn),
-			makeMoveInstruction(3, 4, 1, 2),
-			makeCaptureInstruction(2, 3, kBlack, kPawn),
+			makeMoveInstruction(4, 6, 2, 4),
+			makeCaptureInstruction(3, 5, whiteColor, pawnKind),
+			makeMoveInstruction(2, 4, 0, 2),
+			makeCaptureInstruction(1, 3, whiteColor, pawnKind),
+			makeCrownInstruction(0, 2),
 		},
 		{
-			makeMoveInstruction(5, 6, 3, 4),
-			makeCaptureInstruction(4, 5, kBlack, kPawn),
-			makeMoveInstruction(3, 4, 5, 2),
-			makeCaptureInstruction(4, 3, kBlack, kKing),
+			makeMoveInstruction(4, 6, 2, 4),
+			makeCaptureInstruction(3, 5, whiteColor, pawnKind),
+			makeMoveInstruction(2, 4, 4, 2),
+			makeCaptureInstruction(3, 3, whiteColor, kingKind),
 		},
 		{
-			makeMoveInstruction(7, 4, 5, 2),
-			makeCaptureInstruction(6, 3, kBlack, kKing),
-			makeMoveInstruction(5, 2, 3, 4),
-			makeCaptureInstruction(4, 3, kBlack, kKing),
-			makeMoveInstruction(3, 4, 1, 2),
-			makeCaptureInstruction(2, 3, kBlack, kPawn),
+			makeMoveInstruction(6, 4, 4, 2),
+			makeCaptureInstruction(5, 3, whiteColor, kingKind),
+			makeMoveInstruction(4, 2, 2, 4),
+			makeCaptureInstruction(3, 3, whiteColor, kingKind),
+			makeMoveInstruction(2, 4, 0, 2),
+			makeCaptureInstruction(1, 3, whiteColor, pawnKind),
+			makeCrownInstruction(0, 2),
 		},
 	}
 

@@ -53,10 +53,10 @@ func TestMakeCaptureInstruction(t *testing.T) {
 	}
 
 	cases := []testCase{
-		{1, 2, kWhite, kKing},
-		{3, 1, kBlack, kPawn},
-		{2, 2, kWhite, kPawn},
-		{5, 7, kBlack, kKing},
+		{1, 2, whiteColor, kingKind},
+		{3, 1, blackColor, pawnKind},
+		{2, 2, whiteColor, pawnKind},
+		{5, 7, blackColor, kingKind},
 	}
 
 	for _, test := range cases {
@@ -94,7 +94,7 @@ func TestCrownInstruction(t *testing.T) {
 	var row, col byte
 	row, col = 5, 4
 
-	b.set(row, col, kWhite, kPawn)
+	b.set(row, col, whiteColor, pawnKind)
 
 	i := makeCrownInstruction(row, col)
 	is := []instruction{i}
@@ -102,14 +102,14 @@ func TestCrownInstruction(t *testing.T) {
 	performInstructions(b, is)
 
 	_, newKind := b.get(row, col)
-	if newKind != kKing {
+	if newKind != kingKind {
 		t.Errorf("crown instruction failed, %d %d still a pawn", row, col)
 	}
 
 	undoInstructions(b, is)
 
 	_, oldKind := b.get(row, col)
-	if oldKind != kPawn {
+	if oldKind != pawnKind {
 		t.Errorf("undo of crown instruction failed, %d %d still a king", row, col)
 	}
 }
@@ -122,7 +122,7 @@ func TestMoveInstruction(t *testing.T) {
 
 	frow, fcol = 3, 7
 	trow, tcol = 4, 6
-	c, k := kBlack, kKing
+	c, k := blackColor, kingKind
 
 	b.set(frow, fcol, c, k)
 
@@ -165,7 +165,7 @@ func TestCaptureInstruction(t *testing.T) {
 
 	var row, col byte
 	row, col = 3, 6
-	color, kind := kWhite, kPawn
+	color, kind := whiteColor, pawnKind
 
 	b.set(row, col, color, kind)
 
@@ -208,9 +208,9 @@ func TestInsSequence(t *testing.T) {
 
 	b := new(board)
 
-	b.set(3, 5, kWhite, kPawn)
-	b.set(1, 0, kBlack, kKing)
-	b.set(2, 2, kBlack, kPawn)
+	b.set(3, 5, whiteColor, pawnKind)
+	b.set(1, 0, blackColor, kingKind)
+	b.set(2, 2, blackColor, pawnKind)
 
 	t.Log("Before:")
 	t.Log("\n" + b.String())
@@ -220,7 +220,7 @@ func TestInsSequence(t *testing.T) {
 	is := []instruction{
 		makeMoveInstruction(3, 5, 2, 4),
 		makeCrownInstruction(2, 4),
-		makeCaptureInstruction(2, 4, kWhite, kKing),
+		makeCaptureInstruction(2, 4, whiteColor, kingKind),
 		makeMoveInstruction(1, 0, 4, 6),
 		makeMoveInstruction(2, 2, 3, 5),
 		makeCrownInstruction(3, 5),
@@ -232,9 +232,9 @@ func TestInsSequence(t *testing.T) {
 	t.Log("\n" + b.String())
 
 	assertOccupied(b, t, 3, 5)
-	assertContains(b, t, 3, 5, kBlack, kKing)
+	assertContains(b, t, 3, 5, blackColor, kingKind)
 	assertOccupied(b, t, 4, 6)
-	assertContains(b, t, 4, 6, kBlack, kKing)
+	assertContains(b, t, 4, 6, blackColor, kingKind)
 	assertEmpty(b, t, 1, 0)
 	assertEmpty(b, t, 2, 2)
 	assertEmpty(b, t, 2, 4)

@@ -54,7 +54,7 @@ func generateSimpleMoves(iss [][]instruction, b *board) [][]instruction {
 			}
 
 			color, kind := b.get(row, col)
-			if kind == kPawn {
+			if kind == pawnKind {
 				iss = generateSimplePawnMoves(iss, b, row, col, color)
 			} else {
 				iss = generateSimpleKingMoves(iss, b, row, col, color)
@@ -142,7 +142,7 @@ func generateCaptureMoves(iss [][]instruction, b *board) [][]instruction {
 			}
 
 			color, kind := b.get(row, col)
-			if kind == kPawn {
+			if kind == pawnKind {
 				iss = generatePawnCaptureMoves(iss, b, row, col, color)
 			} else {
 				iss = generateKingCaptureMoves(iss, b, row, col, color)
