@@ -44,9 +44,9 @@ func generateSimpleKingMoves(iss [][]instruction, b *board, row, col byte, color
 	return iss
 }
 
-// should always be called like append:
-// iss = generateSimpleMoves(iss, b)
-func generateSimpleMoves(iss [][]instruction, b *board) [][]instruction {
+func generateSimpleMoves(b *board, player color) [][]instruction {
+	var iss [][]instruction
+
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
 			if !b.isOccupied(row, col) {
@@ -54,6 +54,10 @@ func generateSimpleMoves(iss [][]instruction, b *board) [][]instruction {
 			}
 
 			color, kind := b.get(row, col)
+			if color != player {
+				continue
+			}
+
 			if kind == pawnKind {
 				iss = generateSimplePawnMoves(iss, b, row, col, color)
 			} else {
@@ -69,6 +73,7 @@ func generateSimpleMoves(iss [][]instruction, b *board) [][]instruction {
 // generating captures modifies the board!
 
 func followPawnCaptures(iss [][]instruction, stack []instruction, b *board, row, col byte, color color) [][]instruction {
+	// sink: there are no more captures available from here
 	sink := true
 
 	for _, roff := range offBoth {
@@ -110,6 +115,7 @@ func followPawnCaptures(iss [][]instruction, stack []instruction, b *board, row,
 		}
 	}
 
+	// stack is nil on the first call where no captures have been made yet
 	if sink && stack != nil {
 		isLen := len(stack)
 		crown := row == crowningRow[color]
@@ -126,15 +132,76 @@ func followPawnCaptures(iss [][]instruction, stack []instruction, b *board, row,
 	return iss
 }
 
-func generatePawnCaptureMoves(iss [][]instruction, b *board, row, col byte, color color) [][]instruction {
-	return followPawnCaptures(iss, nil, b, row, col, color)
-}
+func followKingCaptures(iss [][]instruction, stack []instruction, b *board, row, col byte, player color) [][]instruction {
+	sink := true
 
-func generateKingCaptureMoves(iss [][]instruction, b *board, row, col byte, color color) [][]instruction {
+	for _, roff := range offBoth {
+		for _, coff := range offBoth {
+
+			pastCapture := false // currently iterating through positions after the captured one
+
+			// captured piece, if any (only one)
+			var crow, ccol byte
+			var ccolor color
+			var ckind kind
+
+			dist := int8(1)
+			for {
+
+				// iteration row and col, for lack of a better single-letter abbreviation
+				irow, icol := byte(int8(row)+dist*roff), byte(int8(col)+dist*coff)
+
+				if irow >= 8 || icol >= 8 {
+					break
+				}
+
+				if b.isOccupied(irow, icol) {
+					if pastCapture {
+						break
+					}
+					icolor, ikind := b.get(irow, icol)
+					if icolor != player {
+						// this is the capture
+						pastCapture = true
+						crow, ccol = irow, icol
+						ccolor, ckind = icolor, ikind
+					}
+				} else if pastCapture {
+					// this is a destination
+					sink = false
+
+					// do
+					stack = append(stack, makeMoveInstruction(row, col, irow, icol))
+					stack = append(stack, makeCaptureInstruction(crow, ccol, ccolor, ckind))
+					b.move(row, col, irow, icol)
+					b.clear(crow, ccol)
+
+					iss = followKingCaptures(iss, stack, b, irow, icol, player)
+
+					// undo
+					b.set(crow, ccol, ccolor, ckind)
+					b.move(irow, icol, row, col)
+					stack = stack[:len(stack)-2]
+				}
+
+				dist++
+			}
+
+		}
+	}
+
+	// same code as in followSimpleCaptures, except no crowning since the piece is already a king
+	if sink && stack != nil {
+		is := make([]instruction, len(stack))
+		copy(is, stack)
+		iss = append(iss, is)
+	}
+
 	return iss
 }
 
-func generateCaptureMoves(iss [][]instruction, b *board) [][]instruction {
+func generateCaptureMoves(b *board, player color) [][]instruction {
+	var iss [][]instruction
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
 			if !b.isOccupied(row, col) {
@@ -142,10 +209,14 @@ func generateCaptureMoves(iss [][]instruction, b *board) [][]instruction {
 			}
 
 			color, kind := b.get(row, col)
+			if color != player {
+				continue
+			}
+
 			if kind == pawnKind {
-				iss = generatePawnCaptureMoves(iss, b, row, col, color)
+				iss = followPawnCaptures(iss, nil, b, row, col, color)
 			} else {
-				iss = generateKingCaptureMoves(iss, b, row, col, color)
+				iss = followKingCaptures(iss, nil, b, row, col, color)
 			}
 		}
 	}
