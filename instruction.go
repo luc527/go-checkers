@@ -91,9 +91,7 @@ func performInstructions(b *board, is []instruction) {
 		case moveInstruction:
 			fromRow, fromCol := i.row, i.col
 			toRow, toCol := i.d[0], i.d[1]
-			movedColor, movedKind := b.get(fromRow, fromCol)
-			b.clear(fromRow, fromCol)
-			b.set(toRow, toCol, movedColor, movedKind)
+			b.move(fromRow, fromCol, toRow, toCol)
 		case captureInstruction:
 			row, col := i.row, i.col
 			capturedColor, capturedKind := color(i.d[0]), kind(i.d[1])
@@ -128,9 +126,7 @@ func undoInstructions(b *board, is []instruction) {
 		case moveInstruction:
 			fromRow, fromCol := i.row, i.col
 			toRow, toCol := i.d[0], i.d[1]
-			movedColor, movedKind := b.get(toRow, toCol)
-			b.clear(toRow, toCol)
-			b.set(fromRow, fromCol, movedColor, movedKind)
+			b.move(toRow, toCol, fromRow, fromCol)
 		case captureInstruction:
 			row, col := i.row, i.col
 			capturedColor, capturedKind := color(i.d[0]), kind(i.d[1])

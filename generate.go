@@ -1,6 +1,6 @@
 package main
 
-var dirBoth = [2]int8{-1, +1}
+var offBoth = [2]int8{-1, +1}
 
 func generateSimplePawnMoves(iss [][]instruction, b *board, row, col byte, color color) [][]instruction {
 	drow := byte(int8(row) + forward[color])
@@ -8,7 +8,7 @@ func generateSimplePawnMoves(iss [][]instruction, b *board, row, col byte, color
 		return iss
 	}
 	crown := crowningRow[color] == drow
-	for _, dir := range dirBoth {
+	for _, dir := range offBoth {
 		dcol := byte(int8(col) + dir)
 		if dcol >= 8 || b.isOccupied(drow, dcol) {
 			continue
@@ -24,8 +24,8 @@ func generateSimplePawnMoves(iss [][]instruction, b *board, row, col byte, color
 }
 
 func generateSimpleKingMoves(iss [][]instruction, b *board, row, col byte, color color) [][]instruction {
-	for _, roff := range dirBoth {
-		for _, coff := range dirBoth {
+	for _, roff := range offBoth {
+		for _, coff := range offBoth {
 			dist := int8(1)
 			for {
 				drow, dcol := byte(int8(row)+dist*roff), byte(int8(col)+dist*coff)

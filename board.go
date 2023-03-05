@@ -138,6 +138,12 @@ func (b *board) set(row, col byte, c color, k kind) {
 	}
 }
 
+func (b *board) move(srow, scol, drow, dcol byte) {
+	c, k := b.get(srow, scol)
+	b.clear(srow, scol)
+	b.set(drow, dcol, c, k)
+}
+
 func (b *board) crown(row, col byte) {
 	x := uint64(1 << (uint64(row)*8 + uint64(col)))
 	b.king |= x
