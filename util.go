@@ -37,6 +37,20 @@ func sideBySide(boards []string) {
 
 }
 
+func showcaseMoves(b *board, iss [][]instruction) {
+	for _, is := range iss {
+		boards := make([]string, 0, len(is))
+		for k := range is {
+			performInstructions(b, is[k:k+1])
+			boards = append(boards, b.String())
+		}
+		fmt.Println(is)
+		sideBySide(boards)
+		undoInstructions(b, is)
+		fmt.Println()
+	}
+}
+
 func example0() {
 	b := new(board)
 
@@ -49,18 +63,48 @@ func example0() {
 
 	fmt.Println(b)
 
-	iss := generateCaptureMoves(b, blackColor)
+	iss := generateCaptureMoves(nil, b, blackColor)
+	showcaseMoves(b, iss)
+}
 
-	for _, is := range iss {
-		boards := make([]string, 0, len(is))
-		for k := range is {
-			performInstructions(b, is[k:k+1])
-			boards = append(boards, b.String())
+func example1() {
+
+	b := new(board)
+
+	//same board as example0
+	b.set(0, 5, blackColor, kingKind)
+	b.set(2, 3, whiteColor, pawnKind)
+	b.set(4, 3, whiteColor, pawnKind)
+	b.set(4, 5, whiteColor, pawnKind)
+	b.set(6, 5, whiteColor, pawnKind)
+	b.set(5, 2, whiteColor, pawnKind)
+
+	fmt.Println(b)
+
+	captureRules := []captureRule{capturesMandatory, capturesNotMandatory}
+	bestRules := []bestRule{bestMandatory, bestNotMandatory}
+
+	for _, capRule := range captureRules {
+		for _, bRule := range bestRules {
+			fmt.Println()
+
+			capString := " NOT "
+			if capRule == capturesMandatory {
+				capString = " ARE "
+			}
+
+			bString := " NOT "
+			if bRule == bestMandatory {
+				bString = " ARE "
+			}
+
+			fmt.Printf("==================%s===================\n", "=====")
+			fmt.Printf("========= captures%smandatory =========\n", capString)
+			fmt.Printf("=========     best%smandatory =========\n", bString)
+			fmt.Printf("==================%s===================\n", "=====")
+
+			iss := generateMoves(b, blackColor, capRule, bRule)
+			showcaseMoves(b, iss)
 		}
-		fmt.Println(is)
-		sideBySide(boards)
-		undoInstructions(b, is)
-		fmt.Println()
 	}
-
 }

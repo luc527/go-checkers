@@ -79,7 +79,7 @@ func TestSimplePawnMove(t *testing.T) {
 
 	t.Log("\n" + b.String())
 
-	blackMovesGot := generateSimpleMoves(b, blackColor)
+	blackMovesGot := generateSimpleMoves(nil, b, blackColor)
 
 	blackMovesWant := [][]instruction{
 		{makeMoveInstruction(1, 1, 2, 2)},
@@ -113,7 +113,7 @@ func TestSimplePawnMove(t *testing.T) {
 			makeCrownInstruction(0, 4),
 		},
 	}
-	whiteMovesGot := generateSimpleMoves(b, whiteColor)
+	whiteMovesGot := generateSimpleMoves(nil, b, whiteColor)
 
 	assertEqualMoves(t, whiteMovesGot, whiteMovesWant)
 }
@@ -131,7 +131,7 @@ func TestSimpleKingMove(t *testing.T) {
 
 	t.Log("\n" + b.String())
 
-	whiteMovesGot := generateSimpleMoves(b, whiteColor)
+	whiteMovesGot := generateSimpleMoves(nil, b, whiteColor)
 
 	whiteMovesWant := [][]instruction{
 		//
@@ -180,7 +180,7 @@ func TestSimpleKingMove(t *testing.T) {
 		{makeMoveInstruction(2, 2, 1, 1)},
 		{makeMoveInstruction(2, 2, 0, 0)},
 	}
-	blackMovesGot := generateSimpleMoves(b, blackColor)
+	blackMovesGot := generateSimpleMoves(nil, b, blackColor)
 
 	assertEqualMoves(t, blackMovesGot, blackMovesWant)
 }
@@ -199,7 +199,7 @@ func TestCapturePawnMove(t *testing.T) {
 
 	t.Log("\n" + b.String())
 
-	blackMovesGot := generateCaptureMoves(b, blackColor)
+	blackMovesGot := generateCaptureMoves(nil, b, blackColor)
 
 	blackMovesWant := [][]instruction{
 		{
@@ -239,7 +239,7 @@ func TestCapturePawnMove(t *testing.T) {
 			makeCrownInstruction(0, 2),
 		},
 	}
-	whiteMovesGot := generateCaptureMoves(b, whiteColor)
+	whiteMovesGot := generateCaptureMoves(nil, b, whiteColor)
 
 	assertEqualMoves(t, whiteMovesGot, whiteMovesWant)
 }
@@ -267,7 +267,7 @@ func TestCaptureThroughCrowningRowDoesntCrown(t *testing.T) {
 			makeCaptureInstruction(1, 2, blackColor, pawnKind),
 		},
 	}
-	movesGot := generateCaptureMoves(b, whiteColor)
+	movesGot := generateCaptureMoves(nil, b, whiteColor)
 
 	assertEqualMoves(t, movesGot, movesWant)
 }
@@ -278,7 +278,7 @@ func TestCaptureKingMoveOneDiagonal(t *testing.T) {
 	b.set(3, 3, whiteColor, kingKind)
 	b.set(5, 5, blackColor, pawnKind)
 
-	movesGot := generateCaptureMoves(b, whiteColor)
+	movesGot := generateCaptureMoves(nil, b, whiteColor)
 	movesWant := [][]instruction{
 		{
 			makeMoveInstruction(3, 3, 6, 6),
@@ -345,9 +345,7 @@ func TestAllowOverPreviousTile(t *testing.T) {
 			makeCrownInstruction(0, 7),
 		},
 	}
-	movesGot := generateCaptureMoves(b, whiteColor)
+	movesGot := generateCaptureMoves(nil, b, whiteColor)
 
 	assertEqualMoves(t, movesGot, movesWant)
 }
-
-// TODO use some examples from http://www.damasciencias.com.br/regras-jogo-de-damas/ as tests

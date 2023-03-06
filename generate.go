@@ -2,6 +2,20 @@ package main
 
 var offBoth = [2]int8{-1, +1}
 
+type captureRule bool
+
+const (
+	capturesMandatory    = captureRule(true)
+	capturesNotMandatory = captureRule(false)
+)
+
+type bestRule bool
+
+const (
+	bestMandatory    = bestRule(true)
+	bestNotMandatory = bestRule(false)
+)
+
 func generateSimplePawnMoves(iss [][]instruction, b *board, row, col byte, color color) [][]instruction {
 	drow := byte(int8(row) + forward[color])
 	if drow >= 8 {
@@ -44,9 +58,7 @@ func generateSimpleKingMoves(iss [][]instruction, b *board, row, col byte, color
 	return iss
 }
 
-func generateSimpleMoves(b *board, player color) [][]instruction {
-	var iss [][]instruction
-
+func generateSimpleMoves(iss [][]instruction, b *board, player color) [][]instruction {
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
 			if !b.isOccupied(row, col) {
@@ -200,8 +212,7 @@ func followKingCaptures(iss [][]instruction, stack []instruction, b *board, row,
 	return iss
 }
 
-func generateCaptureMoves(b *board, player color) [][]instruction {
-	var iss [][]instruction
+func generateCaptureMoves(iss [][]instruction, b *board, player color) [][]instruction {
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
 			if !b.isOccupied(row, col) {
@@ -220,5 +231,44 @@ func generateCaptureMoves(b *board, player color) [][]instruction {
 			}
 		}
 	}
+	return iss
+}
+
+func generateMoves(b *board, player color, captureRule captureRule, bestRule bestRule) [][]instruction {
+
+	iss := generateCaptureMoves(nil, b, player)
+
+	capturesMandatory := captureRule == capturesMandatory
+	bestMandatory := bestRule == bestMandatory
+
+	if len(iss) == 0 || (!capturesMandatory && !bestMandatory) {
+		iss = generateSimpleMoves(iss, b, player)
+	}
+
+	if len(iss) > 0 && bestMandatory {
+		captureCountPerMove := make([]int, len(iss))
+		mostCaptures := 0
+		for k, is := range iss {
+			captureCount := 0
+			for _, i := range is {
+				if i.t == captureInstruction {
+					captureCount++
+				}
+			}
+			captureCountPerMove[k] = captureCount
+			if captureCount > mostCaptures {
+				mostCaptures = captureCount
+			}
+		}
+
+		var best [][]instruction
+		for k, is := range iss {
+			if captureCountPerMove[k] == mostCaptures {
+				best = append(best, is)
+			}
+		}
+		iss = best
+	}
+
 	return iss
 }
