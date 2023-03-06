@@ -16,13 +16,13 @@ const (
 )
 
 var crowningRow = [2]byte{
-	int(blackColor): 0,
-	int(whiteColor): 7,
+	int(blackColor): 7,
+	int(whiteColor): 0,
 }
 
 var forward = [2]int8{
-	int(blackColor): -1,
-	int(whiteColor): +1,
+	int(blackColor): +1,
+	int(whiteColor): -1,
 }
 
 func (c color) String() string {
@@ -103,14 +103,14 @@ func placeInitialPieces(b *board) {
 	for row := byte(0); row <= 2; row++ {
 		for col := byte(0); col < 8; col++ {
 			if tileColor(row, col) == blackColor {
-				b.set(row, col, whiteColor, pawnKind)
+				b.set(row, col, blackColor, pawnKind)
 			}
 		}
 	}
 	for row := byte(5); row <= 7; row++ {
 		for col := byte(0); col < 8; col++ {
 			if tileColor(row, col) == blackColor {
-				b.set(row, col, blackColor, pawnKind)
+				b.set(row, col, whiteColor, pawnKind)
 			}
 		}
 	}

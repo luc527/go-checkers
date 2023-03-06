@@ -104,14 +104,14 @@ func TestInitialPieces(t *testing.T) {
 	bla := &piece{c: blackColor, k: pawnKind}
 
 	initial := [8][8]*piece{
-		{nil, whi, nil, whi, nil, whi, nil, whi},
-		{whi, nil, whi, nil, whi, nil, whi, nil},
-		{nil, whi, nil, whi, nil, whi, nil, whi},
-		{nil, nil, nil, nil, nil, nil, nil, nil},
-		{nil, nil, nil, nil, nil, nil, nil, nil},
-		{bla, nil, bla, nil, bla, nil, bla, nil},
 		{nil, bla, nil, bla, nil, bla, nil, bla},
 		{bla, nil, bla, nil, bla, nil, bla, nil},
+		{nil, bla, nil, bla, nil, bla, nil, bla},
+		{nil, nil, nil, nil, nil, nil, nil, nil},
+		{nil, nil, nil, nil, nil, nil, nil, nil},
+		{whi, nil, whi, nil, whi, nil, whi, nil},
+		{nil, whi, nil, whi, nil, whi, nil, whi},
+		{whi, nil, whi, nil, whi, nil, whi, nil},
 	}
 
 	b := new(board)

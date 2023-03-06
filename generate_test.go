@@ -51,37 +51,37 @@ func assertEqualMoves(t *testing.T, got [][]instruction, want [][]instruction) {
 func TestSimplePawnMove(t *testing.T) {
 	b := new(board)
 
-	b.set(1, 1, whiteColor, pawnKind)
+	b.set(1, 1, blackColor, pawnKind)
 	// no possibilities
-	b.set(0, 0, whiteColor, pawnKind)
+	b.set(0, 0, blackColor, pawnKind)
 	// one possibility occupied
-	b.set(0, 2, whiteColor, pawnKind)
+	b.set(0, 2, blackColor, pawnKind)
 	// against the (left and right) walls
-	b.set(1, 7, whiteColor, pawnKind)
-	b.set(3, 0, whiteColor, pawnKind)
+	b.set(1, 7, blackColor, pawnKind)
+	b.set(3, 0, blackColor, pawnKind)
 	// crowning
-	b.set(6, 6, whiteColor, pawnKind)
+	b.set(6, 6, blackColor, pawnKind)
 
 	//
 	// black
 	//
 
-	b.set(6, 1, blackColor, pawnKind)
+	b.set(6, 1, whiteColor, pawnKind)
 	// no possibilities
-	b.set(7, 0, blackColor, pawnKind)
+	b.set(7, 0, whiteColor, pawnKind)
 	// one possibility occupied
-	b.set(7, 2, blackColor, pawnKind)
+	b.set(7, 2, whiteColor, pawnKind)
 	// against the (left and right) walls
-	b.set(4, 0, blackColor, pawnKind)
-	b.set(4, 7, blackColor, pawnKind)
+	b.set(4, 0, whiteColor, pawnKind)
+	b.set(4, 7, whiteColor, pawnKind)
 	// crowning
-	b.set(1, 5, blackColor, pawnKind)
+	b.set(1, 5, whiteColor, pawnKind)
 
 	t.Log("\n" + b.String())
 
-	whiteMovesGot := generateSimpleMoves(b, whiteColor)
+	blackMovesGot := generateSimpleMoves(b, blackColor)
 
-	whiteMovesWant := [][]instruction{
+	blackMovesWant := [][]instruction{
 		{makeMoveInstruction(1, 1, 2, 2)},
 		{makeMoveInstruction(1, 1, 2, 0)},
 		{makeMoveInstruction(0, 2, 1, 3)},
@@ -96,9 +96,9 @@ func TestSimplePawnMove(t *testing.T) {
 			makeCrownInstruction(7, 5),
 		},
 	}
-	assertEqualMoves(t, whiteMovesGot, whiteMovesWant)
+	assertEqualMoves(t, blackMovesGot, blackMovesWant)
 
-	blackMovesWant := [][]instruction{
+	whiteMovesWant := [][]instruction{
 		{makeMoveInstruction(6, 1, 5, 0)},
 		{makeMoveInstruction(6, 1, 5, 2)},
 		{makeMoveInstruction(7, 2, 6, 3)},
@@ -113,9 +113,9 @@ func TestSimplePawnMove(t *testing.T) {
 			makeCrownInstruction(0, 4),
 		},
 	}
-	blackMovesGot := generateSimpleMoves(b, blackColor)
+	whiteMovesGot := generateSimpleMoves(b, whiteColor)
 
-	assertEqualMoves(t, blackMovesGot, blackMovesWant)
+	assertEqualMoves(t, whiteMovesGot, whiteMovesWant)
 }
 
 func TestSimpleKingMove(t *testing.T) {
@@ -188,55 +188,60 @@ func TestSimpleKingMove(t *testing.T) {
 func TestCapturePawnMove(t *testing.T) {
 	b := new(board)
 
-	b.set(4, 6, blackColor, pawnKind)
-	b.set(3, 5, whiteColor, pawnKind)
-	b.set(3, 3, whiteColor, kingKind)
-	b.set(1, 3, whiteColor, pawnKind)
-	b.set(1, 1, blackColor, pawnKind)
+	b.set(4, 6, whiteColor, pawnKind)
+	b.set(3, 5, blackColor, pawnKind)
+	b.set(3, 3, blackColor, pawnKind)
+	b.set(1, 3, blackColor, pawnKind)
+	b.set(1, 1, whiteColor, pawnKind)
 
-	b.set(5, 3, whiteColor, kingKind)
-	b.set(6, 4, blackColor, pawnKind)
+	b.set(5, 3, blackColor, pawnKind)
+	b.set(6, 4, whiteColor, pawnKind)
 
 	t.Log("\n" + b.String())
 
-	whiteMovesGot := generateCaptureMoves(b, whiteColor)
-
-	whiteMovesWant := [][]instruction{
-		{
-			makeMoveInstruction(3, 5, 5, 7),
-			makeCaptureInstruction(4, 6, blackColor, pawnKind),
-		},
-	}
-
-	assertEqualMoves(t, whiteMovesGot, whiteMovesWant)
+	blackMovesGot := generateCaptureMoves(b, blackColor)
 
 	blackMovesWant := [][]instruction{
 		{
+			makeMoveInstruction(3, 5, 5, 7),
+			makeCaptureInstruction(4, 6, whiteColor, pawnKind),
+		},
+		{
+			makeMoveInstruction(5, 3, 7, 5),
+			makeCaptureInstruction(6, 4, whiteColor, pawnKind),
+			makeCrownInstruction(7, 5),
+		},
+	}
+
+	assertEqualMoves(t, blackMovesGot, blackMovesWant)
+
+	whiteMovesWant := [][]instruction{
+		{
 			makeMoveInstruction(4, 6, 2, 4),
-			makeCaptureInstruction(3, 5, whiteColor, pawnKind),
+			makeCaptureInstruction(3, 5, blackColor, pawnKind),
 			makeMoveInstruction(2, 4, 0, 2),
-			makeCaptureInstruction(1, 3, whiteColor, pawnKind),
+			makeCaptureInstruction(1, 3, blackColor, pawnKind),
 			makeCrownInstruction(0, 2),
 		},
 		{
 			makeMoveInstruction(4, 6, 2, 4),
-			makeCaptureInstruction(3, 5, whiteColor, pawnKind),
+			makeCaptureInstruction(3, 5, blackColor, pawnKind),
 			makeMoveInstruction(2, 4, 4, 2),
-			makeCaptureInstruction(3, 3, whiteColor, kingKind),
+			makeCaptureInstruction(3, 3, blackColor, pawnKind),
 		},
 		{
 			makeMoveInstruction(6, 4, 4, 2),
-			makeCaptureInstruction(5, 3, whiteColor, kingKind),
+			makeCaptureInstruction(5, 3, blackColor, pawnKind),
 			makeMoveInstruction(4, 2, 2, 4),
-			makeCaptureInstruction(3, 3, whiteColor, kingKind),
+			makeCaptureInstruction(3, 3, blackColor, pawnKind),
 			makeMoveInstruction(2, 4, 0, 2),
-			makeCaptureInstruction(1, 3, whiteColor, pawnKind),
+			makeCaptureInstruction(1, 3, blackColor, pawnKind),
 			makeCrownInstruction(0, 2),
 		},
 	}
-	blackMovesGot := generateCaptureMoves(b, blackColor)
+	whiteMovesGot := generateCaptureMoves(b, whiteColor)
 
-	assertEqualMoves(t, blackMovesGot, blackMovesWant)
+	assertEqualMoves(t, whiteMovesGot, whiteMovesWant)
 }
 
 func TestCaptureThroughCrowningRowDoesntCrown(t *testing.T) {
