@@ -76,9 +76,11 @@ func (b *board) String() string {
 		for col := byte(0); col < 8; col++ {
 			if b.isOccupied(row, col) {
 				buf.WriteRune(pieceToRune(b.get(row, col)))
+			} else if tileColor(row, col) == blackColor {
+				buf.WriteRune('_')
 			} else {
-				buf.WriteRune('.')
-			}
+				buf.WriteRune(' ')
+      }
 		}
 		buf.WriteRune('0' + rune(row))
 	}
