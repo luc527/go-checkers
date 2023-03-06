@@ -67,6 +67,8 @@ func (b *board) String() string {
 	for col := byte(0); col < 8; col++ {
 		buf.WriteRune('0' + rune(col))
 	}
+	buf.WriteRune(' ')
+	// for alignment when writing side by side
 
 	for row := byte(0); row < 8; row++ {
 		buf.WriteString("\n")
@@ -86,6 +88,7 @@ func (b *board) String() string {
 	for col := byte(0); col < 8; col++ {
 		buf.WriteRune('0' + rune(col))
 	}
+	buf.WriteRune(' ')
 	buf.WriteRune('\n')
 
 	return buf.String()

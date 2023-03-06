@@ -293,4 +293,61 @@ func TestCaptureKingMoveOneDiagonal(t *testing.T) {
 	assertEqualMoves(t, movesGot, movesWant)
 }
 
+func TestAllowOverPreviousTile(t *testing.T) {
+	b := new(board)
+
+	b.set(4, 7, whiteColor, pawnKind)
+	b.set(3, 6, blackColor, pawnKind)
+	b.set(1, 6, blackColor, pawnKind)
+	b.set(3, 4, blackColor, pawnKind)
+	b.set(1, 4, blackColor, pawnKind)
+	b.set(3, 2, blackColor, pawnKind)
+	b.set(1, 2, blackColor, pawnKind)
+
+	t.Log("\n" + b.String())
+
+	movesWant := [][]instruction{
+		{
+			makeMoveInstruction(4, 7, 2, 5),
+			makeCaptureInstruction(3, 6, blackColor, pawnKind),
+			makeMoveInstruction(2, 5, 0, 7),
+			makeCaptureInstruction(1, 6, blackColor, pawnKind),
+			makeCrownInstruction(0, 7),
+		},
+		{
+			makeMoveInstruction(4, 7, 2, 5),
+			makeCaptureInstruction(3, 6, blackColor, pawnKind),
+			makeMoveInstruction(2, 5, 0, 3),
+			makeCaptureInstruction(1, 4, blackColor, pawnKind),
+			makeMoveInstruction(0, 3, 2, 1),
+			makeCaptureInstruction(1, 2, blackColor, pawnKind),
+			makeMoveInstruction(2, 1, 4, 3),
+			makeCaptureInstruction(3, 2, blackColor, pawnKind),
+			makeMoveInstruction(4, 3, 2, 5),
+			makeCaptureInstruction(3, 4, blackColor, pawnKind),
+			makeMoveInstruction(2, 5, 0, 7),
+			makeCaptureInstruction(1, 6, blackColor, pawnKind),
+			makeCrownInstruction(0, 7),
+		},
+		{
+			makeMoveInstruction(4, 7, 2, 5),
+			makeCaptureInstruction(3, 6, blackColor, pawnKind),
+			makeMoveInstruction(2, 5, 4, 3),
+			makeCaptureInstruction(3, 4, blackColor, pawnKind),
+			makeMoveInstruction(4, 3, 2, 1),
+			makeCaptureInstruction(3, 2, blackColor, pawnKind),
+			makeMoveInstruction(2, 1, 0, 3),
+			makeCaptureInstruction(1, 2, blackColor, pawnKind),
+			makeMoveInstruction(0, 3, 2, 5),
+			makeCaptureInstruction(1, 4, blackColor, pawnKind),
+			makeMoveInstruction(2, 5, 0, 7),
+			makeCaptureInstruction(1, 6, blackColor, pawnKind),
+			makeCrownInstruction(0, 7),
+		},
+	}
+	movesGot := generateCaptureMoves(b, whiteColor)
+
+	assertEqualMoves(t, movesGot, movesWant)
+}
+
 // TODO use some examples from http://www.damasciencias.com.br/regras-jogo-de-damas/ as tests
