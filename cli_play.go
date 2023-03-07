@@ -54,8 +54,8 @@ func play() {
 		text := input.Text()
 		i, err := strconv.Atoi(text)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			break
+			fmt.Printf("Invalid move, try again (%v)\n", err)
+			goto askForMove // Considered harmful!
 		}
 		if i < 0 || i >= len(moves) {
 			fmt.Println("Invalid move, try again")
