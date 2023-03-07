@@ -10,6 +10,8 @@ import (
 func play() {
 
 	// TODO no game state representation yet
+	// ^ consider that the game state has to be able to undo as well
+	// and that includes undoing a win, draw etc. in general rolling black every part of the state
 	// also: need to detect draws.
 
 	b := new(board)
