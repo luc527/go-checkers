@@ -33,6 +33,13 @@ func (c color) String() string {
 	}
 }
 
+func (c color) opposite() color {
+	if c == whiteColor {
+		return blackColor
+	}
+	return whiteColor
+}
+
 func (k kind) String() string {
 	if k == kingKind {
 		return "king"
@@ -80,7 +87,7 @@ func (b *board) String() string {
 				buf.WriteRune('_')
 			} else {
 				buf.WriteRune(' ')
-      }
+			}
 		}
 		buf.WriteRune('0' + rune(row))
 	}
@@ -178,4 +185,40 @@ func (b *board) copy() *board {
 	c.white = b.white
 	c.king = b.king
 	return &c
+}
+
+type pieceCount struct {
+	whitePawns int8
+	blackPawns int8
+	whiteKings int8
+	blackKings int8
+}
+
+func (b *board) pieceCount() pieceCount {
+	var c pieceCount
+
+	for row := byte(0); row < 8; row++ {
+		for col := byte(0); col < 8; col++ {
+			if !b.isOccupied(row, col) {
+				continue
+			}
+
+			color, kind := b.get(row, col)
+			if color == whiteColor {
+				if kind == pawnKind {
+					c.whitePawns++
+				} else {
+					c.whiteKings++
+				}
+			} else {
+				if kind == pawnKind {
+					c.blackPawns++
+				} else {
+					c.blackKings++
+				}
+			}
+		}
+	}
+
+	return c
 }
