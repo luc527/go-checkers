@@ -16,10 +16,13 @@ const (
 	bestNotMandatory = bestRule(false)
 )
 
-func generateSimplePawnMoves(iss [][]instruction, b *board, row, col byte, color color) [][]instruction {
+// ply: a single action a player can execute when it's their turn to play
+type ply []instruction
+
+func generateSimplePawnPlies(ps []ply, b *board, row, col byte, color color) []ply {
 	drow := byte(int8(row) + forward[color])
 	if drow >= 8 {
-		return iss
+		return ps
 	}
 	crown := crowningRow[color] == drow
 	for _, dir := range offBoth {
@@ -32,12 +35,12 @@ func generateSimplePawnMoves(iss [][]instruction, b *board, row, col byte, color
 		if crown {
 			is = append(is, makeCrownInstruction(drow, dcol))
 		}
-		iss = append(iss, is)
+		ps = append(ps, ply(is))
 	}
-	return iss
+	return ps
 }
 
-func generateSimpleKingMoves(iss [][]instruction, b *board, row, col byte, color color) [][]instruction {
+func generateSimpleKingPlies(ps []ply, b *board, row, col byte, color color) []ply {
 	for _, roff := range offBoth {
 		for _, coff := range offBoth {
 			dist := int8(1)
@@ -48,17 +51,17 @@ func generateSimpleKingMoves(iss [][]instruction, b *board, row, col byte, color
 				}
 
 				is := []instruction{makeMoveInstruction(row, col, drow, dcol)}
-				iss = append(iss, is)
+				ps = append(ps, ply(is))
 
 				dist++
 			}
 		}
 	}
 
-	return iss
+	return ps
 }
 
-func generateSimpleMoves(iss [][]instruction, b *board, player color) [][]instruction {
+func generateSimplePlies(ps []ply, b *board, player color) []ply {
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
 			if !b.isOccupied(row, col) {
@@ -71,20 +74,20 @@ func generateSimpleMoves(iss [][]instruction, b *board, player color) [][]instru
 			}
 
 			if kind == pawnKind {
-				iss = generateSimplePawnMoves(iss, b, row, col, color)
+				ps = generateSimplePawnPlies(ps, b, row, col, color)
 			} else {
-				iss = generateSimpleKingMoves(iss, b, row, col, color)
+				ps = generateSimpleKingPlies(ps, b, row, col, color)
 			}
 		}
 	}
 
-	return iss
+	return ps
 }
 
 // WARNING
 // generating captures modifies the board!
 
-func followPawnCaptures(iss [][]instruction, stack []instruction, b *board, row, col byte, color color) [][]instruction {
+func followPawnCaptures(ps []ply, stack []instruction, b *board, row, col byte, color color) []ply {
 	// sink: there are no more captures available from here
 	sink := true
 
@@ -111,7 +114,7 @@ func followPawnCaptures(iss [][]instruction, stack []instruction, b *board, row,
 			b.move(row, col, drow, dcol)
 			b.clear(mrow, mcol)
 
-			iss = followPawnCaptures(iss, stack, b, drow, dcol, color)
+			ps = followPawnCaptures(ps, stack, b, drow, dcol, color)
 
 			// undo
 			b.set(mrow, mcol, mcolor, mkind)
@@ -139,12 +142,12 @@ func followPawnCaptures(iss [][]instruction, stack []instruction, b *board, row,
 		if crown {
 			is[isLen-1] = makeCrownInstruction(row, col)
 		}
-		iss = append(iss, is)
+		ps = append(ps, ply(is))
 	}
-	return iss
+	return ps
 }
 
-func followKingCaptures(iss [][]instruction, stack []instruction, b *board, row, col byte, player color) [][]instruction {
+func followKingCaptures(ps []ply, stack []instruction, b *board, row, col byte, player color) []ply {
 	sink := true
 
 	for _, roff := range offBoth {
@@ -188,7 +191,7 @@ func followKingCaptures(iss [][]instruction, stack []instruction, b *board, row,
 					b.move(row, col, irow, icol)
 					b.clear(crow, ccol)
 
-					iss = followKingCaptures(iss, stack, b, irow, icol, player)
+					ps = followKingCaptures(ps, stack, b, irow, icol, player)
 
 					// undo
 					b.set(crow, ccol, ccolor, ckind)
@@ -206,13 +209,13 @@ func followKingCaptures(iss [][]instruction, stack []instruction, b *board, row,
 	if sink && stack != nil {
 		is := make([]instruction, len(stack))
 		copy(is, stack)
-		iss = append(iss, is)
+		ps = append(ps, ply(is))
 	}
 
-	return iss
+	return ps
 }
 
-func generateCaptureMoves(iss [][]instruction, b *board, player color) [][]instruction {
+func generateCapturePlies(ps []ply, b *board, player color) []ply {
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
 			if !b.isOccupied(row, col) {
@@ -225,32 +228,32 @@ func generateCaptureMoves(iss [][]instruction, b *board, player color) [][]instr
 			}
 
 			if kind == pawnKind {
-				iss = followPawnCaptures(iss, nil, b, row, col, color)
+				ps = followPawnCaptures(ps, nil, b, row, col, color)
 			} else {
-				iss = followKingCaptures(iss, nil, b, row, col, color)
+				ps = followKingCaptures(ps, nil, b, row, col, color)
 			}
 		}
 	}
-	return iss
+	return ps
 }
 
-func generateMoves(b *board, player color, captureRule captureRule, bestRule bestRule) [][]instruction {
+func generatePlies(b *board, player color, captureRule captureRule, bestRule bestRule) []ply {
 
-	iss := generateCaptureMoves(nil, b, player)
+	ps := generateCapturePlies(nil, b, player)
 
 	capturesMandatory := captureRule == capturesMandatory
 	bestMandatory := bestRule == bestMandatory
 
-	if len(iss) == 0 || (!capturesMandatory && !bestMandatory) {
-		iss = generateSimpleMoves(iss, b, player)
+	if len(ps) == 0 || (!capturesMandatory && !bestMandatory) {
+		ps = generateSimplePlies(ps, b, player)
 	}
 
-	if len(iss) > 0 && bestMandatory {
-		captureCountPerMove := make([]int, len(iss))
+	if len(ps) > 0 && bestMandatory {
+		captureCountPerMove := make([]int, len(ps))
 		mostCaptures := 0
-		for k, is := range iss {
+		for k, p := range ps {
 			captureCount := 0
-			for _, i := range is {
+			for _, i := range p {
 				if i.t == captureInstruction {
 					captureCount++
 				}
@@ -261,14 +264,14 @@ func generateMoves(b *board, player color, captureRule captureRule, bestRule bes
 			}
 		}
 
-		var best [][]instruction
-		for k, is := range iss {
+		var best []ply
+		for k, p := range ps {
 			if captureCountPerMove[k] == mostCaptures {
-				best = append(best, is)
+				best = append(best, p)
 			}
 		}
-		iss = best
+		ps = best
 	}
 
-	return iss
+	return ps
 }

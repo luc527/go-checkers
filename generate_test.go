@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-func compareGeneratedMoves(
-	got [][]instruction,
-	want [][]instruction,
+func compareGeneratedPlies(
+	got []ply,
+	want []ply,
 ) (
 	extra []string,
 	missing []string,
@@ -38,8 +38,8 @@ func compareGeneratedMoves(
 	return
 }
 
-func assertEqualMoves(t *testing.T, got [][]instruction, want [][]instruction) {
-	extra, missing := compareGeneratedMoves(got, want)
+func assertEqualPlies(t *testing.T, got []ply, want []ply) {
+	extra, missing := compareGeneratedPlies(got, want)
 	if len(extra) > 0 {
 		t.Errorf("generated extra instruction lists:\n%s", strings.Join(extra, "\n"))
 	}
@@ -79,9 +79,9 @@ func TestSimplePawnMove(t *testing.T) {
 
 	t.Log("\n" + b.String())
 
-	blackMovesGot := generateSimpleMoves(nil, b, blackColor)
+	blackPliesGot := generateSimplePlies(nil, b, blackColor)
 
-	blackMovesWant := [][]instruction{
+	blackPliesWant := []ply{
 		{makeMoveInstruction(1, 1, 2, 2)},
 		{makeMoveInstruction(1, 1, 2, 0)},
 		{makeMoveInstruction(0, 2, 1, 3)},
@@ -96,9 +96,9 @@ func TestSimplePawnMove(t *testing.T) {
 			makeCrownInstruction(7, 5),
 		},
 	}
-	assertEqualMoves(t, blackMovesGot, blackMovesWant)
+	assertEqualPlies(t, blackPliesGot, blackPliesWant)
 
-	whiteMovesWant := [][]instruction{
+	whitePliesWant := []ply{
 		{makeMoveInstruction(6, 1, 5, 0)},
 		{makeMoveInstruction(6, 1, 5, 2)},
 		{makeMoveInstruction(7, 2, 6, 3)},
@@ -113,9 +113,9 @@ func TestSimplePawnMove(t *testing.T) {
 			makeCrownInstruction(0, 4),
 		},
 	}
-	whiteMovesGot := generateSimpleMoves(nil, b, whiteColor)
+	whitePliesGot := generateSimplePlies(nil, b, whiteColor)
 
-	assertEqualMoves(t, whiteMovesGot, whiteMovesWant)
+	assertEqualPlies(t, whitePliesGot, whitePliesWant)
 }
 
 func TestSimpleKingMove(t *testing.T) {
@@ -131,9 +131,9 @@ func TestSimpleKingMove(t *testing.T) {
 
 	t.Log("\n" + b.String())
 
-	whiteMovesGot := generateSimpleMoves(nil, b, whiteColor)
+	whitePliesGot := generateSimplePlies(nil, b, whiteColor)
 
-	whiteMovesWant := [][]instruction{
+	whitePliesWant := []ply{
 		//
 		// moving the white king at (5, 5)
 		//
@@ -161,9 +161,9 @@ func TestSimpleKingMove(t *testing.T) {
 		{makeMoveInstruction(0, 7, 7, 0)},
 	}
 
-	assertEqualMoves(t, whiteMovesGot, whiteMovesWant)
+	assertEqualPlies(t, whitePliesGot, whitePliesWant)
 
-	blackMovesWant := [][]instruction{
+	blackPliesWant := []ply{
 		//
 		// moving the black king at (2, 2)
 		//
@@ -180,9 +180,9 @@ func TestSimpleKingMove(t *testing.T) {
 		{makeMoveInstruction(2, 2, 1, 1)},
 		{makeMoveInstruction(2, 2, 0, 0)},
 	}
-	blackMovesGot := generateSimpleMoves(nil, b, blackColor)
+	blackPliesGot := generateSimplePlies(nil, b, blackColor)
 
-	assertEqualMoves(t, blackMovesGot, blackMovesWant)
+	assertEqualPlies(t, blackPliesGot, blackPliesWant)
 }
 
 func TestCapturePawnMove(t *testing.T) {
@@ -199,9 +199,9 @@ func TestCapturePawnMove(t *testing.T) {
 
 	t.Log("\n" + b.String())
 
-	blackMovesGot := generateCaptureMoves(nil, b, blackColor)
+	blackPliesGot := generateCapturePlies(nil, b, blackColor)
 
-	blackMovesWant := [][]instruction{
+	blackPliesWant := []ply{
 		{
 			makeMoveInstruction(3, 5, 5, 7),
 			makeCaptureInstruction(4, 6, whiteColor, pawnKind),
@@ -213,9 +213,9 @@ func TestCapturePawnMove(t *testing.T) {
 		},
 	}
 
-	assertEqualMoves(t, blackMovesGot, blackMovesWant)
+	assertEqualPlies(t, blackPliesGot, blackPliesWant)
 
-	whiteMovesWant := [][]instruction{
+	whitePliesWant := []ply{
 		{
 			makeMoveInstruction(4, 6, 2, 4),
 			makeCaptureInstruction(3, 5, blackColor, pawnKind),
@@ -239,9 +239,9 @@ func TestCapturePawnMove(t *testing.T) {
 			makeCrownInstruction(0, 2),
 		},
 	}
-	whiteMovesGot := generateCaptureMoves(nil, b, whiteColor)
+	whitePliesGot := generateCapturePlies(nil, b, whiteColor)
 
-	assertEqualMoves(t, whiteMovesGot, whiteMovesWant)
+	assertEqualPlies(t, whitePliesGot, whitePliesWant)
 }
 
 func TestCaptureThroughCrowningRowDoesntCrown(t *testing.T) {
@@ -257,7 +257,7 @@ func TestCaptureThroughCrowningRowDoesntCrown(t *testing.T) {
 
 	t.Log("\n" + b.String())
 
-	movesWant := [][]instruction{
+	pliesWant := []ply{
 		{
 			makeMoveInstruction(4, 7, 2, 5),
 			makeCaptureInstruction(3, 6, blackColor, pawnKind),
@@ -267,9 +267,9 @@ func TestCaptureThroughCrowningRowDoesntCrown(t *testing.T) {
 			makeCaptureInstruction(1, 2, blackColor, pawnKind),
 		},
 	}
-	movesGot := generateCaptureMoves(nil, b, whiteColor)
+	pliesGot := generateCapturePlies(nil, b, whiteColor)
 
-	assertEqualMoves(t, movesGot, movesWant)
+	assertEqualPlies(t, pliesGot, pliesWant)
 }
 
 func TestCaptureKingMoveOneDiagonal(t *testing.T) {
@@ -278,8 +278,8 @@ func TestCaptureKingMoveOneDiagonal(t *testing.T) {
 	b.set(3, 3, whiteColor, kingKind)
 	b.set(5, 5, blackColor, pawnKind)
 
-	movesGot := generateCaptureMoves(nil, b, whiteColor)
-	movesWant := [][]instruction{
+	pliesGot := generateCapturePlies(nil, b, whiteColor)
+	pliesWant := []ply{
 		{
 			makeMoveInstruction(3, 3, 6, 6),
 			makeCaptureInstruction(5, 5, blackColor, pawnKind),
@@ -290,7 +290,7 @@ func TestCaptureKingMoveOneDiagonal(t *testing.T) {
 		},
 	}
 
-	assertEqualMoves(t, movesGot, movesWant)
+	assertEqualPlies(t, pliesGot, pliesWant)
 }
 
 func TestAllowOverPreviousTile(t *testing.T) {
@@ -306,7 +306,7 @@ func TestAllowOverPreviousTile(t *testing.T) {
 
 	t.Log("\n" + b.String())
 
-	movesWant := [][]instruction{
+	pliesWant := []ply{
 		{
 			makeMoveInstruction(4, 7, 2, 5),
 			makeCaptureInstruction(3, 6, blackColor, pawnKind),
@@ -345,7 +345,7 @@ func TestAllowOverPreviousTile(t *testing.T) {
 			makeCrownInstruction(0, 7),
 		},
 	}
-	movesGot := generateCaptureMoves(nil, b, whiteColor)
+	pliesGot := generateCapturePlies(nil, b, whiteColor)
 
-	assertEqualMoves(t, movesGot, movesWant)
+	assertEqualPlies(t, pliesGot, pliesWant)
 }

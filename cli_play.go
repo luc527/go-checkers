@@ -30,7 +30,7 @@ func play() {
 	for !gameOver {
 		fmt.Printf("It's %s's turn!\n", toPlay)
 
-		moves := generateMoves(b, toPlay, captureRule, bestRule)
+		moves := generatePlies(b, toPlay, captureRule, bestRule)
 
 		if len(moves) == 0 {
 			gameOver = true
@@ -83,6 +83,8 @@ func play() {
 
 		toPlay = toPlay.opposite()
 	}
+
+	fmt.Println(b)
 
 	if gameOver {
 		if draw {

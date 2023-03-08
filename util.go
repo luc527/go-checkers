@@ -37,16 +37,16 @@ func sideBySide(boards []string) {
 
 }
 
-func showcaseMoves(b *board, iss [][]instruction) {
-	for _, is := range iss {
-		boards := make([]string, 0, len(is))
-		for k := range is {
-			performInstructions(b, is[k:k+1])
+func showcasePlies(b *board, ps []ply) {
+	for _, p := range ps {
+		boards := make([]string, 0, len(p))
+		for k := range p {
+			performInstructions(b, p[k:k+1])
 			boards = append(boards, b.String())
 		}
-		fmt.Println(is)
+		fmt.Println(p)
 		sideBySide(boards)
-		undoInstructions(b, is)
+		undoInstructions(b, p)
 		fmt.Println()
 	}
 }
@@ -63,8 +63,8 @@ func example0() {
 
 	fmt.Println(b)
 
-	iss := generateCaptureMoves(nil, b, blackColor)
-	showcaseMoves(b, iss)
+	iss := generateCapturePlies(nil, b, blackColor)
+	showcasePlies(b, iss)
 }
 
 func example1() {
@@ -103,8 +103,8 @@ func example1() {
 			fmt.Printf("=========     best%smandatory =========\n", bString)
 			fmt.Printf("==================%s===================\n", "=====")
 
-			iss := generateMoves(b, blackColor, capRule, bRule)
-			showcaseMoves(b, iss)
+			iss := generatePlies(b, blackColor, capRule, bRule)
+			showcasePlies(b, iss)
 		}
 	}
 }
