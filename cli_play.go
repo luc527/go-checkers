@@ -9,39 +9,32 @@ import (
 
 func play() {
 
-	// TODO no game state representation yet
-	// ^ consider that the game state has to be able to undo as well
-	// and that includes undoing a win, draw etc. in general rolling black every part of the state
-	// also: need to detect draws.
-
-	b := new(board)
-	placeInitialPieces(b)
-
-	captureRule := capturesMandatory
-	bestRule := bestNotMandatory
-
-	toPlay := whiteColor
-	gameOver := false
-	draw := false
-	var winner color
+	g := newGame(capturesMandatory, bestNotMandatory)
 
 	input := bufio.NewScanner(os.Stdin)
 
-	for !gameOver {
-		fmt.Printf("It's %s's turn!\n", toPlay)
+	quit := false
 
-		moves := generatePlies(b, toPlay, captureRule, bestRule)
+	for !quit {
+		fmt.Printf("It's %s's turn!\n", g.toPlay)
 
-		if len(moves) == 0 {
-			gameOver = true
-			winner = toPlay.opposite()
+		if g.isOver() {
+			if !g.hasWinner() {
+				fmt.Println("It's a draw, no one wins")
+			} else {
+				fmt.Printf("The winner is %s!\n", g.winner())
+			}
 		}
 
-		fmt.Println(b)
-
-		for i, m := range moves {
-			fmt.Printf("[%2d]: %s\n", i, instructionsToString(m))
+		for i, p := range g.plies {
+			fmt.Printf("[%2d]: %s\n", i, p.String())
 		}
+		if len(g.history) > 0 {
+			fmt.Println("[ u]: undo last move")
+		}
+		fmt.Println("[ q]: quit")
+
+		fmt.Println(g.board)
 
 	askForMove:
 		fmt.Print("Your choice: ")
@@ -54,45 +47,21 @@ func play() {
 		}
 
 		text := input.Text()
-		i, err := strconv.Atoi(text)
-		if err != nil {
-			fmt.Printf("Invalid move, try again (%v)\n", err)
-			goto askForMove // Considered harmful!
-		}
-		if i < 0 || i >= len(moves) {
-			fmt.Println("Invalid move, try again")
-			goto askForMove // Considered harmful!
-		}
-
-		moveTaken := moves[i]
-
-		performInstructions(b, moveTaken)
-
-		count := b.pieceCount()
-
-		whites := count.whitePawns + count.whiteKings
-		blacks := count.blackPawns + count.blackKings
-
-		if whites == 0 {
-			gameOver = true
-			winner = blackColor
-		} else if blacks == 0 {
-			gameOver = true
-			winner = whiteColor
-		}
-
-		toPlay = toPlay.opposite()
-	}
-
-	fmt.Println(b)
-
-	if gameOver {
-		if draw {
-			fmt.Println("It's a draw, no one wins")
+		if text == "u" {
+			g.undoLastPly()
+		} else if text == "q" {
+			quit = true
 		} else {
-			fmt.Printf("The winner is %s!\n", winner)
+			i, err := strconv.Atoi(text)
+			if err != nil {
+				fmt.Printf("Invalid move, try again (%v)\n", err)
+				goto askForMove // Considered harmful!
+			}
+			if i < 0 || i >= len(g.plies) {
+				fmt.Println("Invalid move, try again")
+				goto askForMove // Considered harmful!
+			}
+			g.doPly(g.plies[i])
 		}
-	} else {
-		fmt.Println("Oops")
 	}
 }

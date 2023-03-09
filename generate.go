@@ -19,6 +19,10 @@ const (
 // ply: a single action a player can execute when it's their turn to play
 type ply []instruction
 
+func (p ply) String() string {
+	return instructionsToString(p)
+}
+
 func generateSimplePawnPlies(ps []ply, b *board, row, col byte, color color) []ply {
 	drow := byte(int8(row) + forward[color])
 	if drow >= 8 {
