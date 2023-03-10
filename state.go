@@ -49,9 +49,8 @@ func (g *game) hasWinner() bool {
 func (g *game) winner() color {
 	if g.state == whiteWonState {
 		return whiteColor
-	} else {
-		return blackColor
 	}
+	return blackColor
 }
 
 func (g *game) doPly(p ply) {
@@ -103,4 +102,49 @@ func (g *game) undoLastPly() {
 	g.rememberedState = g.history[len(g.history)-1]
 
 	g.history = g.history[:len(g.history)-1]
+}
+
+func (g *game) deepCopy() *game {
+	return &game{
+		captureRule: g.captureRule,
+		bestRule:    g.bestRule,
+		rememberedState: rememberedState{
+			state:   g.state,
+			plies:   g.plies,
+			lastPly: g.lastPly,
+		},
+		board:   g.board.copy(),
+		toPlay:  g.toPlay,
+		history: g.history,
+	}
+}
+
+func (g *game) equals(o *game) bool {
+	if g == nil && o == nil {
+		return true
+	}
+	if g == nil || o == nil {
+		return false
+	}
+
+	pliesEq := func(a []ply, b []ply) bool {
+		if len(a) != len(b) {
+			return false
+		}
+		for i, x := range a {
+			y := b[i]
+			if !sliceEq(x, y) {
+				return false
+			}
+		}
+		return true
+	}
+
+	return g.captureRule == o.captureRule &&
+		g.bestRule == o.bestRule &&
+		g.state == o.state &&
+		g.toPlay == o.toPlay &&
+		g.board.equals(o.board) &&
+		sliceEq(g.lastPly, o.lastPly) &&
+		pliesEq(g.plies, o.plies)
 }

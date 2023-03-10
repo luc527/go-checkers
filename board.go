@@ -222,3 +222,27 @@ func (b *board) pieceCount() pieceCount {
 
 	return c
 }
+
+func (b *board) equals(o *board) bool {
+	if b == nil && o == nil {
+		return true
+	}
+	if b == nil || o == nil {
+		return false
+	}
+	for row := byte(0); row < 8; row++ {
+		for col := byte(0); col < 8; col++ {
+			if b.isOccupied(row, col) != o.isOccupied(row, col) {
+				return false
+			}
+			if b.isOccupied(row, col) {
+				bc, bk := b.get(row, col)
+				oc, ok := o.get(row, col)
+				if bc != oc || bk != ok {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
