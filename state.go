@@ -11,9 +11,11 @@ const (
 
 // the part of the state that you need to explicitely remember in order to undo
 type rememberedState struct {
-	state   gameState
-	plies   []ply
-	lastPly ply
+	state               gameState
+	plies               []ply
+	lastPly             ply
+	roundsSinceCapture  int
+	roundsSincePawnMove int
 }
 
 type game struct {
@@ -35,6 +37,8 @@ func newGame(captureRule captureRule, bestRule bestRule) *game {
 	g.bestRule = bestRule
 	g.plies = generatePlies(g.board, g.toPlay, captureRule, bestRule)
 	g.lastPly = nil
+	g.roundsSinceCapture = 0
+	g.roundsSincePawnMove = 0
 	return &g
 }
 
@@ -86,8 +90,44 @@ func (g *game) doPly(p ply) {
 		}
 	}
 
-	// TODO draw detection
-	// involves keeping more state variables in the rememberedState
+	//
+	// Draw detection
+	// TODO test
+	//
+
+	isCapture := false
+	isPawnMove := false
+
+	for _, ins := range p {
+		if ins.t == captureInstruction {
+			isCapture = true
+		}
+		if ins.t == moveInstruction {
+			_, kind := g.board.get(ins.row, ins.col)
+			if kind == pawnKind {
+				isPawnMove = true
+			}
+		}
+	}
+
+	if isCapture {
+		g.roundsSinceCapture = 0
+	} else {
+		g.roundsSinceCapture++
+	}
+
+	if isPawnMove {
+		g.roundsSincePawnMove = 0
+	} else {
+		g.roundsSincePawnMove++
+	}
+
+	// TODO also:
+	// roundsInSpecialMove
+
+	if g.roundsSincePawnMove >= 20 && g.roundsSinceCapture >= 20 {
+		g.state = drawState
+	}
 
 	// TODO also, find a better name than 'rememberedState', it's a little annoying to type
 }
