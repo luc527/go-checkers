@@ -13,6 +13,7 @@ func play() {
 
 	input := bufio.NewScanner(os.Stdin)
 
+	// if the game has ended the player can still undo their last action, so we don't quit yet
 	quit := false
 
 	for !quit {
@@ -58,7 +59,7 @@ func play() {
 				goto askForMove // Considered harmful!
 			}
 			if i < 0 || i >= len(g.plies) {
-				fmt.Println("Invalid move, try again")
+				fmt.Println("Invalid move, try again (out of bounds)")
 				goto askForMove // Considered harmful!
 			}
 			g.doPly(g.plies[i])

@@ -11,7 +11,7 @@ func TestDoUndoState(t *testing.T) {
 	var states []*game
 
 	for !g.isOver() {
-		states = append(states, g.deepCopy())
+		states = append(states, g.deepishCopy())
 		r := rand.Int() % len(g.plies)
 		t.Log(g.plies[r])
 		g.doPly(g.plies[r])

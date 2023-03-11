@@ -9,7 +9,7 @@ const (
 	drawState
 )
 
-// the part of the state that you need to explicitely remember in order to undo
+// the part of the state that you need to remember in order to undo
 type rememberedState struct {
 	state               gameState
 	plies               []ply
@@ -27,19 +27,33 @@ type game struct {
 	history []rememberedState
 }
 
-func newGame(captureRule captureRule, bestRule bestRule) *game {
+func newGameWithBoardAndPlayer(captureRule captureRule, bestRule bestRule, initialBoard *board, initalPlayer color) *game {
 	var g game
-	g.board = new(board)
-	placeInitialPieces(g.board)
-	g.toPlay = whiteColor
-	g.state = playingState
+
+	if initialBoard == nil {
+		g.board = new(board)
+		placeInitialPieces(g.board)
+	} else {
+		g.board = initialBoard
+	}
+
 	g.captureRule = captureRule
 	g.bestRule = bestRule
-	g.plies = generatePlies(g.board, g.toPlay, captureRule, bestRule)
+
+	g.toPlay = initalPlayer
+
 	g.lastPly = nil
 	g.roundsSinceCapture = 0
 	g.roundsSincePawnMove = 0
+
+	g.boardChanged()
+
 	return &g
+
+}
+
+func newGame(captureRule captureRule, bestRule bestRule) *game {
+	return newGameWithBoardAndPlayer(captureRule, bestRule, nil, whiteColor)
 }
 
 func (g *game) isOver() bool {
@@ -63,37 +77,11 @@ func (g *game) doPly(p ply) {
 
 	// save current state in the history
 	g.history = append(g.history, g.rememberedState)
-
-	g.plies = nil
 	g.lastPly = p
 
-	count := g.board.pieceCount()
-	whiteCount := count.whiteKings + count.whitePawns
-	blackCount := count.blackKings + count.blackPawns
+	g.boardChanged()
 
-	if whiteCount == 0 {
-		g.state = blackWonState
-	} else if blackCount == 0 {
-		g.state = whiteWonState
-	}
-
-	if g.isOver() {
-		return
-	}
-
-	g.plies = generatePlies(g.board, g.toPlay, g.captureRule, g.bestRule)
-	if len(g.plies) == 0 {
-		if g.toPlay == whiteColor {
-			g.state = blackWonState
-		} else {
-			g.state = whiteWonState
-		}
-	}
-
-	//
 	// Draw detection
-	// TODO test
-	//
 
 	isCapture := false
 	isPawnMove := false
@@ -122,14 +110,11 @@ func (g *game) doPly(p ply) {
 		g.roundsSincePawnMove++
 	}
 
-	// TODO also:
-	// roundsInSpecialMove
+	// TODO roundsInSpecialMove
 
 	if g.roundsSincePawnMove >= 20 && g.roundsSinceCapture >= 20 {
 		g.state = drawState
 	}
-
-	// TODO also, find a better name than 'rememberedState', it's a little annoying to type
 }
 
 func (g *game) undoLastPly() {
@@ -144,7 +129,9 @@ func (g *game) undoLastPly() {
 	g.history = g.history[:len(g.history)-1]
 }
 
-func (g *game) deepCopy() *game {
+func (g *game) deepishCopy() *game {
+	// plies, lastPly, history all shallow-copied
+	// board deep-copied
 	return &game{
 		captureRule: g.captureRule,
 		bestRule:    g.bestRule,
@@ -187,4 +174,29 @@ func (g *game) equals(o *game) bool {
 		g.board.equals(o.board) &&
 		sliceEq(g.lastPly, o.lastPly) &&
 		pliesEq(g.plies, o.plies)
+}
+
+func (g *game) boardChanged() {
+	count := g.board.pieceCount()
+	whiteCount := count.whiteKings + count.whitePawns
+	blackCount := count.blackKings + count.blackPawns
+
+	if whiteCount == 0 {
+		g.state = blackWonState
+	} else if blackCount == 0 {
+		g.state = whiteWonState
+	}
+
+	if g.isOver() {
+		return
+	}
+
+	g.plies = generatePlies(g.board, g.toPlay, g.captureRule, g.bestRule)
+	if len(g.plies) == 0 {
+		if g.toPlay == whiteColor {
+			g.state = blackWonState
+		} else {
+			g.state = whiteWonState
+		}
+	}
 }
