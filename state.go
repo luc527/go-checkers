@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type gameState byte
 
 const (
@@ -8,6 +10,21 @@ const (
 	blackWonState
 	drawState
 )
+
+func (s gameState) String() string {
+	switch s {
+	case playingState:
+		return "playing"
+	case whiteWonState:
+		return "white won"
+	case blackWonState:
+		return "black won"
+	case drawState:
+		return "draw"
+	default:
+		panic(fmt.Sprintf("Invalid game state: %d", s))
+	}
+}
 
 // the part of the state that you need to remember in order to undo
 type rememberedState struct {
@@ -22,12 +39,13 @@ type game struct {
 	captureRule
 	bestRule
 	rememberedState
-	board   *board
-	toPlay  color
-	history []rememberedState
+	stagnantTurnsToDraw int // stagnant here means no captures and no king moves
+	board               *board
+	toPlay              color
+	history             []rememberedState
 }
 
-func newGameWithBoardAndPlayer(captureRule captureRule, bestRule bestRule, initialBoard *board, initalPlayer color) *game {
+func newCustomGame(captureRule captureRule, bestRule bestRule, stagnantTurnsToDraw int, initialBoard *board, initalPlayer color) *game {
 	var g game
 
 	if initialBoard == nil {
@@ -39,6 +57,7 @@ func newGameWithBoardAndPlayer(captureRule captureRule, bestRule bestRule, initi
 
 	g.captureRule = captureRule
 	g.bestRule = bestRule
+	g.stagnantTurnsToDraw = stagnantTurnsToDraw
 
 	g.toPlay = initalPlayer
 
@@ -53,7 +72,7 @@ func newGameWithBoardAndPlayer(captureRule captureRule, bestRule bestRule, initi
 }
 
 func newGame(captureRule captureRule, bestRule bestRule) *game {
-	return newGameWithBoardAndPlayer(captureRule, bestRule, nil, whiteColor)
+	return newCustomGame(captureRule, bestRule, 20, nil, whiteColor)
 }
 
 func (g *game) isOver() bool {
@@ -72,6 +91,11 @@ func (g *game) winner() color {
 }
 
 func (g *game) doPly(p ply) {
+	// maybe it'd be safer for doPly to receive an index into the g.plies slice
+	// because there's no guarantee the given ply is one in the slice,
+	// so it can be invalid (e.g. moving from an empty position etc.)
+	// but idk if it would work with minimax
+
 	performInstructions(g.board, p)
 	g.toPlay = g.toPlay.opposite()
 
@@ -110,9 +134,9 @@ func (g *game) doPly(p ply) {
 		g.roundsSincePawnMove++
 	}
 
-	// TODO roundsInSpecialMove
+	// TODO roundsInSpecialEnding
 
-	if g.roundsSincePawnMove >= 20 && g.roundsSinceCapture >= 20 {
+	if g.roundsSincePawnMove >= g.stagnantTurnsToDraw && g.roundsSinceCapture >= g.stagnantTurnsToDraw {
 		g.state = drawState
 	}
 }
@@ -129,7 +153,7 @@ func (g *game) undoLastPly() {
 	g.history = g.history[:len(g.history)-1]
 }
 
-func (g *game) deepishCopy() *game {
+func (g *game) Copy() *game {
 	// plies, lastPly, history all shallow-copied
 	// board deep-copied
 	return &game{

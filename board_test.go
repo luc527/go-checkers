@@ -151,3 +151,75 @@ func TestInitialPieces(t *testing.T) {
 		}
 	}
 }
+
+func TestDecodeBoard(t *testing.T) {
+
+	s := `
+		..#
+		...o..@
+		.....
+		..x...........o
+		
+		1234
+
+
+
+
+		..x..
+		...
+		...
+		...
+		...@
+	`
+
+	b := decodeBoard(s)
+
+	t.Log("\n" + b.String())
+
+	type coord struct {
+		row, col byte
+	}
+
+	type piece struct {
+		color
+		kind
+	}
+
+	expect := make(map[coord]piece)
+	expect[coord{0, 2}] = piece{blackColor, kingKind}
+	expect[coord{1, 3}] = piece{whiteColor, pawnKind}
+	expect[coord{1, 6}] = piece{whiteColor, kingKind}
+	expect[coord{3, 2}] = piece{blackColor, pawnKind}
+	expect[coord{3, 2}] = piece{blackColor, pawnKind}
+	expect[coord{5, 2}] = piece{blackColor, pawnKind}
+
+	for row := byte(0); row < 8; row++ {
+		for col := byte(0); col < 8; col++ {
+			expectedPiece, expectOccupied := expect[coord{row, col}]
+
+			if expectOccupied {
+				color, kind := b.get(row, col)
+				if !b.isOccupied(row, col) {
+					t.Errorf("expected (%d %d) to containt something but it's empty", row, col)
+				} else if color != expectedPiece.color || kind != expectedPiece.kind {
+					t.Errorf(
+						"expected a %s %s at (%d, %d) but it contains a %s %s",
+						expectedPiece.color, expectedPiece.kind,
+						row, col,
+						color, kind,
+					)
+				}
+			} else {
+				if b.isOccupied(row, col) {
+					color, kind := b.get(row, col)
+					t.Errorf(
+						"expected (%d, %d) to be empty but it contains a %s, %s",
+						row, col,
+						color, kind,
+					)
+				}
+			}
+		}
+	}
+
+}

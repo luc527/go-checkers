@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"strings"
 )
 
 type color byte
@@ -61,9 +62,11 @@ func pieceToRune(c color, k kind) rune {
 		}
 		return 'o'
 	}
+	//black
 	if k == kingKind {
 		return '#'
 	}
+	//pawn
 	return 'x'
 }
 
@@ -245,4 +248,51 @@ func (b *board) equals(o *board) bool {
 		}
 	}
 	return true
+}
+
+func decodeBoard(s string) *board {
+	rawLines := strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n")
+
+	// trim all liens and filter empty ones
+	var lines []string
+	for _, line := range rawLines {
+		line = strings.Trim(line, " \t")
+		if line != "" {
+			lines = append(lines, line)
+		}
+	}
+
+	b := new(board)
+
+	// parse lines rawLines
+	maxRow := 8
+	if len(lines) < 8 {
+		maxRow = len(lines)
+	}
+
+	for row := 0; row < maxRow; row++ {
+		line := lines[row]
+
+		// can't count on len(line) because it counts bytes and not unicode runes
+		col := 0
+		for _, cell := range line {
+			if col >= 8 {
+				break
+			}
+
+			if cell == 'x' {
+				b.set(byte(row), byte(col), blackColor, pawnKind)
+			} else if cell == '#' {
+				b.set(byte(row), byte(col), blackColor, kingKind)
+			} else if cell == 'o' {
+				b.set(byte(row), byte(col), whiteColor, pawnKind)
+			} else if cell == '@' {
+				b.set(byte(row), byte(col), whiteColor, kingKind)
+			}
+
+			col++
+		}
+	}
+
+	return b
 }

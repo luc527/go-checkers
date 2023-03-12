@@ -90,6 +90,7 @@ func generateSimplePlies(ps []ply, b *board, player color) []ply {
 
 // WARNING
 // generating captures modifies the board!
+// the initial state is preserved at the end, but it modifies the board in order to generate the captures
 
 func followPawnCaptures(ps []ply, stack []instruction, b *board, row, col byte, color color) []ply {
 	// sink: there are no more captures available from here
@@ -134,7 +135,7 @@ func followPawnCaptures(ps []ply, stack []instruction, b *board, row, col byte, 
 		}
 	}
 
-	// stack is nil on the first call where no captures have been made yet
+	// stack is nil at the first call when no captures have been made yet
 	if sink && stack != nil {
 		isLen := len(stack)
 		crown := row == crowningRow[color]
