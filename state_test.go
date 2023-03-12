@@ -135,7 +135,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		ooooooo
 	`))
 	assertGameState(t, g, playingState)
-	// at this point roundsSincePawnMove=0, roundsSinceCapture=1
+	// at this point turnsSincePawnMove=0, turnsSinceCapture=1
 
 	g.doPly(ply{makeMoveInstruction(0, 6, 1, 5)})
 	assertEqualBoards(t, g.board, decodeBoard(`
@@ -149,7 +149,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		ooooooo
 	`))
 	assertGameState(t, g, playingState)
-	// at this point roundsSincePawnMove=1, roundsSinceCapture=2
+	// at this point turnsSincePawnMove=1, turnsSinceCapture=2
 
 	g.doPly(ply{makeMoveInstruction(4, 4, 6, 2)})
 	assertEqualBoards(t, g.board, decodeBoard(`
@@ -163,7 +163,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		ooooooo
 	`))
 	assertGameState(t, g, playingState)
-	// at this point roundsSincePawnMove=2, roundsSinceCapture=3
+	// at this point turnsSincePawnMove=2, turnsSinceCapture=3
 
 	// let's reset a counter, ply doesn't have to be legal
 	g.doPly(ply{makeMoveInstruction(2, 2, 2, 4)})
@@ -178,7 +178,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		ooooooo
 	`))
 	assertGameState(t, g, playingState)
-	// at this point roundsSincePawnMove=0, roundsSinceCapture=4
+	// at this point turnsSincePawnMove=0, turnsSinceCapture=4
 
 	// let's reset another counter
 	g.doPly(ply{makeMoveInstruction(1, 5, 3, 3), makeCaptureInstruction(2, 4, whiteColor, pawnKind)})
@@ -193,7 +193,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		ooooooo
 	`))
 	assertGameState(t, g, playingState)
-	// at this point roundsSincePawnMove=1, roundsSinceCapture=0
+	// at this point turnsSincePawnMove=1, turnsSinceCapture=0
 
 	// now let's keep the state stagnant
 
@@ -209,7 +209,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		ooooooo
 	`))
 	assertGameState(t, g, playingState)
-	// roundsSincePawnMove=2, roundsSinceCapture=1
+	// turnsSincePawnMove=2, turnsSinceCapture=1
 
 	g.doPly(ply{makeMoveInstruction(3, 3, 2, 2)})
 	assertEqualBoards(t, g.board, decodeBoard(`
@@ -223,7 +223,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		ooooooo
 	`))
 	assertGameState(t, g, playingState)
-	// roundsSincePawnMove=3, roundsSinceCapture=2
+	// turnsSincePawnMove=3, turnsSinceCapture=2
 
 	g.doPly(ply{makeMoveInstruction(5, 3, 4, 4)})
 	assertEqualBoards(t, g.board, decodeBoard(`
@@ -236,6 +236,6 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		.
 		ooooooo
 	`))
-	// roundsSincePawnMove=3, roundsSinceCapture=2, should draw now!
+	// turnsSincePawnMove=3, turnsSinceCapture=2, should draw now!
 	assertGameState(t, g, drawState)
 }

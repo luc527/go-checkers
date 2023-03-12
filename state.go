@@ -28,11 +28,11 @@ func (s gameState) String() string {
 
 // the part of the state that you need to remember in order to undo
 type rememberedState struct {
-	state               gameState
-	plies               []ply
-	lastPly             ply
-	roundsSinceCapture  int
-	roundsSincePawnMove int
+	state              gameState
+	plies              []ply
+	lastPly            ply
+	turnsSinceCapture  int
+	turnsSincePawnMove int
 }
 
 type game struct {
@@ -62,8 +62,8 @@ func newCustomGame(captureRule captureRule, bestRule bestRule, stagnantTurnsToDr
 	g.toPlay = initalPlayer
 
 	g.lastPly = nil
-	g.roundsSinceCapture = 0
-	g.roundsSincePawnMove = 0
+	g.turnsSinceCapture = 0
+	g.turnsSincePawnMove = 0
 
 	g.boardChanged()
 
@@ -123,20 +123,20 @@ func (g *game) doPly(p ply) {
 	}
 
 	if isCapture {
-		g.roundsSinceCapture = 0
+		g.turnsSinceCapture = 0
 	} else {
-		g.roundsSinceCapture++
+		g.turnsSinceCapture++
 	}
 
 	if isPawnMove {
-		g.roundsSincePawnMove = 0
+		g.turnsSincePawnMove = 0
 	} else {
-		g.roundsSincePawnMove++
+		g.turnsSincePawnMove++
 	}
 
-	// TODO roundsInSpecialEnding
+	// TODO turnsInSpecialEnding
 
-	if g.roundsSincePawnMove >= g.stagnantTurnsToDraw && g.roundsSinceCapture >= g.stagnantTurnsToDraw {
+	if g.turnsSincePawnMove >= g.stagnantTurnsToDraw && g.turnsSinceCapture >= g.stagnantTurnsToDraw {
 		g.state = drawState
 	}
 }
