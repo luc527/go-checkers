@@ -1,10 +1,16 @@
 package main
 
+// both offsets
 var offBoth = [2]int8{-1, +1}
+
+// some types to avoid boolean blindness
+// since we don't have proper sum types
+// e.g. newCustomGame(true, false, ...) true or false what?
 
 type captureRule bool
 
 const (
+	// 'capturesMandatory' means that if you have captures available, you must perform one of the captures, not the simple plies
 	capturesMandatory    = captureRule(true)
 	capturesNotMandatory = captureRule(false)
 )
@@ -12,6 +18,7 @@ const (
 type bestRule bool
 
 const (
+	// 'bestMandatory' means that you must perform the best capture available (the one that captures the most pieces)
 	bestMandatory    = bestRule(true)
 	bestNotMandatory = bestRule(false)
 )
@@ -22,6 +29,15 @@ type ply []instruction
 func (p ply) String() string {
 	return instructionsToString(p)
 }
+
+// the generateSimplePawnPlies and followPawnCaptures procedures
+// are special cases of the same procedures for king pieces
+// that have the distance bound to 1 (simple move) or 2 (capture)
+// and direction bounded by forward[color] (simple move)
+// you COULD make something like maxDist := king ? 100 : 2 and use the same procedure
+// but my hope is that these pawn-specific versions are faster
+
+// simple plies are ones not involving any captures, where the piece just moves
 
 func generateSimplePawnPlies(ps []ply, b *board, row, col byte, color color) []ply {
 	drow := byte(int8(row) + forward[color])
@@ -88,9 +104,10 @@ func generateSimplePlies(ps []ply, b *board, player color) []ply {
 	return ps
 }
 
-// WARNING
-// generating captures modifies the board!
-// the initial state is preserved at the end, but it modifies the board in order to generate the captures
+// after calling generateCapturePlies the board is the same as before calling it,
+// but the procedures alter the board in order to generate the captures
+// (we need to do a tree search in order to generate all possibilities of
+// sequential captures, and we do that by backtracking)
 
 func followPawnCaptures(ps []ply, stack []instruction, b *board, row, col byte, color color) []ply {
 	// sink: there are no more captures available from here
@@ -168,7 +185,8 @@ func followKingCaptures(ps []ply, stack []instruction, b *board, row, col byte, 
 			dist := int8(1)
 			for {
 
-				// iteration row and col, for lack of a better single-letter abbreviation
+				// i for [i]teration row and col, for lack of a better single-letter abbreviation
+				// TODO implement by irow, icol = irow+roff, icol+coff? would it be any more efficient?
 				irow, icol := byte(int8(row)+dist*roff), byte(int8(col)+dist*coff)
 
 				if irow >= 8 || icol >= 8 {
@@ -250,6 +268,12 @@ func generatePlies(b *board, player color, captureRule captureRule, bestRule bes
 	bestMandatory := bestRule == bestMandatory
 
 	if len(ps) == 0 || (!capturesMandatory && !bestMandatory) {
+		// could be just len(ps) == 0 || !capturesMandatory, making the logic more obvious:
+		// the && !bestMandatory is just for efficiency:
+		// if the best moves are mandatory and we have captures (len(ps)==0 false)
+		// then the captures are always going to be better than simple plies
+		// so it would be a waste to generate them
+
 		ps = generateSimplePlies(ps, b, player)
 	}
 
