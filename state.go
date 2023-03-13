@@ -28,22 +28,27 @@ func (s gameState) String() string {
 
 // the part of the state that you need to remember in order to undo
 type rememberedState struct {
-	state              gameState
-	plies              []ply
-	lastPly            ply
-	turnsSinceCapture  int
-	turnsSincePawnMove int
+	state                gameState
+	plies                []ply
+	lastPly              ply
+	turnsSinceCapture    int
+	turnsSincePawnMove   int
+	turnsInSpecialEnding int
+	// TODO turn into int8 maybe ^
 }
 
 type game struct {
 	captureRule
 	bestRule
 	rememberedState
-	stagnantTurnsToDraw int // stagnant here means no captures and no king moves
+	stagnantTurnsToDraw int // stagnant here means no captures and no pawn moves
 	board               *board
 	toPlay              color
 	history             []rememberedState
 }
+
+// TODO? make game proper ADT; no direct access to fields
+// idk might not be very idiomatic in Go
 
 func newCustomGame(captureRule captureRule, bestRule bestRule, stagnantTurnsToDraw int, initialBoard *board, initalPlayer color) *game {
 	var g game
@@ -64,6 +69,8 @@ func newCustomGame(captureRule captureRule, bestRule bestRule, stagnantTurnsToDr
 	g.lastPly = nil
 	g.turnsSinceCapture = 0
 	g.turnsSincePawnMove = 0
+	g.turnsInSpecialEnding = 0
+	// once we get in a special ending turnsInSpecialEnding becomes 1 and increases each turn
 
 	g.boardChanged()
 
@@ -105,7 +112,9 @@ func (g *game) doPly(p ply) {
 
 	g.boardChanged()
 
-	// Draw detection
+	if g.isOver() {
+		return
+	}
 
 	isCapture := false
 	isPawnMove := false
@@ -134,8 +143,6 @@ func (g *game) doPly(p ply) {
 		g.turnsSincePawnMove++
 	}
 
-	// TODO turnsInSpecialEnding
-
 	if g.turnsSincePawnMove >= g.stagnantTurnsToDraw && g.turnsSinceCapture >= g.stagnantTurnsToDraw {
 		g.state = drawState
 	}
@@ -153,7 +160,7 @@ func (g *game) undoLastPly() {
 	g.history = g.history[:len(g.history)-1]
 }
 
-func (g *game) Copy() *game {
+func (g *game) copy() *game {
 	// plies, lastPly, history all shallow-copied
 	// board deep-copied
 	return &game{
@@ -211,6 +218,18 @@ func (g *game) boardChanged() {
 		g.state = whiteWonState
 	}
 
+	if inSpecialEnding(count) {
+		g.turnsInSpecialEnding++
+		if g.turnsInSpecialEnding == 5 {
+			g.state = drawState
+		}
+	} else {
+		g.turnsInSpecialEnding = 0
+	}
+
+	// so if the game is over we don't say with the previous' state plies because of the early return
+	g.plies = nil
+
 	if g.isOver() {
 		return
 	}
@@ -223,4 +242,45 @@ func (g *game) boardChanged() {
 			g.state = whiteWonState
 		}
 	}
+}
+
+func oneColorSpecialEnding(ourKings, ourPawns, theirKings, theirPawns int8) bool {
+	// a) 2 damas vs 2 damas
+	// b) 2 damas vs 1 dama
+	// c) 2 damas vs 1 dama e 1 pedra
+	// d) 1 dama  vs 1 dama
+	// e) 1 dama  vs 1 dama e 1 pedra
+	//    ^ our   vs ^ their
+	if ourPawns > 0 {
+		return false
+	}
+	if ourKings == 2 {
+		return (theirPawns == 0 && (theirKings == 2 || theirKings == 1)) || // a ou b
+			(theirPawns == 1 && theirKings == 1) // c
+	}
+	if ourKings == 1 {
+		return theirKings == 1 && (theirPawns == 0 || theirPawns == 1) // d or e
+	}
+	return false
+
+	// let's check whether:
+	// once we get in a special ending any further capture still leaves us in another special ending
+
+	// a -> b by losing 1 king
+	// b -> (win) by losing 1 king
+	// b -> d by losing 1 king
+	// c -> e by losing 1 king
+	// c -> b by losing 1 pawn
+	// c -> 2 damas vs 1 pedra, not an special ending!
+	// d -> (win) by losing either king
+	// e -> d by losing 1 pawn
+	// e -> 1 dama vs 1 pedra, again not an special ending!
+
+	// this means we need to check every time
+}
+
+func inSpecialEnding(c pieceCount) bool {
+	wk, wp := c.whiteKings, c.whitePawns
+	bk, bp := c.blackKings, c.blackPawns
+	return oneColorSpecialEnding(wk, wp, bk, bp) || oneColorSpecialEnding(bk, bp, wk, wp)
 }

@@ -14,7 +14,7 @@ func TestDoUndoState(t *testing.T) {
 	var states []*game
 
 	for !g.isOver() {
-		states = append(states, g.Copy())
+		states = append(states, g.copy())
 		r := rand.Int() % len(g.plies)
 		t.Log(g.plies[r])
 		g.doPly(g.plies[r])
@@ -239,3 +239,5 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	// turnsSincePawnMove=3, turnsSinceCapture=2, should draw now!
 	assertGameState(t, g, drawState)
 }
+
+// TODO test draw by special ending
