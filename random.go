@@ -53,3 +53,37 @@ func nRandomActions(b boardInterface, n int) {
 		n--
 	}
 }
+
+func randomInoffensiveMove(b *board, player color) ply {
+	var coords []coord
+
+	for row := byte(0); row < 8; row++ {
+		for col := byte(0); col < 8; col++ {
+			if !b.isOccupied(row, col) {
+				continue
+			}
+
+			color, _ := b.get(row, col)
+			if color == player {
+				coords = append(coords, coord{row, col})
+			}
+		}
+	}
+
+	if len(coords) == 0 {
+		return ply{}
+	}
+
+	randomCoord := coords[rand.Int()%len(coords)]
+	srow, scol := randomCoord.row, randomCoord.col
+
+	var drow, dcol byte
+	for {
+		drow, dcol = rn8(), rn8()
+		if !b.isOccupied(drow, dcol) {
+			break
+		}
+	}
+
+	return ply{makeMoveInstruction(srow, scol, drow, dcol)}
+}

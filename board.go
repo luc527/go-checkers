@@ -16,6 +16,15 @@ const (
 	kingKind   = kind(1)
 )
 
+// Used mostly for testing
+type coord struct {
+	row, col byte
+}
+type piece struct {
+	color
+	kind
+}
+
 var crowningRow = [2]byte{
 	int(blackColor): 7,
 	int(whiteColor): 0,

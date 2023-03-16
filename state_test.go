@@ -240,4 +240,71 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	assertGameState(t, g, drawState)
 }
 
-// TODO test draw by special ending
+func assertSpecialEnding(t *testing.T, b *board) {
+	g := newCustomGame(capturesNotMandatory, bestNotMandatory, 20, b, whiteColor)
+	t.Log("\n" + g.board.String())
+	// 1 turn in special ending
+	assertGameState(t, g, playingState)
+
+	g.doPly(randomInoffensiveMove(g.board, g.toPlay))
+	t.Log("\n" + g.board.String())
+	// 2 turns in special ending
+	assertGameState(t, g, playingState)
+
+	g.doPly(randomInoffensiveMove(g.board, g.toPlay))
+	t.Log("\n" + g.board.String())
+	// 3 turns in special ending
+	assertGameState(t, g, playingState)
+
+	g.doPly(randomInoffensiveMove(g.board, g.toPlay))
+	t.Log("\n" + g.board.String())
+	// 4 turns in special ending
+	assertGameState(t, g, playingState)
+
+	g.doPly(randomInoffensiveMove(g.board, g.toPlay))
+	t.Log("\n" + g.board.String())
+	// 5 turns in special ending
+	assertGameState(t, g, drawState)
+}
+
+func TestDrawBySpecialEnding(t *testing.T) {
+	//a
+	assertSpecialEnding(t, decodeBoard(`
+	  ..@
+		....@
+		.
+		.....#
+		.#
+	`))
+
+	//b
+	assertSpecialEnding(t, decodeBoard(`
+	  ..@
+		.
+		.....#
+		.#
+	`))
+
+	//c
+	assertSpecialEnding(t, decodeBoard(`
+	  ..@
+		....@
+		.
+		.....x
+		.#
+	`))
+
+	//d
+	assertSpecialEnding(t, decodeBoard(`
+	  ..@
+		.
+		.#
+	`))
+
+	//e
+	assertSpecialEnding(t, decodeBoard(`
+	  ..@.x
+		.
+		.#
+	`))
+}

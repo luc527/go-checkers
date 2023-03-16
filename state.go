@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type gameState byte
 
 const (
@@ -22,7 +20,7 @@ func (s gameState) String() string {
 	case drawState:
 		return "draw"
 	default:
-		panic(fmt.Sprintf("Invalid game state: %d", s))
+		return "INVALID gameState"
 	}
 }
 
@@ -31,17 +29,16 @@ type rememberedState struct {
 	state                gameState
 	plies                []ply
 	lastPly              ply
-	turnsSinceCapture    int
-	turnsSincePawnMove   int
-	turnsInSpecialEnding int
-	// TODO turn into int8 maybe ^
+	turnsSinceCapture    int16
+	turnsSincePawnMove   int16
+	turnsInSpecialEnding int16
 }
 
 type game struct {
 	captureRule
 	bestRule
 	rememberedState
-	stagnantTurnsToDraw int // stagnant here means no captures and no pawn moves
+	stagnantTurnsToDraw int16 // stagnant here means no captures and no pawn moves
 	board               *board
 	toPlay              color
 	history             []rememberedState
@@ -50,7 +47,7 @@ type game struct {
 // TODO? make game proper ADT; no direct access to fields
 // idk might not be very idiomatic in Go
 
-func newCustomGame(captureRule captureRule, bestRule bestRule, stagnantTurnsToDraw int, initialBoard *board, initalPlayer color) *game {
+func newCustomGame(captureRule captureRule, bestRule bestRule, stagnantTurnsToDraw int16, initialBoard *board, initalPlayer color) *game {
 	var g game
 
 	if initialBoard == nil {

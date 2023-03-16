@@ -176,15 +176,6 @@ func TestDecodeBoard(t *testing.T) {
 
 	t.Log("\n" + b.String())
 
-	type coord struct {
-		row, col byte
-	}
-
-	type piece struct {
-		color
-		kind
-	}
-
 	expect := make(map[coord]piece)
 	expect[coord{0, 2}] = piece{blackColor, kingKind}
 	expect[coord{1, 3}] = piece{whiteColor, pawnKind}
@@ -222,4 +213,25 @@ func TestDecodeBoard(t *testing.T) {
 		}
 	}
 
+}
+
+func TestBoardEquals(t *testing.T) {
+	if !((*board)(nil)).equals(nil) {
+		t.Fail()
+	}
+	b := new(board)
+	if b.equals(nil) || (*board)(nil).equals(b) {
+		t.Fail()
+	}
+
+	c := new(board)
+	for i := 0; i < 10; i++ {
+		row, col, color, kind := rn8(), rn8(), rnColor(), rnKind()
+		b.set(row, col, color, kind)
+		c.set(row, col, color, kind)
+	}
+
+	if !b.equals(c) {
+		t.Fail()
+	}
 }
