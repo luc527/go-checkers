@@ -42,6 +42,7 @@ type Game struct {
 	board               *Board
 	toPlay              Color
 	history             []rememberedState
+	pieceCount          PieceCount
 }
 
 func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDraw int16, initialBoard *Board, initalPlayer Color) *Game {
@@ -101,6 +102,10 @@ func (g *Game) Plies() []Ply {
 
 func (g *Game) ToPlay() Color {
 	return g.toPlay
+}
+
+func (g *Game) PieceCount() PieceCount {
+	return g.pieceCount
 }
 
 func (g *Game) DoPly(p Ply) {
@@ -167,6 +172,11 @@ func (g *Game) UndoLastPly() {
 	UndoInstructions(g.board, g.lastPly)
 	g.toPlay = g.toPlay.Opposite()
 	g.rememberedState = g.history[len(g.history)-1]
+
+	// just count again
+	// more cpu, less memory usage
+	// TODO benchmark?
+	g.pieceCount = g.board.PieceCount()
 
 	g.history = g.history[:len(g.history)-1]
 }
@@ -239,6 +249,8 @@ func (g *Game) BoardChanged() {
 	} else {
 		g.turnsInSpecialEnding = 0
 	}
+
+	g.pieceCount = count
 
 	// so if the game is over we don't say with the previous' state plies because of the early return
 	g.plies = nil
