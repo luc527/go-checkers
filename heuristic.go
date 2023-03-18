@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+	"runtime"
+)
 
 // the heuristics take a game and not just a board
 // because the game caches the piece count
@@ -8,6 +12,10 @@ import "fmt"
 // -- maybe not a very nice abstraction
 
 type Heuristic func(g *Game, player Color) int
+
+func (h Heuristic) String() string {
+	return fmt.Sprintf("%q", runtime.FuncForPC(reflect.ValueOf(h).Pointer()).Name())
+}
 
 var _ Heuristic = UnweightedCountHeuristic
 var _ Heuristic = WeightedCountHeuristic
