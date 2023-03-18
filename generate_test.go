@@ -6,8 +6,8 @@ import (
 )
 
 func compareGeneratedPlies(
-	got []ply,
-	want []ply,
+	got []Ply,
+	want []Ply,
 ) (
 	extra []string,
 	missing []string,
@@ -38,7 +38,7 @@ func compareGeneratedPlies(
 	return
 }
 
-func assertEqualPlies(t *testing.T, got []ply, want []ply) {
+func assertEqualPlies(t *testing.T, got []Ply, want []Ply) {
 	extra, missing := compareGeneratedPlies(got, want)
 	if len(extra) > 0 {
 		t.Errorf("generated extra instruction lists:\n%s", strings.Join(extra, "\n"))
@@ -49,244 +49,244 @@ func assertEqualPlies(t *testing.T, got []ply, want []ply) {
 }
 
 func TestSimplePawnMove(t *testing.T) {
-	b := new(board)
+	b := new(Board)
 
-	b.set(1, 1, blackColor, pawnKind)
+	b.Set(1, 1, BlackColor, PawnKind)
 	// no possibilities
-	b.set(0, 0, blackColor, pawnKind)
+	b.Set(0, 0, BlackColor, PawnKind)
 	// one possibility occupied
-	b.set(0, 2, blackColor, pawnKind)
+	b.Set(0, 2, BlackColor, PawnKind)
 	// against the (left and right) walls
-	b.set(1, 7, blackColor, pawnKind)
-	b.set(3, 0, blackColor, pawnKind)
+	b.Set(1, 7, BlackColor, PawnKind)
+	b.Set(3, 0, BlackColor, PawnKind)
 	// crowning
-	b.set(6, 6, blackColor, pawnKind)
+	b.Set(6, 6, BlackColor, PawnKind)
 
 	//
 	// black
 	//
 
-	b.set(6, 1, whiteColor, pawnKind)
+	b.Set(6, 1, WhiteColor, PawnKind)
 	// no possibilities
-	b.set(7, 0, whiteColor, pawnKind)
+	b.Set(7, 0, WhiteColor, PawnKind)
 	// one possibility occupied
-	b.set(7, 2, whiteColor, pawnKind)
+	b.Set(7, 2, WhiteColor, PawnKind)
 	// against the (left and right) walls
-	b.set(4, 0, whiteColor, pawnKind)
-	b.set(4, 7, whiteColor, pawnKind)
+	b.Set(4, 0, WhiteColor, PawnKind)
+	b.Set(4, 7, WhiteColor, PawnKind)
 	// crowning
-	b.set(1, 5, whiteColor, pawnKind)
+	b.Set(1, 5, WhiteColor, PawnKind)
 
 	t.Log("\n" + b.String())
 
-	blackPliesGot := generateSimplePlies(nil, b, blackColor)
+	blackPliesGot := generateSimplePlies(nil, b, BlackColor)
 
-	blackPliesWant := []ply{
-		{makeMoveInstruction(1, 1, 2, 2)},
-		{makeMoveInstruction(1, 1, 2, 0)},
-		{makeMoveInstruction(0, 2, 1, 3)},
-		{makeMoveInstruction(1, 7, 2, 6)},
-		{makeMoveInstruction(3, 0, 4, 1)},
+	blackPliesWant := []Ply{
+		{MoveInstruction(1, 1, 2, 2)},
+		{MoveInstruction(1, 1, 2, 0)},
+		{MoveInstruction(0, 2, 1, 3)},
+		{MoveInstruction(1, 7, 2, 6)},
+		{MoveInstruction(3, 0, 4, 1)},
 		{
-			makeMoveInstruction(6, 6, 7, 7),
-			makeCrownInstruction(7, 7),
+			MoveInstruction(6, 6, 7, 7),
+			CrownInstruction(7, 7),
 		},
 		{
-			makeMoveInstruction(6, 6, 7, 5),
-			makeCrownInstruction(7, 5),
+			MoveInstruction(6, 6, 7, 5),
+			CrownInstruction(7, 5),
 		},
 	}
 	assertEqualPlies(t, blackPliesGot, blackPliesWant)
 
-	whitePliesWant := []ply{
-		{makeMoveInstruction(6, 1, 5, 0)},
-		{makeMoveInstruction(6, 1, 5, 2)},
-		{makeMoveInstruction(7, 2, 6, 3)},
-		{makeMoveInstruction(4, 0, 3, 1)},
-		{makeMoveInstruction(4, 7, 3, 6)},
+	whitePliesWant := []Ply{
+		{MoveInstruction(6, 1, 5, 0)},
+		{MoveInstruction(6, 1, 5, 2)},
+		{MoveInstruction(7, 2, 6, 3)},
+		{MoveInstruction(4, 0, 3, 1)},
+		{MoveInstruction(4, 7, 3, 6)},
 		{
-			makeMoveInstruction(1, 5, 0, 6),
-			makeCrownInstruction(0, 6),
+			MoveInstruction(1, 5, 0, 6),
+			CrownInstruction(0, 6),
 		},
 		{
-			makeMoveInstruction(1, 5, 0, 4),
-			makeCrownInstruction(0, 4),
+			MoveInstruction(1, 5, 0, 4),
+			CrownInstruction(0, 4),
 		},
 	}
-	whitePliesGot := generateSimplePlies(nil, b, whiteColor)
+	whitePliesGot := generateSimplePlies(nil, b, WhiteColor)
 
 	assertEqualPlies(t, whitePliesGot, whitePliesWant)
 }
 
 func TestSimpleKingMove(t *testing.T) {
 
-	b := new(board)
+	b := new(Board)
 
 	//white
-	b.set(5, 5, whiteColor, kingKind)
-	b.set(0, 7, whiteColor, kingKind)
+	b.Set(5, 5, WhiteColor, KingKind)
+	b.Set(0, 7, WhiteColor, KingKind)
 
 	//black
-	b.set(2, 2, blackColor, kingKind)
+	b.Set(2, 2, BlackColor, KingKind)
 
 	t.Log("\n" + b.String())
 
-	whitePliesGot := generateSimplePlies(nil, b, whiteColor)
+	whitePliesGot := generateSimplePlies(nil, b, WhiteColor)
 
-	whitePliesWant := []ply{
+	whitePliesWant := []Ply{
 		//
 		// moving the white king at (5, 5)
 		//
 		// down, right
-		{makeMoveInstruction(5, 5, 6, 6)},
-		{makeMoveInstruction(5, 5, 7, 7)},
+		{MoveInstruction(5, 5, 6, 6)},
+		{MoveInstruction(5, 5, 7, 7)},
 		// down, left
-		{makeMoveInstruction(5, 5, 6, 4)},
-		{makeMoveInstruction(5, 5, 7, 3)},
+		{MoveInstruction(5, 5, 6, 4)},
+		{MoveInstruction(5, 5, 7, 3)},
 		// up, left
-		{makeMoveInstruction(5, 5, 4, 4)},
-		{makeMoveInstruction(5, 5, 3, 3)}, // gets stopped by the black king (no (2,2), (1,1), (0,0))
+		{MoveInstruction(5, 5, 4, 4)},
+		{MoveInstruction(5, 5, 3, 3)}, // gets stopped by the black king (no (2,2), (1,1), (0,0))
 		// up, right
-		{makeMoveInstruction(5, 5, 4, 6)},
-		{makeMoveInstruction(5, 5, 3, 7)},
+		{MoveInstruction(5, 5, 4, 6)},
+		{MoveInstruction(5, 5, 3, 7)},
 		//
 		// moving the white king at (0, 7)
 		//
-		{makeMoveInstruction(0, 7, 1, 6)},
-		{makeMoveInstruction(0, 7, 2, 5)},
-		{makeMoveInstruction(0, 7, 3, 4)},
-		{makeMoveInstruction(0, 7, 4, 3)},
-		{makeMoveInstruction(0, 7, 5, 2)},
-		{makeMoveInstruction(0, 7, 6, 1)},
-		{makeMoveInstruction(0, 7, 7, 0)},
+		{MoveInstruction(0, 7, 1, 6)},
+		{MoveInstruction(0, 7, 2, 5)},
+		{MoveInstruction(0, 7, 3, 4)},
+		{MoveInstruction(0, 7, 4, 3)},
+		{MoveInstruction(0, 7, 5, 2)},
+		{MoveInstruction(0, 7, 6, 1)},
+		{MoveInstruction(0, 7, 7, 0)},
 	}
 
 	assertEqualPlies(t, whitePliesGot, whitePliesWant)
 
-	blackPliesWant := []ply{
+	blackPliesWant := []Ply{
 		//
 		// moving the black king at (2, 2)
 		//
 		// down, right
-		{makeMoveInstruction(2, 2, 3, 3)},
-		{makeMoveInstruction(2, 2, 4, 4)}, // gets stopped by the white king (no (5,5) etc.)
+		{MoveInstruction(2, 2, 3, 3)},
+		{MoveInstruction(2, 2, 4, 4)}, // gets stopped by the white king (no (5,5) etc.)
 		// down, left
-		{makeMoveInstruction(2, 2, 3, 1)},
-		{makeMoveInstruction(2, 2, 4, 0)},
+		{MoveInstruction(2, 2, 3, 1)},
+		{MoveInstruction(2, 2, 4, 0)},
 		// up, right
-		{makeMoveInstruction(2, 2, 1, 3)},
-		{makeMoveInstruction(2, 2, 0, 4)},
+		{MoveInstruction(2, 2, 1, 3)},
+		{MoveInstruction(2, 2, 0, 4)},
 		// up, left
-		{makeMoveInstruction(2, 2, 1, 1)},
-		{makeMoveInstruction(2, 2, 0, 0)},
+		{MoveInstruction(2, 2, 1, 1)},
+		{MoveInstruction(2, 2, 0, 0)},
 	}
-	blackPliesGot := generateSimplePlies(nil, b, blackColor)
+	blackPliesGot := generateSimplePlies(nil, b, BlackColor)
 
 	assertEqualPlies(t, blackPliesGot, blackPliesWant)
 }
 
 func TestCapturePawnMove(t *testing.T) {
-	b := new(board)
+	b := new(Board)
 
-	b.set(4, 6, whiteColor, pawnKind)
-	b.set(3, 5, blackColor, pawnKind)
-	b.set(3, 3, blackColor, pawnKind)
-	b.set(1, 3, blackColor, pawnKind)
-	b.set(1, 1, whiteColor, pawnKind)
+	b.Set(4, 6, WhiteColor, PawnKind)
+	b.Set(3, 5, BlackColor, PawnKind)
+	b.Set(3, 3, BlackColor, PawnKind)
+	b.Set(1, 3, BlackColor, PawnKind)
+	b.Set(1, 1, WhiteColor, PawnKind)
 
-	b.set(5, 3, blackColor, pawnKind)
-	b.set(6, 4, whiteColor, pawnKind)
+	b.Set(5, 3, BlackColor, PawnKind)
+	b.Set(6, 4, WhiteColor, PawnKind)
 
 	t.Log("\n" + b.String())
 
-	blackPliesGot := generateCapturePlies(nil, b, blackColor)
+	blackPliesGot := generateCapturePlies(nil, b, BlackColor)
 
-	blackPliesWant := []ply{
+	blackPliesWant := []Ply{
 		{
-			makeMoveInstruction(3, 5, 5, 7),
-			makeCaptureInstruction(4, 6, whiteColor, pawnKind),
+			MoveInstruction(3, 5, 5, 7),
+			CaptureInstruction(4, 6, WhiteColor, PawnKind),
 		},
 		{
-			makeMoveInstruction(5, 3, 7, 5),
-			makeCaptureInstruction(6, 4, whiteColor, pawnKind),
-			makeCrownInstruction(7, 5),
+			MoveInstruction(5, 3, 7, 5),
+			CaptureInstruction(6, 4, WhiteColor, PawnKind),
+			CrownInstruction(7, 5),
 		},
 	}
 
 	assertEqualPlies(t, blackPliesGot, blackPliesWant)
 
-	whitePliesWant := []ply{
+	whitePliesWant := []Ply{
 		{
-			makeMoveInstruction(4, 6, 2, 4),
-			makeCaptureInstruction(3, 5, blackColor, pawnKind),
-			makeMoveInstruction(2, 4, 0, 2),
-			makeCaptureInstruction(1, 3, blackColor, pawnKind),
-			makeCrownInstruction(0, 2),
+			MoveInstruction(4, 6, 2, 4),
+			CaptureInstruction(3, 5, BlackColor, PawnKind),
+			MoveInstruction(2, 4, 0, 2),
+			CaptureInstruction(1, 3, BlackColor, PawnKind),
+			CrownInstruction(0, 2),
 		},
 		{
-			makeMoveInstruction(4, 6, 2, 4),
-			makeCaptureInstruction(3, 5, blackColor, pawnKind),
-			makeMoveInstruction(2, 4, 4, 2),
-			makeCaptureInstruction(3, 3, blackColor, pawnKind),
+			MoveInstruction(4, 6, 2, 4),
+			CaptureInstruction(3, 5, BlackColor, PawnKind),
+			MoveInstruction(2, 4, 4, 2),
+			CaptureInstruction(3, 3, BlackColor, PawnKind),
 		},
 		{
-			makeMoveInstruction(6, 4, 4, 2),
-			makeCaptureInstruction(5, 3, blackColor, pawnKind),
-			makeMoveInstruction(4, 2, 2, 4),
-			makeCaptureInstruction(3, 3, blackColor, pawnKind),
-			makeMoveInstruction(2, 4, 0, 2),
-			makeCaptureInstruction(1, 3, blackColor, pawnKind),
-			makeCrownInstruction(0, 2),
+			MoveInstruction(6, 4, 4, 2),
+			CaptureInstruction(5, 3, BlackColor, PawnKind),
+			MoveInstruction(4, 2, 2, 4),
+			CaptureInstruction(3, 3, BlackColor, PawnKind),
+			MoveInstruction(2, 4, 0, 2),
+			CaptureInstruction(1, 3, BlackColor, PawnKind),
+			CrownInstruction(0, 2),
 		},
 	}
-	whitePliesGot := generateCapturePlies(nil, b, whiteColor)
+	whitePliesGot := generateCapturePlies(nil, b, WhiteColor)
 
 	assertEqualPlies(t, whitePliesGot, whitePliesWant)
 }
 
 func TestCaptureThroughCrowningRowDoesntCrown(t *testing.T) {
-	b := new(board)
+	b := new(Board)
 
 	// passes through (0, 3), with 0 being the crowning row for white pieces,
 	// but it shouldn't crown because it doesn't *end* at that position,
 	// just goes through it
-	b.set(4, 7, whiteColor, pawnKind)
-	b.set(3, 6, blackColor, pawnKind)
-	b.set(1, 4, blackColor, pawnKind)
-	b.set(1, 2, blackColor, pawnKind)
+	b.Set(4, 7, WhiteColor, PawnKind)
+	b.Set(3, 6, BlackColor, PawnKind)
+	b.Set(1, 4, BlackColor, PawnKind)
+	b.Set(1, 2, BlackColor, PawnKind)
 
 	t.Log("\n" + b.String())
 
-	pliesWant := []ply{
+	pliesWant := []Ply{
 		{
-			makeMoveInstruction(4, 7, 2, 5),
-			makeCaptureInstruction(3, 6, blackColor, pawnKind),
-			makeMoveInstruction(2, 5, 0, 3),
-			makeCaptureInstruction(1, 4, blackColor, pawnKind),
-			makeMoveInstruction(0, 3, 2, 1),
-			makeCaptureInstruction(1, 2, blackColor, pawnKind),
+			MoveInstruction(4, 7, 2, 5),
+			CaptureInstruction(3, 6, BlackColor, PawnKind),
+			MoveInstruction(2, 5, 0, 3),
+			CaptureInstruction(1, 4, BlackColor, PawnKind),
+			MoveInstruction(0, 3, 2, 1),
+			CaptureInstruction(1, 2, BlackColor, PawnKind),
 		},
 	}
-	pliesGot := generateCapturePlies(nil, b, whiteColor)
+	pliesGot := generateCapturePlies(nil, b, WhiteColor)
 
 	assertEqualPlies(t, pliesGot, pliesWant)
 }
 
 func TestCaptureKingMoveOneDiagonal(t *testing.T) {
-	b := new(board)
+	b := new(Board)
 
-	b.set(3, 3, whiteColor, kingKind)
-	b.set(5, 5, blackColor, pawnKind)
+	b.Set(3, 3, WhiteColor, KingKind)
+	b.Set(5, 5, BlackColor, PawnKind)
 
-	pliesGot := generateCapturePlies(nil, b, whiteColor)
-	pliesWant := []ply{
+	pliesGot := generateCapturePlies(nil, b, WhiteColor)
+	pliesWant := []Ply{
 		{
-			makeMoveInstruction(3, 3, 6, 6),
-			makeCaptureInstruction(5, 5, blackColor, pawnKind),
+			MoveInstruction(3, 3, 6, 6),
+			CaptureInstruction(5, 5, BlackColor, PawnKind),
 		},
 		{
-			makeMoveInstruction(3, 3, 7, 7),
-			makeCaptureInstruction(5, 5, blackColor, pawnKind),
+			MoveInstruction(3, 3, 7, 7),
+			CaptureInstruction(5, 5, BlackColor, PawnKind),
 		},
 	}
 
@@ -294,58 +294,58 @@ func TestCaptureKingMoveOneDiagonal(t *testing.T) {
 }
 
 func TestAllowOverPreviousTile(t *testing.T) {
-	b := new(board)
+	b := new(Board)
 
-	b.set(4, 7, whiteColor, pawnKind)
-	b.set(3, 6, blackColor, pawnKind)
-	b.set(1, 6, blackColor, pawnKind)
-	b.set(3, 4, blackColor, pawnKind)
-	b.set(1, 4, blackColor, pawnKind)
-	b.set(3, 2, blackColor, pawnKind)
-	b.set(1, 2, blackColor, pawnKind)
+	b.Set(4, 7, WhiteColor, PawnKind)
+	b.Set(3, 6, BlackColor, PawnKind)
+	b.Set(1, 6, BlackColor, PawnKind)
+	b.Set(3, 4, BlackColor, PawnKind)
+	b.Set(1, 4, BlackColor, PawnKind)
+	b.Set(3, 2, BlackColor, PawnKind)
+	b.Set(1, 2, BlackColor, PawnKind)
 
 	t.Log("\n" + b.String())
 
-	pliesWant := []ply{
+	pliesWant := []Ply{
 		{
-			makeMoveInstruction(4, 7, 2, 5),
-			makeCaptureInstruction(3, 6, blackColor, pawnKind),
-			makeMoveInstruction(2, 5, 0, 7),
-			makeCaptureInstruction(1, 6, blackColor, pawnKind),
-			makeCrownInstruction(0, 7),
+			MoveInstruction(4, 7, 2, 5),
+			CaptureInstruction(3, 6, BlackColor, PawnKind),
+			MoveInstruction(2, 5, 0, 7),
+			CaptureInstruction(1, 6, BlackColor, PawnKind),
+			CrownInstruction(0, 7),
 		},
 		{
-			makeMoveInstruction(4, 7, 2, 5),
-			makeCaptureInstruction(3, 6, blackColor, pawnKind),
-			makeMoveInstruction(2, 5, 0, 3),
-			makeCaptureInstruction(1, 4, blackColor, pawnKind),
-			makeMoveInstruction(0, 3, 2, 1),
-			makeCaptureInstruction(1, 2, blackColor, pawnKind),
-			makeMoveInstruction(2, 1, 4, 3),
-			makeCaptureInstruction(3, 2, blackColor, pawnKind),
-			makeMoveInstruction(4, 3, 2, 5),
-			makeCaptureInstruction(3, 4, blackColor, pawnKind),
-			makeMoveInstruction(2, 5, 0, 7),
-			makeCaptureInstruction(1, 6, blackColor, pawnKind),
-			makeCrownInstruction(0, 7),
+			MoveInstruction(4, 7, 2, 5),
+			CaptureInstruction(3, 6, BlackColor, PawnKind),
+			MoveInstruction(2, 5, 0, 3),
+			CaptureInstruction(1, 4, BlackColor, PawnKind),
+			MoveInstruction(0, 3, 2, 1),
+			CaptureInstruction(1, 2, BlackColor, PawnKind),
+			MoveInstruction(2, 1, 4, 3),
+			CaptureInstruction(3, 2, BlackColor, PawnKind),
+			MoveInstruction(4, 3, 2, 5),
+			CaptureInstruction(3, 4, BlackColor, PawnKind),
+			MoveInstruction(2, 5, 0, 7),
+			CaptureInstruction(1, 6, BlackColor, PawnKind),
+			CrownInstruction(0, 7),
 		},
 		{
-			makeMoveInstruction(4, 7, 2, 5),
-			makeCaptureInstruction(3, 6, blackColor, pawnKind),
-			makeMoveInstruction(2, 5, 4, 3),
-			makeCaptureInstruction(3, 4, blackColor, pawnKind),
-			makeMoveInstruction(4, 3, 2, 1),
-			makeCaptureInstruction(3, 2, blackColor, pawnKind),
-			makeMoveInstruction(2, 1, 0, 3),
-			makeCaptureInstruction(1, 2, blackColor, pawnKind),
-			makeMoveInstruction(0, 3, 2, 5),
-			makeCaptureInstruction(1, 4, blackColor, pawnKind),
-			makeMoveInstruction(2, 5, 0, 7),
-			makeCaptureInstruction(1, 6, blackColor, pawnKind),
-			makeCrownInstruction(0, 7),
+			MoveInstruction(4, 7, 2, 5),
+			CaptureInstruction(3, 6, BlackColor, PawnKind),
+			MoveInstruction(2, 5, 4, 3),
+			CaptureInstruction(3, 4, BlackColor, PawnKind),
+			MoveInstruction(4, 3, 2, 1),
+			CaptureInstruction(3, 2, BlackColor, PawnKind),
+			MoveInstruction(2, 1, 0, 3),
+			CaptureInstruction(1, 2, BlackColor, PawnKind),
+			MoveInstruction(0, 3, 2, 5),
+			CaptureInstruction(1, 4, BlackColor, PawnKind),
+			MoveInstruction(2, 5, 0, 7),
+			CaptureInstruction(1, 6, BlackColor, PawnKind),
+			CrownInstruction(0, 7),
 		},
 	}
-	pliesGot := generateCapturePlies(nil, b, whiteColor)
+	pliesGot := generateCapturePlies(nil, b, WhiteColor)
 
 	assertEqualPlies(t, pliesGot, pliesWant)
 }

@@ -17,6 +17,6 @@ func BenchmarkNaiveRandom(b *testing.B) {
 // compact is about 1/3 times faster
 
 func BenchmarkCompactRandom(b *testing.B) {
-	board := new(board)
+	board := new(Board)
 	nRandomActions(board, compareRandomActions)
 }

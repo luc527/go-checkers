@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
-func TestMakeCrownInstruction(t *testing.T) {
+func TestCrownInstruction(t *testing.T) {
 	var row, col byte
 	row, col = 5, 6
-	i := makeCrownInstruction(row, col)
+	i := CrownInstruction(row, col)
 	if i.t != crownInstruction {
 		t.Errorf("expected instruction to be of type crown, is %s", i.t)
 		return
@@ -19,7 +19,7 @@ func TestMakeCrownInstruction(t *testing.T) {
 	}
 }
 
-func TestMakeMoveInstruction(t *testing.T) {
+func TestMoveInstruction(t *testing.T) {
 	var srow, scol byte
 	var drow, dcol byte
 
@@ -27,7 +27,7 @@ func TestMakeMoveInstruction(t *testing.T) {
 	srow, scol = 1, 3
 	drow, dcol = 2, 5
 
-	i := makeMoveInstruction(srow, scol, drow, dcol)
+	i := MoveInstruction(srow, scol, drow, dcol)
 
 	if i.t != moveInstruction {
 		t.Errorf("expected type move but is of type %s", i.t)
@@ -45,23 +45,23 @@ func TestMakeMoveInstruction(t *testing.T) {
 	}
 }
 
-func TestMakeCaptureInstruction(t *testing.T) {
+func TestCaptureInstruction(t *testing.T) {
 	type testCase struct {
 		row, col byte
-		c        color
-		k        kind
+		c        Color
+		k        Kind
 	}
 
 	cases := []testCase{
-		{1, 2, whiteColor, kingKind},
-		{3, 1, blackColor, pawnKind},
-		{2, 2, whiteColor, pawnKind},
-		{5, 7, blackColor, kingKind},
+		{1, 2, WhiteColor, KingKind},
+		{3, 1, BlackColor, PawnKind},
+		{2, 2, WhiteColor, PawnKind},
+		{5, 7, BlackColor, KingKind},
 	}
 
 	for _, test := range cases {
 		row, col, c, k := test.row, test.col, test.c, test.k
-		i := makeCaptureInstruction(row, col, c, k)
+		i := CaptureInstruction(row, col, c, k)
 
 		if i.t != captureInstruction {
 			t.Errorf("expected type capture but got type %s", i.t)
@@ -73,13 +73,13 @@ func TestMakeCaptureInstruction(t *testing.T) {
 			return
 		}
 
-		actualC := color(i.d[0])
+		actualC := Color(i.d[0])
 		if actualC != c {
 			t.Errorf("expected color %s but got %s", c, actualC)
 			return
 		}
 
-		actualK := kind(i.d[1])
+		actualK := Kind(i.d[1])
 		if actualK != k {
 			t.Errorf("expected kind %s but got %s", k, actualK)
 			return
@@ -88,111 +88,111 @@ func TestMakeCaptureInstruction(t *testing.T) {
 
 }
 
-func TestCrownInstruction(t *testing.T) {
-	b := new(board)
+func TestMakeCrownInstruction(t *testing.T) {
+	b := new(Board)
 
 	var row, col byte
 	row, col = 5, 4
 
-	b.set(row, col, whiteColor, pawnKind)
+	b.Set(row, col, WhiteColor, PawnKind)
 
-	i := makeCrownInstruction(row, col)
-	is := []instruction{i}
+	i := CrownInstruction(row, col)
+	is := []Instruction{i}
 
-	performInstructions(b, is)
+	PerformInstructions(b, is)
 
-	_, newKind := b.get(row, col)
-	if newKind != kingKind {
+	_, newKind := b.Get(row, col)
+	if newKind != KingKind {
 		t.Errorf("crown instruction failed, %d %d still a pawn", row, col)
 	}
 
-	undoInstructions(b, is)
+	UndoInstructions(b, is)
 
-	_, oldKind := b.get(row, col)
-	if oldKind != pawnKind {
+	_, oldKind := b.Get(row, col)
+	if oldKind != PawnKind {
 		t.Errorf("undo of crown instruction failed, %d %d still a king", row, col)
 	}
 }
 
-func TestMoveInstruction(t *testing.T) {
-	b := new(board)
+func TestMakeMoveInstruction(t *testing.T) {
+	b := new(Board)
 
 	var frow, fcol byte //from
 	var trow, tcol byte //to
 
 	frow, fcol = 3, 7
 	trow, tcol = 4, 6
-	c, k := blackColor, kingKind
+	c, k := BlackColor, KingKind
 
-	b.set(frow, fcol, c, k)
+	b.Set(frow, fcol, c, k)
 
-	i := makeMoveInstruction(frow, fcol, trow, tcol)
-	is := []instruction{i}
+	i := MoveInstruction(frow, fcol, trow, tcol)
+	is := []Instruction{i}
 
-	performInstructions(b, is)
+	PerformInstructions(b, is)
 
-	if b.isOccupied(frow, fcol) {
+	if b.IsOccupied(frow, fcol) {
 		t.Errorf("after move, source should be empty")
 	}
 
-	if !b.isOccupied(trow, tcol) {
+	if !b.IsOccupied(trow, tcol) {
 		t.Errorf("after move, destination should be occupied")
 	} else {
-		ac, ak := b.get(trow, tcol)
+		ac, ak := b.Get(trow, tcol)
 		if ac != c || ak != k {
 			t.Errorf("piece changed after move, was %s %s now is %s %s", c, k, ac, ak)
 		}
 	}
 
-	undoInstructions(b, is)
+	UndoInstructions(b, is)
 
-	if b.isOccupied(trow, tcol) {
+	if b.IsOccupied(trow, tcol) {
 		t.Errorf("after undo move, destination should be empty")
 	}
 
-	if !b.isOccupied(frow, fcol) {
+	if !b.IsOccupied(frow, fcol) {
 		t.Errorf("after undo move, source should be occupied")
 	} else {
-		ac, ak := b.get(frow, fcol)
+		ac, ak := b.Get(frow, fcol)
 		if ac != c || ak != k {
 			t.Errorf("piece changed after undo move, was %s %s now is %s %s", c, k, ac, ak)
 		}
 	}
 }
 
-func TestCaptureInstruction(t *testing.T) {
-	b := new(board)
+func TestMakeCaptureInstruction(t *testing.T) {
+	b := new(Board)
 
 	var row, col byte
 	row, col = 3, 6
-	color, kind := whiteColor, pawnKind
+	color, kind := WhiteColor, PawnKind
 
-	b.set(row, col, color, kind)
+	b.Set(row, col, color, kind)
 
 	t.Log("Before capture:")
 	t.Log(b)
 
-	i := makeCaptureInstruction(row, col, color, kind)
-	is := []instruction{i}
+	i := CaptureInstruction(row, col, color, kind)
+	is := []Instruction{i}
 
-	performInstructions(b, is)
+	PerformInstructions(b, is)
 
 	t.Log("After capture:")
 	t.Log(b)
 
-	if b.isOccupied(row, col) {
+	if b.IsOccupied(row, col) {
 		t.Errorf("(%d, %d) should be empty after capture, is occupied", row, col)
 	}
 
-	undoInstructions(b, is)
+	UndoInstructions(b, is)
 
 	t.Log("After undoing capture:")
 	t.Log(b)
 
-	if !b.isOccupied(row, col) {
+	if !b.IsOccupied(row, col) {
 		t.Errorf("(%d, %d) should be occupied after undoing the capture, is empty", row, col)
 	} else {
-		actualColor, actualKind := b.get(row, col)
+		actualColor, actualKind := b.Get(row, col)
 		if actualColor != color || actualKind != kind {
 			t.Errorf(
 				"expected (%d, %d) to contain a %s %s after undoing the capture, but it contains a %s %s",
@@ -206,54 +206,54 @@ func TestCaptureInstruction(t *testing.T) {
 
 func TestInsSequence(t *testing.T) {
 
-	b := new(board)
+	b := new(Board)
 
-	b.set(3, 5, whiteColor, pawnKind)
-	b.set(1, 0, blackColor, kingKind)
-	b.set(2, 2, blackColor, pawnKind)
+	b.Set(3, 5, WhiteColor, PawnKind)
+	b.Set(1, 0, BlackColor, KingKind)
+	b.Set(2, 2, BlackColor, PawnKind)
 
 	t.Log("Before:")
 	t.Log("\n" + b.String())
 
-	before := b.copy()
+	before := b.Copy()
 
-	is := []instruction{
-		makeMoveInstruction(3, 5, 2, 4),
-		makeCrownInstruction(2, 4),
-		makeCaptureInstruction(2, 4, whiteColor, kingKind),
-		makeMoveInstruction(1, 0, 4, 6),
-		makeMoveInstruction(2, 2, 3, 5),
-		makeCrownInstruction(3, 5),
+	is := []Instruction{
+		MoveInstruction(3, 5, 2, 4),
+		CrownInstruction(2, 4),
+		CaptureInstruction(2, 4, WhiteColor, KingKind),
+		MoveInstruction(1, 0, 4, 6),
+		MoveInstruction(2, 2, 3, 5),
+		CrownInstruction(3, 5),
 	}
 
-	performInstructions(b, is)
+	PerformInstructions(b, is)
 
 	t.Log("After:")
 	t.Log("\n" + b.String())
 
 	assertOccupied(b, t, 3, 5)
-	assertContains(b, t, 3, 5, blackColor, kingKind)
+	assertContains(b, t, 3, 5, BlackColor, KingKind)
 	assertOccupied(b, t, 4, 6)
-	assertContains(b, t, 4, 6, blackColor, kingKind)
+	assertContains(b, t, 4, 6, BlackColor, KingKind)
 	assertEmpty(b, t, 1, 0)
 	assertEmpty(b, t, 2, 2)
 	assertEmpty(b, t, 2, 4)
 
-	undoInstructions(b, is)
+	UndoInstructions(b, is)
 
 	t.Log("After undo:")
 	t.Log("\n" + b.String())
 
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
-			wantOccupied := before.isOccupied(row, col)
-			gotOccupied := b.isOccupied(row, col)
+			wantOccupied := before.IsOccupied(row, col)
+			gotOccupied := b.IsOccupied(row, col)
 
 			if wantOccupied != gotOccupied {
 				t.Errorf("row %d col %d should be occupied(%v) but is occupied(%v)", row, col, wantOccupied, gotOccupied)
 			} else if gotOccupied {
-				wantColor, wantKind := before.get(row, col)
-				gotColor, gotKind := b.get(row, col)
+				wantColor, wantKind := before.Get(row, col)
+				gotColor, gotKind := b.Get(row, col)
 
 				if wantColor != gotColor || wantKind != gotKind {
 					t.Errorf("row %d col %d should contain %s %s but contains %s %s", row, col, wantColor, wantKind, gotColor, gotKind)
@@ -265,21 +265,21 @@ func TestInsSequence(t *testing.T) {
 
 // TODO refactor other tests to use these assertions
 
-func assertOccupied(b *board, t *testing.T, row, col byte) {
-	if !b.isOccupied(row, col) {
+func assertOccupied(b *Board, t *testing.T, row, col byte) {
+	if !b.IsOccupied(row, col) {
 		t.Errorf("row %d col %d should be occupied", row, col)
 	}
 }
 
-func assertContains(b *board, t *testing.T, row, col byte, c color, k kind) {
-	ac, ak := b.get(row, col)
+func assertContains(b *Board, t *testing.T, row, col byte, c Color, k Kind) {
+	ac, ak := b.Get(row, col)
 	if ac != c || ak != k {
 		t.Errorf("row %d col %d should contain %s %s but contains %s %s", row, col, c, k, ac, ak)
 	}
 }
 
-func assertEmpty(b *board, t *testing.T, row, col byte) {
-	if b.isOccupied(row, col) {
+func assertEmpty(b *Board, t *testing.T, row, col byte) {
+	if b.IsOccupied(row, col) {
 		t.Errorf("row %d col %d should be empty", row, col)
 	}
 }

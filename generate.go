@@ -1,32 +1,32 @@
 package main
 
-// both offsets
+// both offSets
 var offBoth = [2]int8{-1, +1}
 
 // some types to avoid boolean blindness
 // since we don't have proper sum types
-// e.g. newCustomGame(true, false, ...) true or false what?
+// e.g. NewCustomGame(true, false, ...) true or false what?
 
-type captureRule bool
+type CaptureRule bool
 
 const (
 	// 'capturesMandatory' means that if you have captures available, you must perform one of the captures, not the simple plies
-	capturesMandatory    = captureRule(true)
-	capturesNotMandatory = captureRule(false)
+	CapturesMandatory    = CaptureRule(true)
+	CapturesNotMandatory = CaptureRule(false)
 )
 
-type bestRule bool
+type BestRule bool
 
 const (
-	// 'bestMandatory' means that you must perform the best capture available (the one that captures the most pieces)
-	bestMandatory    = bestRule(true)
-	bestNotMandatory = bestRule(false)
+	// 'BestMandatory' means that you must perform the best capture available (the one that captures the most pieces)
+	BestMandatory    = BestRule(true)
+	BestNotMandatory = BestRule(false)
 )
 
-// ply: a single action a player can execute when it's their turn to play
-type ply []instruction
+// Ply: a single action a player can execute when it's their turn to play
+type Ply []Instruction
 
-func (p ply) String() string {
+func (p Ply) String() string {
 	return instructionsToString(p)
 }
 
@@ -39,7 +39,7 @@ func (p ply) String() string {
 
 // simple plies are ones not involving any captures, where the piece just moves
 
-func generateSimplePawnPlies(ps []ply, b *board, row, col byte, color color) []ply {
+func generateSimplePawnPlies(ps []Ply, b *Board, row, col byte, color Color) []Ply {
 	drow := byte(int8(row) + forward[color])
 	if drow >= 8 {
 		return ps
@@ -47,31 +47,31 @@ func generateSimplePawnPlies(ps []ply, b *board, row, col byte, color color) []p
 	crown := crowningRow[color] == drow
 	for _, dir := range offBoth {
 		dcol := byte(int8(col) + dir)
-		if dcol >= 8 || b.isOccupied(drow, dcol) {
+		if dcol >= 8 || b.IsOccupied(drow, dcol) {
 			continue
 		}
-		var is []instruction
-		is = append(is, makeMoveInstruction(row, col, drow, dcol))
+		var is []Instruction
+		is = append(is, MoveInstruction(row, col, drow, dcol))
 		if crown {
-			is = append(is, makeCrownInstruction(drow, dcol))
+			is = append(is, CrownInstruction(drow, dcol))
 		}
-		ps = append(ps, ply(is))
+		ps = append(ps, Ply(is))
 	}
 	return ps
 }
 
-func generateSimpleKingPlies(ps []ply, b *board, row, col byte, color color) []ply {
+func generateSimpleKingPlies(ps []Ply, b *Board, row, col byte, color Color) []Ply {
 	for _, roff := range offBoth {
 		for _, coff := range offBoth {
 			dist := int8(1)
 			for {
 				drow, dcol := byte(int8(row)+dist*roff), byte(int8(col)+dist*coff)
-				if drow >= 8 || dcol >= 8 || b.isOccupied(drow, dcol) {
+				if drow >= 8 || dcol >= 8 || b.IsOccupied(drow, dcol) {
 					break
 				}
 
-				is := []instruction{makeMoveInstruction(row, col, drow, dcol)}
-				ps = append(ps, ply(is))
+				is := []Instruction{MoveInstruction(row, col, drow, dcol)}
+				ps = append(ps, Ply(is))
 
 				dist++
 			}
@@ -81,19 +81,19 @@ func generateSimpleKingPlies(ps []ply, b *board, row, col byte, color color) []p
 	return ps
 }
 
-func generateSimplePlies(ps []ply, b *board, player color) []ply {
+func generateSimplePlies(ps []Ply, b *Board, player Color) []Ply {
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
-			if !b.isOccupied(row, col) {
+			if !b.IsOccupied(row, col) {
 				continue
 			}
 
-			color, kind := b.get(row, col)
+			color, kind := b.Get(row, col)
 			if color != player {
 				continue
 			}
 
-			if kind == pawnKind {
+			if kind == PawnKind {
 				ps = generateSimplePawnPlies(ps, b, row, col, color)
 			} else {
 				ps = generateSimpleKingPlies(ps, b, row, col, color)
@@ -109,21 +109,21 @@ func generateSimplePlies(ps []ply, b *board, player color) []ply {
 // (we need to do a tree search in order to generate all possibilities of
 // sequential captures, and we do that by backtracking)
 
-func followPawnCaptures(ps []ply, stack []instruction, b *board, row, col byte, color color) []ply {
+func followPawnCaptures(ps []Ply, stack []Instruction, b *Board, row, col byte, color Color) []Ply {
 	// sink: there are no more captures available from here
 	sink := true
 
 	for _, roff := range offBoth {
 		for _, coff := range offBoth {
 			drow, dcol := byte(int8(row)+2*roff), byte(int8(col)+2*coff)
-			if drow >= 8 || dcol >= 8 || b.isOccupied(drow, dcol) {
+			if drow >= 8 || dcol >= 8 || b.IsOccupied(drow, dcol) {
 				continue
 			}
 			mrow, mcol := byte(int8(row)+roff), byte(int8(col)+coff)
-			if !b.isOccupied(mrow, mcol) {
+			if !b.IsOccupied(mrow, mcol) {
 				continue
 			}
-			mcolor, mkind := b.get(mrow, mcol)
+			mcolor, mkind := b.Get(mrow, mcol)
 			if mcolor == color {
 				continue
 			}
@@ -131,20 +131,20 @@ func followPawnCaptures(ps []ply, stack []instruction, b *board, row, col byte, 
 			sink = false
 
 			// do
-			stack = append(stack, makeMoveInstruction(row, col, drow, dcol))
-			stack = append(stack, makeCaptureInstruction(mrow, mcol, mcolor, mkind))
-			b.move(row, col, drow, dcol)
-			b.clear(mrow, mcol)
+			stack = append(stack, MoveInstruction(row, col, drow, dcol))
+			stack = append(stack, CaptureInstruction(mrow, mcol, mcolor, mkind))
+			b.Move(row, col, drow, dcol)
+			b.Clear(mrow, mcol)
 
 			ps = followPawnCaptures(ps, stack, b, drow, dcol, color)
 
 			// undo
-			b.set(mrow, mcol, mcolor, mkind)
-			b.move(drow, dcol, row, col)
+			b.Set(mrow, mcol, mcolor, mkind)
+			b.Move(drow, dcol, row, col)
 			stack = stack[:len(stack)-2]
 
 			// I could make another stack variable 'substack', copy the slice stack to it, append
-			// the instructions to that one and pass it to the recursive call,
+			// the Instructions to that one and pass it to the recursive call,
 			// so I don't need to shrink the stack at the end,
 			// BUT this can be less efficient if appending the substack grows the slice:
 			// currently if the stack grows once it can use that leftover capacity in further recursive calls;
@@ -159,17 +159,17 @@ func followPawnCaptures(ps []ply, stack []instruction, b *board, row, col byte, 
 		if crown {
 			isLen += 1
 		}
-		is := make([]instruction, isLen)
+		is := make([]Instruction, isLen)
 		copy(is, stack)
 		if crown {
-			is[isLen-1] = makeCrownInstruction(row, col)
+			is[isLen-1] = CrownInstruction(row, col)
 		}
-		ps = append(ps, ply(is))
+		ps = append(ps, Ply(is))
 	}
 	return ps
 }
 
-func followKingCaptures(ps []ply, stack []instruction, b *board, row, col byte, player color) []ply {
+func followKingCaptures(ps []Ply, stack []Instruction, b *Board, row, col byte, player Color) []Ply {
 	sink := true
 
 	for _, roff := range offBoth {
@@ -179,8 +179,8 @@ func followKingCaptures(ps []ply, stack []instruction, b *board, row, col byte, 
 
 			// captured piece, if any (only one)
 			var crow, ccol byte
-			var ccolor color
-			var ckind kind
+			var ccolor Color
+			var ckind Kind
 
 			dist := int8(1)
 			for {
@@ -193,11 +193,11 @@ func followKingCaptures(ps []ply, stack []instruction, b *board, row, col byte, 
 					break
 				}
 
-				if b.isOccupied(irow, icol) {
+				if b.IsOccupied(irow, icol) {
 					if pastCapture {
 						break
 					}
-					icolor, ikind := b.get(irow, icol)
+					icolor, ikind := b.Get(irow, icol)
 					if icolor != player {
 						// this is the capture
 						pastCapture = true
@@ -209,16 +209,16 @@ func followKingCaptures(ps []ply, stack []instruction, b *board, row, col byte, 
 					sink = false
 
 					// do
-					stack = append(stack, makeMoveInstruction(row, col, irow, icol))
-					stack = append(stack, makeCaptureInstruction(crow, ccol, ccolor, ckind))
-					b.move(row, col, irow, icol)
-					b.clear(crow, ccol)
+					stack = append(stack, MoveInstruction(row, col, irow, icol))
+					stack = append(stack, CaptureInstruction(crow, ccol, ccolor, ckind))
+					b.Move(row, col, irow, icol)
+					b.Clear(crow, ccol)
 
 					ps = followKingCaptures(ps, stack, b, irow, icol, player)
 
 					// undo
-					b.set(crow, ccol, ccolor, ckind)
-					b.move(irow, icol, row, col)
+					b.Set(crow, ccol, ccolor, ckind)
+					b.Move(irow, icol, row, col)
 					stack = stack[:len(stack)-2]
 				}
 
@@ -230,27 +230,27 @@ func followKingCaptures(ps []ply, stack []instruction, b *board, row, col byte, 
 
 	// same code as in followSimpleCaptures, except no crowning since the piece is already a king
 	if sink && stack != nil {
-		is := make([]instruction, len(stack))
+		is := make([]Instruction, len(stack))
 		copy(is, stack)
-		ps = append(ps, ply(is))
+		ps = append(ps, Ply(is))
 	}
 
 	return ps
 }
 
-func generateCapturePlies(ps []ply, b *board, player color) []ply {
+func generateCapturePlies(ps []Ply, b *Board, player Color) []Ply {
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
-			if !b.isOccupied(row, col) {
+			if !b.IsOccupied(row, col) {
 				continue
 			}
 
-			color, kind := b.get(row, col)
+			color, kind := b.Get(row, col)
 			if color != player {
 				continue
 			}
 
-			if kind == pawnKind {
+			if kind == PawnKind {
 				ps = followPawnCaptures(ps, nil, b, row, col, color)
 			} else {
 				ps = followKingCaptures(ps, nil, b, row, col, color)
@@ -260,12 +260,12 @@ func generateCapturePlies(ps []ply, b *board, player color) []ply {
 	return ps
 }
 
-func generatePlies(b *board, player color, captureRule captureRule, bestRule bestRule) []ply {
+func GeneratePlies(b *Board, player Color, captureRule CaptureRule, bestRule BestRule) []Ply {
 
 	ps := generateCapturePlies(nil, b, player)
 
-	capturesMandatory := captureRule == capturesMandatory
-	bestMandatory := bestRule == bestMandatory
+	capturesMandatory := captureRule == CapturesMandatory
+	bestMandatory := bestRule == BestMandatory
 
 	if len(ps) == 0 || (!capturesMandatory && !bestMandatory) {
 		// could be just len(ps) == 0 || !capturesMandatory, making the logic more obvious:
@@ -293,7 +293,7 @@ func generatePlies(b *board, player color, captureRule captureRule, bestRule bes
 			}
 		}
 
-		var best []ply
+		var best []Ply
 		for k, p := range ps {
 			if captureCountPerMove[k] == mostCaptures {
 				best = append(best, p)

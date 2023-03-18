@@ -30,7 +30,7 @@ func (t instructionType) String() string {
 // instruction should contain all information needed to undo it
 // that's the reason for storing the color and kind of the captured piece
 
-type instruction struct {
+type Instruction struct {
 	t   instructionType
 	row byte
 	col byte
@@ -41,19 +41,19 @@ type instruction struct {
 	d [2]byte
 }
 
-func (i instruction) String() string {
+func (i Instruction) String() string {
 	buf := new(bytes.Buffer)
 	fmt.Fprintf(buf, "{%s (%d, %d)", i.t.String(), i.row, i.col)
 	if i.t == moveInstruction {
 		fmt.Fprintf(buf, " to (%d, %d)", i.d[0], i.d[1])
 	} else if i.t == captureInstruction {
-		fmt.Fprintf(buf, " %s %s", color(i.d[0]), kind(i.d[1]))
+		fmt.Fprintf(buf, " %s %s", Color(i.d[0]), Kind(i.d[1]))
 	}
 	buf.WriteRune('}')
 	return buf.String()
 }
 
-func instructionsToString(is []instruction) string {
+func instructionsToString(is []Instruction) string {
 	ss := make([]string, 0, len(is))
 	for _, i := range is {
 		ss = append(ss, i.String())
@@ -61,40 +61,40 @@ func instructionsToString(is []instruction) string {
 	return strings.Join(ss, ";")
 }
 
-func makeMoveInstruction(sourceRow, sourceCol, destinationRow, destinationCol byte) instruction {
-	var i instruction
+func MoveInstruction(sourceRow, sourceCol, destinationRow, destinationCol byte) Instruction {
+	var i Instruction
 	i.t = moveInstruction
 	i.row, i.col = sourceRow, sourceCol
 	i.d[0], i.d[1] = destinationRow, destinationCol
 	return i
 }
 
-func makeCaptureInstruction(row, col byte, c color, k kind) instruction {
-	var i instruction
+func CaptureInstruction(row, col byte, c Color, k Kind) Instruction {
+	var i Instruction
 	i.t = captureInstruction
 	i.row, i.col = row, col
 	i.d[0], i.d[1] = byte(c), byte(k)
 	return i
 }
 
-func makeCrownInstruction(row, col byte) instruction {
-	var i instruction
+func CrownInstruction(row, col byte) Instruction {
+	var i Instruction
 	i.t = crownInstruction
 	i.row, i.col = row, col
 	return i
 }
 
-func performInstructions(b *board, is []instruction) {
+func PerformInstructions(b *Board, is []Instruction) {
 	for _, i := range is {
 		switch i.t {
 		case moveInstruction:
 			fromRow, fromCol := i.row, i.col
 			toRow, toCol := i.d[0], i.d[1]
-			b.move(fromRow, fromCol, toRow, toCol)
+			b.Move(fromRow, fromCol, toRow, toCol)
 		case captureInstruction:
 			row, col := i.row, i.col
-			capturedColor, capturedKind := color(i.d[0]), kind(i.d[1])
-			actualColor, actualKind := b.get(row, col)
+			capturedColor, capturedKind := Color(i.d[0]), Kind(i.d[1])
+			actualColor, actualKind := b.Get(row, col)
 
 			// TODO return err instead of panicking
 
@@ -106,32 +106,32 @@ func performInstructions(b *board, is []instruction) {
 					actualColor, actualKind,
 				))
 			}
-			b.clear(row, col)
+			b.Clear(row, col)
 		case crownInstruction:
-			b.crown(i.row, i.col)
+			b.Crown(i.row, i.col)
 		default:
 			panic(fmt.Sprintf("Invalid instruction type %s", i.t))
 		}
 	}
 }
 
-// if you pass is to performInstructions
-// the same is passed to undoInstructions will undo the instructionList performed
+// if you pass is to PerformInstructions
+// the same is passed to UndoInstructions will undo the instructionList performed
 // you don't need to reverse them
-func undoInstructions(b *board, is []instruction) {
+func UndoInstructions(b *Board, is []Instruction) {
 	for k := len(is) - 1; k >= 0; k-- {
 		i := is[k]
 		switch i.t {
 		case moveInstruction:
 			fromRow, fromCol := i.row, i.col
 			toRow, toCol := i.d[0], i.d[1]
-			b.move(toRow, toCol, fromRow, fromCol)
+			b.Move(toRow, toCol, fromRow, fromCol)
 		case captureInstruction:
 			row, col := i.row, i.col
-			capturedColor, capturedKind := color(i.d[0]), kind(i.d[1])
-			b.set(row, col, capturedColor, capturedKind)
+			capturedColor, capturedKind := Color(i.d[0]), Kind(i.d[1])
+			b.Set(row, col, capturedColor, capturedKind)
 		case crownInstruction:
-			b.uncrown(i.row, i.col)
+			b.Uncrown(i.row, i.col)
 		default:
 			panic(fmt.Sprintf("Invalid instruction type %s", i.t))
 		}

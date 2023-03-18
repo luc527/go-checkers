@@ -9,29 +9,29 @@ func TestDoUndoState(t *testing.T) {
 
 	// this should already fully test g.history and g.lastPly
 
-	g := newGame(capturesMandatory, bestNotMandatory)
+	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
 
-	var states []*game
+	var states []*Game
 
-	for !g.isOver() {
-		states = append(states, g.copy())
-		r := rand.Int() % len(g.plies)
-		t.Log(g.plies[r])
-		g.doPly(g.plies[r])
+	for !g.IsOver() {
+		states = append(states, g.Copy())
+		r := rand.Int() % len(g.Plies())
+		t.Log(g.Plies()[r])
+		g.DoPly(g.Plies()[r])
 	}
 
-	t.Log("\n" + g.board.String())
+	t.Log("\n" + g.Board().String())
 
 	for i := len(states) - 1; i >= 0; i-- {
-		g.undoLastPly()
-		if !g.equals(states[i]) {
+		g.UndoLastPly()
+		if !g.Equals(states[i]) {
 			t.Fail()
 			break
 		}
 	}
 }
 
-func assertGameState(t *testing.T, g *game, s gameState) {
+func assertGameState(t *testing.T, g *Game, s gameState) {
 	if g.state != s {
 		t.Errorf("expected game to be in the %v state, but it's in the %v state", s, g.state)
 	}
@@ -45,7 +45,7 @@ func TestWhiteWinsByNoBlackPieces(t *testing.T) {
 		...o
 	`)
 	t.Log("\n" + b.String())
-	g := newCustomGame(capturesNotMandatory, bestNotMandatory, 20, b, whiteColor)
+	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
 	assertGameState(t, g, whiteWonState)
 }
 
@@ -59,7 +59,7 @@ func TestBlackWinsByNoWhitePieces(t *testing.T) {
 		.
 	`)
 	t.Log("\n" + b.String())
-	g := newCustomGame(capturesNotMandatory, bestNotMandatory, 20, b, whiteColor)
+	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
 	assertGameState(t, g, blackWonState)
 }
 
@@ -75,7 +75,7 @@ func TestWhiteWinsByNoBlackPlies(t *testing.T) {
 		x.o
 	`)
 	t.Log("\n" + b.String())
-	g := newCustomGame(capturesNotMandatory, bestNotMandatory, 20, b, blackColor)
+	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, BlackColor)
 	assertGameState(t, g, whiteWonState)
 }
 
@@ -89,13 +89,13 @@ func TestBlackWinsByNoWhitePlies(t *testing.T) {
 		.....o
 	`)
 	t.Log("\n" + b.String())
-	g := newCustomGame(capturesNotMandatory, bestNotMandatory, 20, b, whiteColor)
+	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
 	t.Log()
 	assertGameState(t, g, blackWonState)
 }
 
-func assertEqualBoards(t *testing.T, a *board, b *board) {
-	if !a.equals(b) {
+func assertEqualBoards(t *testing.T, a *Board, b *Board) {
+	if !a.Equals(b) {
 		t.Errorf("boards not equal: \n%vand\n%v", a, b)
 	}
 }
@@ -118,13 +118,13 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		ooooooo
 	`)
 
-	g := newCustomGame(capturesMandatory, bestMandatory, 3, b, whiteColor)
+	g := NewCustomGame(CapturesMandatory, BestMandatory, 3, b, WhiteColor)
 	assertGameState(t, g, playingState)
 
-	g.doPly(ply{makeMoveInstruction(3, 3, 2, 2)})
+	g.DoPly(Ply{MoveInstruction(3, 3, 2, 2)})
 
 	// just to make the code more legible by showing what each intermediary board looks like
-	assertEqualBoards(t, g.board, decodeBoard(`
+	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x...#
 		.
 		..o
@@ -137,8 +137,8 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	assertGameState(t, g, playingState)
 	// at this point turnsSincePawnMove=0, turnsSinceCapture=1
 
-	g.doPly(ply{makeMoveInstruction(0, 6, 1, 5)})
-	assertEqualBoards(t, g.board, decodeBoard(`
+	g.DoPly(Ply{MoveInstruction(0, 6, 1, 5)})
+	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.....#
 		..o
@@ -151,8 +151,8 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	assertGameState(t, g, playingState)
 	// at this point turnsSincePawnMove=1, turnsSinceCapture=2
 
-	g.doPly(ply{makeMoveInstruction(4, 4, 6, 2)})
-	assertEqualBoards(t, g.board, decodeBoard(`
+	g.DoPly(Ply{MoveInstruction(4, 4, 6, 2)})
+	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.....#
 		..o
@@ -166,8 +166,8 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	// at this point turnsSincePawnMove=2, turnsSinceCapture=3
 
 	// let's reset a counter, ply doesn't have to be legal
-	g.doPly(ply{makeMoveInstruction(2, 2, 2, 4)})
-	assertEqualBoards(t, g.board, decodeBoard(`
+	g.DoPly(Ply{MoveInstruction(2, 2, 2, 4)})
+	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.....#
 		....o
@@ -181,8 +181,8 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	// at this point turnsSincePawnMove=0, turnsSinceCapture=4
 
 	// let's reset another counter
-	g.doPly(ply{makeMoveInstruction(1, 5, 3, 3), makeCaptureInstruction(2, 4, whiteColor, pawnKind)})
-	assertEqualBoards(t, g.board, decodeBoard(`
+	g.DoPly(Ply{MoveInstruction(1, 5, 3, 3), CaptureInstruction(2, 4, WhiteColor, PawnKind)})
+	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.
 		.
@@ -197,8 +197,8 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 
 	// now let's keep the state stagnant
 
-	g.doPly(ply{makeMoveInstruction(6, 2, 5, 3)})
-	assertEqualBoards(t, g.board, decodeBoard(`
+	g.DoPly(Ply{MoveInstruction(6, 2, 5, 3)})
+	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.
 		.
@@ -211,8 +211,8 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	assertGameState(t, g, playingState)
 	// turnsSincePawnMove=2, turnsSinceCapture=1
 
-	g.doPly(ply{makeMoveInstruction(3, 3, 2, 2)})
-	assertEqualBoards(t, g.board, decodeBoard(`
+	g.DoPly(Ply{MoveInstruction(3, 3, 2, 2)})
+	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.
 		..#
@@ -225,8 +225,8 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	assertGameState(t, g, playingState)
 	// turnsSincePawnMove=3, turnsSinceCapture=2
 
-	g.doPly(ply{makeMoveInstruction(5, 3, 4, 4)})
-	assertEqualBoards(t, g.board, decodeBoard(`
+	g.DoPly(Ply{MoveInstruction(5, 3, 4, 4)})
+	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.
 		..#
@@ -240,29 +240,29 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	assertGameState(t, g, drawState)
 }
 
-func assertSpecialEnding(t *testing.T, b *board) {
-	g := newCustomGame(capturesNotMandatory, bestNotMandatory, 20, b, whiteColor)
-	t.Log("\n" + g.board.String())
+func assertSpecialEnding(t *testing.T, b *Board) {
+	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
+	t.Log("\n" + g.Board().String())
 	// 1 turn in special ending
 	assertGameState(t, g, playingState)
 
-	g.doPly(randomInoffensiveMove(g.board, g.toPlay))
-	t.Log("\n" + g.board.String())
+	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
+	t.Log("\n" + g.Board().String())
 	// 2 turns in special ending
 	assertGameState(t, g, playingState)
 
-	g.doPly(randomInoffensiveMove(g.board, g.toPlay))
-	t.Log("\n" + g.board.String())
+	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
+	t.Log("\n" + g.Board().String())
 	// 3 turns in special ending
 	assertGameState(t, g, playingState)
 
-	g.doPly(randomInoffensiveMove(g.board, g.toPlay))
-	t.Log("\n" + g.board.String())
+	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
+	t.Log("\n" + g.Board().String())
 	// 4 turns in special ending
 	assertGameState(t, g, playingState)
 
-	g.doPly(randomInoffensiveMove(g.board, g.toPlay))
-	t.Log("\n" + g.board.String())
+	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
+	t.Log("\n" + g.Board().String())
 	// 5 turns in special ending
 	assertGameState(t, g, drawState)
 }

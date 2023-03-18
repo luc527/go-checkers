@@ -9,7 +9,7 @@ import (
 
 func play() {
 
-	g := newGame(capturesMandatory, bestNotMandatory)
+	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
 
 	input := bufio.NewScanner(os.Stdin)
 
@@ -17,25 +17,27 @@ func play() {
 	quit := false
 
 	for !quit {
-		fmt.Printf("It's %s's turn!\n", g.toPlay)
+		fmt.Printf("It's %s's turn!\n", g.ToPlay())
 
-		if g.isOver() {
-			if !g.hasWinner() {
+		if g.IsOver() {
+			if !g.HasWinner() {
 				fmt.Println("It's a draw, no one wins")
 			} else {
-				fmt.Printf("The winner is %s!\n", g.winner())
+				fmt.Printf("The winner is %s!\n", g.Winner())
 			}
 		}
 
-		for i, p := range g.plies {
+		plies := g.Plies()
+
+		for i, p := range plies {
 			fmt.Printf("[%2d]: %s\n", i, p.String())
 		}
-		if len(g.history) > 0 {
+		if g.HasLastPly() {
 			fmt.Println("[ u]: undo last move")
 		}
 		fmt.Println("[ q]: quit")
 
-		fmt.Println(g.board)
+		fmt.Println(g.Board())
 
 	askForMove:
 		fmt.Print("Your choice: ")
@@ -49,7 +51,7 @@ func play() {
 
 		text := input.Text()
 		if text == "u" {
-			g.undoLastPly()
+			g.UndoLastPly()
 		} else if text == "q" {
 			quit = true
 		} else {
@@ -58,11 +60,11 @@ func play() {
 				fmt.Printf("Invalid move, try again (%v)\n", err)
 				goto askForMove // Considered harmful!
 			}
-			if i < 0 || i >= len(g.plies) {
+			if i < 0 || i >= len(plies) {
 				fmt.Println("Invalid move, try again (out of bounds)")
 				goto askForMove // Considered harmful!
 			}
-			g.doPly(g.plies[i])
+			g.DoPly(plies[i])
 		}
 	}
 }

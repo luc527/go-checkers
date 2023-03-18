@@ -5,15 +5,15 @@ import (
 	"strings"
 )
 
-type color byte
+type Color byte
 
-type kind byte
+type Kind byte
 
 const (
-	blackColor = color(0)
-	whiteColor = color(1)
-	pawnKind   = kind(0)
-	kingKind   = kind(1)
+	BlackColor = Color(0)
+	WhiteColor = Color(1)
+	PawnKind   = Kind(0)
+	KingKind   = Kind(1)
 )
 
 // Used mostly for testing
@@ -21,65 +21,65 @@ type coord struct {
 	row, col byte
 }
 type piece struct {
-	color
-	kind
+	Color
+	Kind
 }
 
 var crowningRow = [2]byte{
-	int(blackColor): 7,
-	int(whiteColor): 0,
+	int(BlackColor): 7,
+	int(WhiteColor): 0,
 }
 
 var forward = [2]int8{
-	int(blackColor): +1,
-	int(whiteColor): -1,
+	int(BlackColor): +1,
+	int(WhiteColor): -1,
 }
 
-func (c color) String() string {
-	if c == whiteColor {
+func (c Color) String() string {
+	if c == WhiteColor {
 		return "white"
 	} else {
 		return "black"
 	}
 }
 
-func (c color) opposite() color {
-	if c == whiteColor {
-		return blackColor
+func (c Color) Opposite() Color {
+	if c == WhiteColor {
+		return BlackColor
 	}
-	return whiteColor
+	return WhiteColor
 }
 
-func (k kind) String() string {
-	if k == kingKind {
+func (k Kind) String() string {
+	if k == KingKind {
 		return "king"
 	} else {
 		return "pawn"
 	}
 }
 
-type board struct {
+type Board struct {
 	occupied uint64
 	white    uint64
 	king     uint64
 }
 
-func pieceToRune(c color, k kind) rune {
-	if c == whiteColor {
-		if k == kingKind {
+func pieceToRune(c Color, k Kind) rune {
+	if c == WhiteColor {
+		if k == KingKind {
 			return '@'
 		}
 		return 'o'
 	}
 	//black
-	if k == kingKind {
+	if k == KingKind {
 		return '#'
 	}
 	//pawn
 	return 'x'
 }
 
-func (b *board) String() string {
+func (b *Board) String() string {
 	buf := new(bytes.Buffer)
 
 	buf.WriteRune(' ')
@@ -93,9 +93,9 @@ func (b *board) String() string {
 		buf.WriteString("\n")
 		buf.WriteRune('0' + rune(row))
 		for col := byte(0); col < 8; col++ {
-			if b.isOccupied(row, col) {
-				buf.WriteRune(pieceToRune(b.get(row, col)))
-			} else if tileColor(row, col) == blackColor {
+			if b.IsOccupied(row, col) {
+				buf.WriteRune(pieceToRune(b.Get(row, col)))
+			} else if TileColor(row, col) == BlackColor {
 				buf.WriteRune('_')
 			} else {
 				buf.WriteRune(' ')
@@ -115,118 +115,118 @@ func (b *board) String() string {
 	return buf.String()
 }
 
-func tileColor(row, col byte) color {
+func TileColor(row, col byte) Color {
 	if (row+col)%2 == 0 {
-		return whiteColor
+		return WhiteColor
 	} else {
-		return blackColor
+		return BlackColor
 	}
 }
 
-func placeInitialPieces(b *board) {
+func PlaceInitialPieces(b *Board) {
 	for row := byte(0); row <= 2; row++ {
 		for col := byte(0); col < 8; col++ {
-			if tileColor(row, col) == blackColor {
-				b.set(row, col, blackColor, pawnKind)
+			if TileColor(row, col) == BlackColor {
+				b.Set(row, col, BlackColor, PawnKind)
 			}
 		}
 	}
 	for row := byte(5); row <= 7; row++ {
 		for col := byte(0); col < 8; col++ {
-			if tileColor(row, col) == blackColor {
-				b.set(row, col, whiteColor, pawnKind)
+			if TileColor(row, col) == BlackColor {
+				b.Set(row, col, WhiteColor, PawnKind)
 			}
 		}
 	}
 }
 
-func (b *board) clear(row, col byte) {
+func (b *Board) Clear(row, col byte) {
 	b.occupied &^= uint64(1 << (uint64(row)*8 + uint64(col)))
 }
 
-func (b *board) set(row, col byte, c color, k kind) {
+func (b *Board) Set(row, col byte, c Color, k Kind) {
 	x := uint64(1 << (uint64(row)*8 + uint64(col)))
 
 	b.occupied |= x
 
-	if c == whiteColor {
+	if c == WhiteColor {
 		b.white |= x
 	} else {
 		b.white &^= x
 	}
 
-	if k == kingKind {
+	if k == KingKind {
 		b.king |= x
 	} else {
 		b.king &^= x
 	}
 }
 
-func (b *board) move(srow, scol, drow, dcol byte) {
-	c, k := b.get(srow, scol)
-	b.clear(srow, scol)
-	b.set(drow, dcol, c, k)
+func (b *Board) Move(srow, scol, drow, dcol byte) {
+	c, k := b.Get(srow, scol)
+	b.Clear(srow, scol)
+	b.Set(drow, dcol, c, k)
 }
 
-func (b *board) crown(row, col byte) {
+func (b *Board) Crown(row, col byte) {
 	x := uint64(1 << (uint64(row)*8 + uint64(col)))
 	b.king |= x
 }
 
-func (b *board) uncrown(row, col byte) {
+func (b *Board) Uncrown(row, col byte) {
 	x := uint64(1 << (uint64(row)*8 + uint64(col)))
 	b.king &^= x
 }
 
-func (b *board) isOccupied(row, col byte) bool {
+func (b *Board) IsOccupied(row, col byte) bool {
 	x := uint64(1 << (uint64(row)*8 + uint64(col)))
 	return b.occupied&x != 0
 }
 
-func (b *board) get(row, col byte) (c color, k kind) {
+func (b *Board) Get(row, col byte) (c Color, k Kind) {
 	n := uint64(row)*8 + uint64(col)
 	x := uint64(1 << n)
-	k = kind((b.king & x) >> n)
-	c = color((b.white & x) >> n)
+	k = Kind((b.king & x) >> n)
+	c = Color((b.white & x) >> n)
 	return
 }
 
-func (b *board) copy() *board {
-	var c board
+func (b *Board) Copy() *Board {
+	var c Board
 	c.occupied = b.occupied
 	c.white = b.white
 	c.king = b.king
 	return &c
 }
 
-type pieceCount struct {
-	whitePawns int8
-	blackPawns int8
-	whiteKings int8
-	blackKings int8
+type PieceCount struct {
+	WhitePawns int8
+	BlackPawns int8
+	WhiteKings int8
+	BlackKings int8
 }
 
-func (b *board) pieceCount() pieceCount {
-	var c pieceCount
+func (b *Board) PieceCount() PieceCount {
+	var c PieceCount
 
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
-			if !b.isOccupied(row, col) {
+			if !b.IsOccupied(row, col) {
 				continue
 			}
 
-			color, kind := b.get(row, col)
-			if color == whiteColor {
-				if kind == pawnKind {
-					c.whitePawns++
+			color, kind := b.Get(row, col)
+			if color == WhiteColor {
+				if kind == PawnKind {
+					c.WhitePawns++
 				} else {
-					c.whiteKings++
+					c.WhiteKings++
 				}
 			} else {
-				if kind == pawnKind {
-					c.blackPawns++
+				if kind == PawnKind {
+					c.BlackPawns++
 				} else {
-					c.blackKings++
+					c.BlackKings++
 				}
 			}
 		}
@@ -235,7 +235,7 @@ func (b *board) pieceCount() pieceCount {
 	return c
 }
 
-func (b *board) equals(o *board) bool {
+func (b *Board) Equals(o *Board) bool {
 	if b == nil && o == nil {
 		return true
 	}
@@ -244,12 +244,12 @@ func (b *board) equals(o *board) bool {
 	}
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
-			if b.isOccupied(row, col) != o.isOccupied(row, col) {
+			if b.IsOccupied(row, col) != o.IsOccupied(row, col) {
 				return false
 			}
-			if b.isOccupied(row, col) {
-				bc, bk := b.get(row, col)
-				oc, ok := o.get(row, col)
+			if b.IsOccupied(row, col) {
+				bc, bk := b.Get(row, col)
+				oc, ok := o.Get(row, col)
 				if bc != oc || bk != ok {
 					return false
 				}
@@ -259,7 +259,7 @@ func (b *board) equals(o *board) bool {
 	return true
 }
 
-func decodeBoard(s string) *board {
+func decodeBoard(s string) *Board {
 	rawLines := strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n")
 
 	// trim all liens and filter empty ones
@@ -271,7 +271,7 @@ func decodeBoard(s string) *board {
 		}
 	}
 
-	b := new(board)
+	b := new(Board)
 
 	// parse lines rawLines
 	maxRow := 8
@@ -290,13 +290,13 @@ func decodeBoard(s string) *board {
 			}
 
 			if cell == 'x' {
-				b.set(byte(row), byte(col), blackColor, pawnKind)
+				b.Set(byte(row), byte(col), BlackColor, PawnKind)
 			} else if cell == '#' {
-				b.set(byte(row), byte(col), blackColor, kingKind)
+				b.Set(byte(row), byte(col), BlackColor, KingKind)
 			} else if cell == 'o' {
-				b.set(byte(row), byte(col), whiteColor, pawnKind)
+				b.Set(byte(row), byte(col), WhiteColor, PawnKind)
 			} else if cell == '@' {
-				b.set(byte(row), byte(col), whiteColor, kingKind)
+				b.Set(byte(row), byte(col), WhiteColor, KingKind)
 			}
 
 			col++

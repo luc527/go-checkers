@@ -6,18 +6,18 @@ package main
 // arguably interfaces shouldn't be named xxxInterface
 // but this is just for the naive board comparison, so whatever
 type boardInterface interface {
-	isOccupied(row, col uint8) bool
-	clear(row, col uint8)
-	set(row, col uint8, c color, k kind)
-	get(row, col uint8) (color, kind)
+	IsOccupied(row, col uint8) bool
+	Clear(row, col uint8)
+	Set(row, col uint8, c Color, k Kind)
+	Get(row, col uint8) (Color, Kind)
 }
 
 var _ boardInterface = &naiveBoard{}
-var _ boardInterface = &board{}
+var _ boardInterface = &Board{}
 
 type naivePiece struct {
-	color
-	kind
+	Color
+	Kind
 }
 
 type naiveBoard struct {
@@ -28,19 +28,19 @@ func newEmptyNaiveBoard() *naiveBoard {
 	return &naiveBoard{}
 }
 
-func (b *naiveBoard) isOccupied(row, col uint8) bool {
+func (b *naiveBoard) IsOccupied(row, col uint8) bool {
 	return b.matrix[row][col] != nil
 }
 
-func (b *naiveBoard) clear(row, col uint8) {
+func (b *naiveBoard) Clear(row, col uint8) {
 	b.matrix[row][col] = nil
 }
 
-func (b *naiveBoard) set(row, col uint8, c color, k kind) {
+func (b *naiveBoard) Set(row, col uint8, c Color, k Kind) {
 	b.matrix[row][col] = &naivePiece{c, k}
 }
 
-func (b *naiveBoard) get(row, col uint8) (color, kind) {
+func (b *naiveBoard) Get(row, col uint8) (Color, Kind) {
 	p := b.matrix[row][col]
-	return p.color, p.kind
+	return p.Color, p.Kind
 }

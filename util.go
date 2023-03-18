@@ -37,64 +37,64 @@ func sideBySide(boards []string) {
 
 }
 
-func showcasePlies(b *board, ps []ply) {
+func showcasePlies(b *Board, ps []Ply) {
 	for _, p := range ps {
 		boards := make([]string, 0, len(p))
 		for k := range p {
-			performInstructions(b, p[k:k+1])
+			PerformInstructions(b, p[k:k+1])
 			boards = append(boards, b.String())
 		}
 		fmt.Println(p)
 		sideBySide(boards)
-		undoInstructions(b, p)
+		UndoInstructions(b, p)
 		fmt.Println()
 	}
 }
 
 func example0() {
-	b := new(board)
+	b := new(Board)
 
-	b.set(0, 5, blackColor, kingKind)
-	b.set(2, 3, whiteColor, pawnKind)
-	b.set(4, 3, whiteColor, pawnKind)
-	b.set(4, 5, whiteColor, pawnKind)
-	b.set(6, 5, whiteColor, pawnKind)
-	b.set(5, 2, whiteColor, pawnKind)
+	b.Set(0, 5, BlackColor, KingKind)
+	b.Set(2, 3, WhiteColor, PawnKind)
+	b.Set(4, 3, WhiteColor, PawnKind)
+	b.Set(4, 5, WhiteColor, PawnKind)
+	b.Set(6, 5, WhiteColor, PawnKind)
+	b.Set(5, 2, WhiteColor, PawnKind)
 
 	fmt.Println(b)
 
-	iss := generateCapturePlies(nil, b, blackColor)
+	iss := generateCapturePlies(nil, b, BlackColor)
 	showcasePlies(b, iss)
 }
 
 func example1() {
 
-	b := new(board)
+	b := new(Board)
 
 	//same board as example0
-	b.set(0, 5, blackColor, kingKind)
-	b.set(2, 3, whiteColor, pawnKind)
-	b.set(4, 3, whiteColor, pawnKind)
-	b.set(4, 5, whiteColor, pawnKind)
-	b.set(6, 5, whiteColor, pawnKind)
-	b.set(5, 2, whiteColor, pawnKind)
+	b.Set(0, 5, BlackColor, KingKind)
+	b.Set(2, 3, WhiteColor, PawnKind)
+	b.Set(4, 3, WhiteColor, PawnKind)
+	b.Set(4, 5, WhiteColor, PawnKind)
+	b.Set(6, 5, WhiteColor, PawnKind)
+	b.Set(5, 2, WhiteColor, PawnKind)
 
 	fmt.Println(b)
 
-	captureRules := []captureRule{capturesMandatory, capturesNotMandatory}
-	bestRules := []bestRule{bestMandatory, bestNotMandatory}
+	captureRules := []CaptureRule{CapturesMandatory, CapturesNotMandatory}
+	bestRules := []BestRule{BestMandatory, BestNotMandatory}
 
 	for _, capRule := range captureRules {
 		for _, bRule := range bestRules {
 			fmt.Println()
 
 			capString := " NOT "
-			if capRule == capturesMandatory {
+			if capRule == CapturesMandatory {
 				capString = " ARE "
 			}
 
 			bString := " NOT "
-			if bRule == bestMandatory {
+			if bRule == BestMandatory {
 				bString = " ARE "
 			}
 
@@ -103,7 +103,7 @@ func example1() {
 			fmt.Printf("=========     best%smandatory =========\n", bString)
 			fmt.Printf("==================%s===================\n", "=====")
 
-			iss := generatePlies(b, blackColor, capRule, bRule)
+			iss := GeneratePlies(b, BlackColor, capRule, bRule)
 			showcasePlies(b, iss)
 		}
 	}

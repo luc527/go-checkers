@@ -8,41 +8,41 @@ func rn8() uint8 {
 	return uint8(rand.Uint32() % 8)
 }
 
-func rnColor() color {
-	return color(rand.Uint32() % 2)
+func rnColor() Color {
+	return Color(rand.Uint32() % 2)
 }
 
-func rnKind() kind {
-	return kind(rand.Uint32() % 2)
+func rnKind() Kind {
+	return Kind(rand.Uint32() % 2)
 }
 
 func randomAction(b boardInterface) {
 	x := rand.Uint32() % 5
 	if x == 0 { // happens 1/5 of the times
-		b.clear(rn8(), rn8())
+		b.Clear(rn8(), rn8())
 	} else if x == 1 || x == 2 || x == 3 { // happens 3/5 of the times
-		b.set(rn8(), rn8(), rnColor(), rnKind())
+		b.Set(rn8(), rn8(), rnColor(), rnKind())
 	} else { // x == 4, x == 5, happens 2/5 of the time
 
 		// flip
 
 		r, c := rn8(), rn8()
-		if b.isOccupied(r, c) {
-			color, kind := b.get(r, c)
+		if b.IsOccupied(r, c) {
+			color, kind := b.Get(r, c)
 
-			if color == whiteColor {
-				color = blackColor
+			if color == WhiteColor {
+				color = BlackColor
 			} else {
-				color = whiteColor
+				color = WhiteColor
 			}
 
-			if kind == kingKind {
-				kind = pawnKind
+			if kind == KingKind {
+				kind = PawnKind
 			} else {
-				kind = kingKind
+				kind = KingKind
 			}
 
-			b.set(r, c, color, kind)
+			b.Set(r, c, color, kind)
 		}
 	}
 }
@@ -54,16 +54,16 @@ func nRandomActions(b boardInterface, n int) {
 	}
 }
 
-func randomInoffensiveMove(b *board, player color) ply {
+func randomInoffensiveMove(b *Board, player Color) Ply {
 	var coords []coord
 
 	for row := byte(0); row < 8; row++ {
 		for col := byte(0); col < 8; col++ {
-			if !b.isOccupied(row, col) {
+			if !b.IsOccupied(row, col) {
 				continue
 			}
 
-			color, _ := b.get(row, col)
+			color, _ := b.Get(row, col)
 			if color == player {
 				coords = append(coords, coord{row, col})
 			}
@@ -71,7 +71,7 @@ func randomInoffensiveMove(b *board, player color) ply {
 	}
 
 	if len(coords) == 0 {
-		return ply{}
+		return Ply{}
 	}
 
 	randomCoord := coords[rand.Int()%len(coords)]
@@ -80,10 +80,10 @@ func randomInoffensiveMove(b *board, player color) ply {
 	var drow, dcol byte
 	for {
 		drow, dcol = rn8(), rn8()
-		if !b.isOccupied(drow, dcol) {
+		if !b.IsOccupied(drow, dcol) {
 			break
 		}
 	}
 
-	return ply{makeMoveInstruction(srow, scol, drow, dcol)}
+	return Ply{MoveInstruction(srow, scol, drow, dcol)}
 }
