@@ -1,0 +1,12 @@
+in main():
+
+	f, perr := os.Create("cpu.pprof")
+	if perr != nil {
+		log.Fatal(perr)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+
+then run:
+
+go tool pprof -http=":8000" ./cpu.pprof
