@@ -285,6 +285,9 @@ func GeneratePlies(b *Board, player Color, captureRule CaptureRule, bestRule Bes
 		ps = generateSimplePlies(ps, b, player)
 	}
 
+	// TODO optimize below
+	// don't need to always allocate the best []Ply
+
 	if len(ps) > 0 && bestMandatory {
 		captureCountPerMove := make([]int, len(ps))
 		mostCaptures := 0

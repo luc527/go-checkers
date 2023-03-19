@@ -25,9 +25,6 @@ func UnweightedCountHeuristic(g *Game, player Color) int {
 	whites := int(count.WhitePawns + count.WhiteKings)
 	blacks := int(count.BlackPawns + count.BlackKings)
 
-	fmt.Println("whites", whites)
-	fmt.Println("blacks", blacks)
-
 	factor := 1
 	if player == BlackColor {
 		factor = -1

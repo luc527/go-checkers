@@ -315,7 +315,7 @@ func BenchmarkGame(b *testing.B) {
 		g := NewStandardGame(CapturesNotMandatory, BestNotMandatory)
 		for !g.IsOver() {
 			plies := g.Plies()
-			randomPly := plies[int(rand.Uint32()%uint32(len(plies)))]
+			randomPly := plies[rand.Int()%len(plies)]
 			g.DoPly(randomPly)
 		}
 		for g.HasLastPly() {
@@ -330,11 +330,13 @@ func BenchmarkGame(b *testing.B) {
 	// to which it adds the best ones
 
 	// before IsRowEmpty
-	// CM, BM: 13.73s  (0.137ms per game)
-	// CM, BX:  9.93s  (0.099ms per game)
-	// CX, BX: 27.73s  (0.277ms per game)
+	// CM, BM: 13.42s
+	// CM, BX: 10.09s
+	// CX, BX: 29.67s
 	// after IsRowEmpty
-	// CM, BM: 10.14s (0.101ms per game)
-	// CM, BX: ~8.70s (0.087ms per game)
-	// CX, BX: 17.55s (0.175ms per game)
+	// CM, BM: 12.38s
+	// CM, BX: 10.46s
+	// CX, BX: 28.71s
+
+	// now with the correct implementation it's only marginally faster :(
 }
