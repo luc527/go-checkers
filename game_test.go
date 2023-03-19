@@ -322,21 +322,4 @@ func BenchmarkGame(b *testing.B) {
 			g.UndoLastPly()
 		}
 	}
-
-	// _M means _ mandatory
-	// _X means _ NOT mandatory
-
-	// BM probably slower because it allocates a new plies array
-	// to which it adds the best ones
-
-	// before IsRowEmpty
-	// CM, BM: 13.42s
-	// CM, BX: 10.09s
-	// CX, BX: 29.67s
-	// after IsRowEmpty
-	// CM, BM: 12.38s
-	// CM, BX: 10.46s
-	// CX, BX: 28.71s
-
-	// now with the correct implementation it's only marginally faster :(
 }

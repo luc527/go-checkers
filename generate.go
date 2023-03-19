@@ -83,10 +83,6 @@ func generateSimpleKingPlies(ps []Ply, b *Board, row, col byte, color Color) []P
 
 func generateSimplePlies(ps []Ply, b *Board, player Color) []Ply {
 	for row := byte(0); row < 8; row++ {
-		if b.IsRowEmpty(row) {
-			continue
-		}
-
 		for col := byte(0); col < 8; col++ {
 			if !b.IsOccupied(row, col) {
 				continue
@@ -244,10 +240,6 @@ func followKingCaptures(ps []Ply, stack []Instruction, b *Board, row, col byte, 
 
 func generateCapturePlies(ps []Ply, b *Board, player Color) []Ply {
 	for row := byte(0); row < 8; row++ {
-		if b.IsRowEmpty(row) {
-			continue
-		}
-
 		for col := byte(0); col < 8; col++ {
 			if !b.IsOccupied(row, col) {
 				continue
