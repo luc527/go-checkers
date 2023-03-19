@@ -30,6 +30,16 @@ func (p Ply) String() string {
 	return instructionsToString(p)
 }
 
+func (p Ply) CountCaptures() int {
+	c := 0
+	for _, i := range p {
+		if i.t == captureInstruction {
+			c++
+		}
+	}
+	return c
+}
+
 // the generateSimplePawnPlies and followPawnCaptures procedures
 // are special cases of the same procedures for king pieces
 // that have the distance bound to 1 (simple move) or 2 (capture)
@@ -277,32 +287,31 @@ func GeneratePlies(b *Board, player Color, captureRule CaptureRule, bestRule Bes
 		ps = generateSimplePlies(ps, b, player)
 	}
 
-	// TODO optimize below
-	// don't need to always allocate the best []Ply
-
 	if len(ps) > 0 && bestMandatory {
-		captureCountPerMove := make([]int, len(ps))
-		mostCaptures := 0
+		maxCaptureCount := 0
+		fstCaptureCount := 0
+
 		for k, p := range ps {
-			captureCount := 0
-			for _, i := range p {
-				if i.t == captureInstruction {
-					captureCount++
+			captureCount := p.CountCaptures()
+			if k == 0 {
+				fstCaptureCount = captureCount
+			}
+			if captureCount > maxCaptureCount {
+				maxCaptureCount = captureCount
+			}
+		}
+
+		needToFilterBest := fstCaptureCount != maxCaptureCount
+
+		if needToFilterBest {
+			var best []Ply
+			for _, p := range ps {
+				if p.CountCaptures() == maxCaptureCount {
+					best = append(best, p)
 				}
 			}
-			captureCountPerMove[k] = captureCount
-			if captureCount > mostCaptures {
-				mostCaptures = captureCount
-			}
+			ps = best
 		}
-
-		var best []Ply
-		for k, p := range ps {
-			if captureCountPerMove[k] == mostCaptures {
-				best = append(best, p)
-			}
-		}
-		ps = best
 	}
 
 	return ps

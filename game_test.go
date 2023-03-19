@@ -312,7 +312,7 @@ func TestDrawBySpecialEnding(t *testing.T) {
 func BenchmarkGame(b *testing.B) {
 	trials := 100_000
 	for t := 0; t < trials; t++ {
-		g := NewStandardGame(CapturesNotMandatory, BestNotMandatory)
+		g := NewStandardGame(CapturesMandatory, BestMandatory)
 		for !g.IsOver() {
 			plies := g.Plies()
 			randomPly := plies[rand.Int()%len(plies)]
@@ -322,4 +322,7 @@ func BenchmarkGame(b *testing.B) {
 			g.UndoLastPly()
 		}
 	}
+
+	// before best alloc only when needed optimization:  13.082s
+	// after  best alloc only when needed optimization:  11.723s
 }
