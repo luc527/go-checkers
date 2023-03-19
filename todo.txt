@@ -1,0 +1,57 @@
+currently to find which positions in the board have pieces we do this
+
+for row := byte(0); row < 8; row++ {
+  for col := byte(0); col < 8; col++ {
+    if !b.isOccupied(row, col) {
+      continue
+    }
+  }
+}
+
+where b.isOccupied translates into
+
+x := uint64(1 << (uint64(row)*8 + uint64(col)))
+return b.occupied&x != 0
+
+so basically
+we check each bit of the occupied uint64
+
+BUT we could... check an entire row with a bit mask!
+like 0xFF000000000000 for the first row
+     0x00FF0000000000 for the second row etc.
+
+so we check each row to see if masking gives us a non-zero number
+if it gives us zero we just go to the next row, since it means the row is empty
+if it gives us some non-zero number THEN we do the isOccupied loop
+
+we would just need to insert some code between the for row ... and the for col ...
+
+in fact, could just be this
+
+for row := byte(0); row < 8; row++ {
+  if b.rowEmpty(row) {
+    continue
+  }
+
+  for col := byte(0); col < 8; col++ {
+    ...
+  }
+}
+
+actually BEFORE doing any of this, prepare a benchmark for the before & after
+
+
+if we represented boards as [8][8]tile or something
+then rowEmpty would have to just iterate through the colums anyway, it'd be wasted work
+
+but with a uint64
+we expect masking with 0xFF000... is the same as masking with a single bit
+so the operation of checking the whole row takes as much time as checking a single col 
+
+
+also, if we reeally want to optimize it, maybe we should start with 0xFF00000...
+and shift it right 8 bytes each iteration instead of creating the mask for each
+rowEmpty call. but it's really good enough already
+
+
+we could apply the same optimization in the piececount

@@ -43,6 +43,7 @@ type Game struct {
 	toPlay              Color
 	history             []rememberedState
 	pieceCount          PieceCount
+	// maybe don't cache the piececount
 }
 
 func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDraw int16, initialBoard *Board, initalPlayer Color) *Game {

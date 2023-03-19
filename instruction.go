@@ -96,7 +96,7 @@ func PerformInstructions(b *Board, is []Instruction) {
 			capturedColor, capturedKind := Color(i.d[0]), Kind(i.d[1])
 			actualColor, actualKind := b.Get(row, col)
 
-			// TODO return err instead of panicking
+			// TODO return err instead of panicking?
 
 			if capturedColor != actualColor || capturedKind != actualKind {
 				panic(fmt.Sprintf(

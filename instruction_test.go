@@ -1,7 +1,5 @@
 package main
 
-// TODO add log to tests, run with go test -v
-
 import (
 	"testing"
 )
