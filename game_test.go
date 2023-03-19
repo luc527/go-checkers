@@ -308,3 +308,21 @@ func TestDrawBySpecialEnding(t *testing.T) {
 		.#
 	`))
 }
+
+func BenchmarkGame(b *testing.B) {
+	trials := 1000
+	for t := 0; t < trials; t++ {
+		g := NewStandardGame(CapturesNotMandatory, BestNotMandatory)
+		for !g.IsOver() {
+			plies := g.Plies()
+			randomPly := plies[int(rand.Uint32()%uint32(len(plies)))]
+			g.DoPly(randomPly)
+		}
+	}
+
+	// previously 4.2s
+	// 4200 ms / 1000 = 4.2ms per game
+
+	// after the IsRowEmpty optimization, now 2s
+	// twice as fast
+}

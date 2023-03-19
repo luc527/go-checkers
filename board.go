@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 )
 
@@ -199,6 +200,14 @@ func (b *Board) Copy() *Board {
 	return &c
 }
 
+func (b *Board) IsRowEmpty(row byte) bool {
+	if row >= 8 {
+		panic(fmt.Sprintf("IsRowEmpty(%d), should be between 0 and 7 (it's unsigned so you might've subtracted too much)", row))
+	}
+	mask := uint64(0xFF00000000000000) >> uint64(row*8)
+	return b.occupied&mask == 0
+}
+
 type PieceCount struct {
 	WhitePawns int8
 	BlackPawns int8
@@ -210,6 +219,10 @@ func (b *Board) PieceCount() PieceCount {
 	var c PieceCount
 
 	for row := byte(0); row < 8; row++ {
+		if b.IsRowEmpty(row) {
+			continue
+		}
+
 		for col := byte(0); col < 8; col++ {
 			if !b.IsOccupied(row, col) {
 				continue
