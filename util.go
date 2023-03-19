@@ -103,7 +103,7 @@ func example1() {
 			fmt.Printf("=========     best%smandatory =========\n", bString)
 			fmt.Printf("==================%s===================\n", "=====")
 
-			iss := GeneratePlies(b, BlackColor, capRule, bRule)
+			iss := GeneratePlies(nil, b, BlackColor, capRule, bRule)
 			showcasePlies(b, iss)
 		}
 	}

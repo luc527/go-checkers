@@ -32,6 +32,7 @@ type rememberedState struct {
 	turnsSinceCapture    int16
 	turnsSincePawnMove   int16
 	turnsInSpecialEnding int16
+	pieceCount           PieceCount
 }
 
 type Game struct {
@@ -42,8 +43,6 @@ type Game struct {
 	board               *Board
 	toPlay              Color
 	history             []rememberedState
-	pieceCount          PieceCount
-	// maybe don't cache the piececount
 }
 
 func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDraw int16, initialBoard *Board, initalPlayer Color) *Game {
@@ -174,11 +173,6 @@ func (g *Game) UndoLastPly() {
 	g.toPlay = g.toPlay.Opposite()
 	g.rememberedState = g.history[len(g.history)-1]
 
-	// just count again
-	// more cpu, less memory usage
-	// TODO benchmark?
-	g.pieceCount = g.board.PieceCount()
-
 	g.history = g.history[:len(g.history)-1]
 }
 
@@ -260,7 +254,7 @@ func (g *Game) BoardChanged() {
 		return
 	}
 
-	g.plies = GeneratePlies(g.board, g.toPlay, g.captureRule, g.bestRule)
+	g.plies = GeneratePlies(make([]Ply, 0, 10), g.board, g.toPlay, g.captureRule, g.bestRule)
 	if len(g.plies) == 0 {
 		if g.toPlay == WhiteColor {
 			g.state = blackWonState

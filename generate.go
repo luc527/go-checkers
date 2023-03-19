@@ -270,9 +270,9 @@ func generateCapturePlies(ps []Ply, b *Board, player Color) []Ply {
 	return ps
 }
 
-func GeneratePlies(b *Board, player Color, captureRule CaptureRule, bestRule BestRule) []Ply {
+func GeneratePlies(ps []Ply, b *Board, player Color, captureRule CaptureRule, bestRule BestRule) []Ply {
 
-	ps := generateCapturePlies(nil, b, player)
+	ps = generateCapturePlies(ps, b, player)
 
 	capturesMandatory := captureRule == CapturesMandatory
 	bestMandatory := bestRule == BestMandatory
