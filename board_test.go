@@ -243,7 +243,7 @@ func assertRowEmpty(t *testing.T, b *Board, row byte, want bool) {
 	}
 }
 
-func TestRowEmpty(t *testing.T) {
+func TestRowEmpty1(t *testing.T) {
 	b := decodeBoard(`
 	  .....x
 		.
@@ -262,4 +262,26 @@ func TestRowEmpty(t *testing.T) {
 	assertRowEmpty(t, b, 5, false)
 	assertRowEmpty(t, b, 6, true)
 	assertRowEmpty(t, b, 7, false)
+}
+
+func TestRowEmpty2(t *testing.T) {
+	b := new(Board)
+
+	b.Set(0, 5, BlackColor, KingKind)
+	b.Set(2, 3, WhiteColor, PawnKind)
+	b.Set(4, 3, WhiteColor, PawnKind)
+	b.Set(4, 5, WhiteColor, PawnKind)
+	b.Set(6, 5, WhiteColor, PawnKind)
+	b.Set(5, 2, WhiteColor, PawnKind)
+
+	t.Log("\n" + b.String())
+
+	assertRowEmpty(t, b, 0, false)
+	assertRowEmpty(t, b, 1, true)
+	assertRowEmpty(t, b, 2, false)
+	assertRowEmpty(t, b, 3, true)
+	assertRowEmpty(t, b, 4, false)
+	assertRowEmpty(t, b, 5, false)
+	assertRowEmpty(t, b, 6, false)
+	assertRowEmpty(t, b, 7, true)
 }

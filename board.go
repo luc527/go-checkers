@@ -204,8 +204,11 @@ func (b *Board) IsRowEmpty(row byte) bool {
 	if row >= 8 {
 		panic(fmt.Sprintf("IsRowEmpty(%d), should be between 0 and 7 (it's unsigned so you might've subtracted too much)", row))
 	}
-	mask := uint64(0xFF00000000000000) >> uint64(row*8)
-	return b.occupied&mask == 0
+
+	mask := uint64(0xFF) << uint64(row*8)
+	result := b.occupied & mask
+
+	return result == 0
 }
 
 type PieceCount struct {
