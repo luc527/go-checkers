@@ -310,7 +310,7 @@ func TestDrawBySpecialEnding(t *testing.T) {
 }
 
 func BenchmarkGame(b *testing.B) {
-	trials := 1000
+	trials := 100_000
 	for t := 0; t < trials; t++ {
 		g := NewStandardGame(CapturesNotMandatory, BestNotMandatory)
 		for !g.IsOver() {
@@ -318,11 +318,23 @@ func BenchmarkGame(b *testing.B) {
 			randomPly := plies[int(rand.Uint32()%uint32(len(plies)))]
 			g.DoPly(randomPly)
 		}
+		for g.HasLastPly() {
+			g.UndoLastPly()
+		}
 	}
 
-	// previously 4.2s
-	// 4200 ms / 1000 = 4.2ms per game
+	// _M means _ mandatory
+	// _X means _ NOT mandatory
 
-	// after the IsRowEmpty optimization, now 2s
-	// twice as fast
+	// BM probably slower because it allocates a new plies array
+	// to which it adds the best ones
+
+	// before IsRowEmpty
+	// CM, BM: 13.73s  (0.137ms per game)
+	// CM, BX:  9.93s  (0.099ms per game)
+	// CX, BX: 27.73s  (0.277ms per game)
+	// after IsRowEmpty
+	// CM, BM: 10.14s (0.101ms per game)
+	// CM, BX: ~8.70s (0.087ms per game)
+	// CX, BX: 17.55s (0.175ms per game)
 }

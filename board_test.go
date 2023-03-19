@@ -237,7 +237,7 @@ func TestBoardEquals(t *testing.T) {
 }
 
 func assertRowEmpty(t *testing.T, b *Board, row byte, want bool) {
-	got := b.RowEmpty(row)
+	got := b.IsRowEmpty(row)
 	if got != want {
 		t.Errorf("expected rowEmpty(%d) to be %v", row, want)
 	}
