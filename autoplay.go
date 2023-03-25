@@ -14,7 +14,7 @@ func autoplay(captureRule CaptureRule, bestRule BestRule, whiteBot Minimax, blac
 		if g.ToPlay() == BlackColor {
 			toPlay = blackBot
 		}
-		_, ply := toPlay.Search(g, 0)
+		_, ply := toPlay.Search(g)
 		g.DoPly(ply)
 	}
 	end := time.Now()

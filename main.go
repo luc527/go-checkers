@@ -75,12 +75,12 @@ func prof() {
 func main() {
 	whiteBot := Minimax{
 		ToMaximize: WhiteColor,
-		Cutoff:     8,
+		Cutoff:     10,
 		Heuristic:  UnweightedCountHeuristic,
 	}
 	blackBot := Minimax{
 		ToMaximize: BlackColor,
-		Cutoff:     8,
+		Cutoff:     10,
 		Heuristic:  WeightedCountHeuristic,
 	}
 	autoplay(CapturesMandatory, BestNotMandatory, whiteBot, blackBot)

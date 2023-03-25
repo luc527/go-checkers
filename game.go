@@ -204,16 +204,36 @@ func (g *Game) Copy() *Game {
 	// plies, lastPly, history all shallow-copied
 	// board deep-copied
 	return &Game{
-		captureRule: g.captureRule,
-		bestRule:    g.bestRule,
 		rememberedState: rememberedState{
 			state:   g.state,
 			plies:   g.plies,
 			lastPly: g.lastPly,
 		},
-		board:   g.board.Copy(),
-		toPlay:  g.toPlay,
-		history: g.history,
+		stagnantTurnsToDraw: g.stagnantTurnsToDraw,
+		captureRule:         g.captureRule,
+		bestRule:            g.bestRule,
+		board:               g.board.Copy(),
+		toPlay:              g.toPlay,
+		history:             g.history,
+	}
+}
+
+func (g *Game) DeepCopy() *Game {
+	// not really 100% deep, just deep copying everything that can be modified
+	history := make([]rememberedState, len(g.history))
+	copy(history, g.history)
+	return &Game{
+		rememberedState: rememberedState{
+			state:   g.state,
+			plies:   g.plies,
+			lastPly: g.lastPly,
+		},
+		stagnantTurnsToDraw: g.stagnantTurnsToDraw,
+		captureRule:         g.captureRule,
+		bestRule:            g.bestRule,
+		board:               g.board.Copy(),
+		toPlay:              g.toPlay,
+		history:             history,
 	}
 }
 

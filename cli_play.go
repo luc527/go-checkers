@@ -79,7 +79,7 @@ func play() {
 			}
 		} else {
 			fmt.Println("Waiting fo the AI's choice...")
-			_, ply := mm.Search(g, 0)
+			_, ply := mm.Search(g)
 			fmt.Println("Choice:", ply)
 			g.DoPly(ply)
 		}
