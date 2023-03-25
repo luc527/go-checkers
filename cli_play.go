@@ -7,6 +7,9 @@ import (
 	"strconv"
 )
 
+// TODO make server, then make a web client
+// try to reuse most of the pin3-checkers client
+
 func play() {
 
 	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
@@ -15,6 +18,12 @@ func play() {
 
 	// if the game has ended the player can still undo their last action, so we don't quit yet
 	quit := false
+
+	mm := Minimax{
+		ToMaximize: BlackColor,
+		Heuristic:  WeightedCountHeuristic,
+		Cutoff:     7,
+	}
 
 	for !quit {
 		fmt.Printf("It's %s's turn!\n", g.ToPlay())
@@ -39,32 +48,41 @@ func play() {
 
 		fmt.Println(g.Board())
 
-	askForMove:
-		fmt.Print("Your choice: ")
-		if !input.Scan() {
-			break
-		}
-		if err := input.Err(); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			break
+		if g.ToPlay() == WhiteColor {
+		askForMove:
+			fmt.Print("Your choice: ")
+			if !input.Scan() {
+				break
+			}
+			if err := input.Err(); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				break
+			}
+
+			text := input.Text()
+			if text == "u" {
+				g.UndoLastPly() // undo AI
+				g.UndoLastPly() // undo player
+			} else if text == "q" {
+				quit = true
+			} else {
+				i, err := strconv.Atoi(text)
+				if err != nil {
+					fmt.Printf("Invalid move, try again (%v)\n", err)
+					goto askForMove // Considered harmful!
+				}
+				if i < 0 || i >= len(plies) {
+					fmt.Println("Invalid move, try again (out of bounds)")
+					goto askForMove // Considered harmful!
+				}
+				g.DoPly(plies[i])
+			}
+		} else {
+			fmt.Println("Waiting fo the AI's choice...")
+			_, ply := mm.Search(g, 0)
+			fmt.Println("Choice:", ply)
+			g.DoPly(ply)
 		}
 
-		text := input.Text()
-		if text == "u" {
-			g.UndoLastPly()
-		} else if text == "q" {
-			quit = true
-		} else {
-			i, err := strconv.Atoi(text)
-			if err != nil {
-				fmt.Printf("Invalid move, try again (%v)\n", err)
-				goto askForMove // Considered harmful!
-			}
-			if i < 0 || i >= len(plies) {
-				fmt.Println("Invalid move, try again (out of bounds)")
-				goto askForMove // Considered harmful!
-			}
-			g.DoPly(plies[i])
-		}
 	}
 }

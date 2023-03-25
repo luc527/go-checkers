@@ -17,7 +17,7 @@ import (
 // it could also count the pieces so we don't have to do it as a separate process
 // but this would make the logic in game.go a little confusing
 
-func main() {
+func prof() {
 	f, perr := os.Create("cpu4.pprof")
 	if perr != nil {
 		log.Fatal(perr)
@@ -69,4 +69,9 @@ func main() {
 
 	// 	fmt.Printf("%3d -> avg %5.2g, stddev %5.2g, avg+1std %5.2g, avg+2std %5.2g, \n", i, avg, stddev, avg+stddev, avg+2*stddev)
 	// }
+
+}
+
+func main() {
+	play()
 }

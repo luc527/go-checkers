@@ -2,9 +2,9 @@ package main
 
 import "testing"
 
-func assertHeuristicValue(t *testing.T, h Heuristic, g *Game, player Color, want int) {
+func assertHeuristicValue(t *testing.T, h Heuristic, g *Game, player Color, want float64) {
 	if got := h(g, player); got != want {
-		t.Errorf("heuristic %v fails: want %d got %d", h, want, got)
+		t.Errorf("heuristic %v fails: want %g got %g", h, want, got)
 	}
 }
 

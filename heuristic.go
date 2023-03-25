@@ -11,7 +11,7 @@ import (
 // and some heuristics rely on the piece count
 // -- maybe not a very nice abstraction
 
-type Heuristic func(g *Game, player Color) int
+type Heuristic func(g *Game, player Color) float64
 
 func (h Heuristic) String() string {
 	return fmt.Sprintf("%q", runtime.FuncForPC(reflect.ValueOf(h).Pointer()).Name())
@@ -20,7 +20,7 @@ func (h Heuristic) String() string {
 var _ Heuristic = UnweightedCountHeuristic
 var _ Heuristic = WeightedCountHeuristic
 
-func UnweightedCountHeuristic(g *Game, player Color) int {
+func UnweightedCountHeuristic(g *Game, player Color) float64 {
 	count := g.PieceCount()
 	whites := int(count.WhitePawns + count.WhiteKings)
 	blacks := int(count.BlackPawns + count.BlackKings)
@@ -30,10 +30,10 @@ func UnweightedCountHeuristic(g *Game, player Color) int {
 		factor = -1
 	}
 
-	return factor * (whites - blacks)
+	return float64(factor * (whites - blacks))
 }
 
-func WeightedCountHeuristic(g *Game, player Color) int {
+func WeightedCountHeuristic(g *Game, player Color) float64 {
 	const (
 		pawnWeight = 1
 		kingWeight = 2
@@ -48,7 +48,7 @@ func WeightedCountHeuristic(g *Game, player Color) int {
 		factor = -1
 	}
 
-	return factor * (whites - blacks)
+	return float64(factor * (whites - blacks))
 }
 
 // TODO distance heuristic
