@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type gameState byte
 
 const (
@@ -43,6 +45,15 @@ type Game struct {
 	board               *Board
 	toPlay              Color
 	history             []rememberedState
+}
+
+func (g *Game) String() string {
+	return fmt.Sprintf(
+		"{ToPlay: %v, LastPly: %v, Board:\n%v\n}",
+		g.toPlay,
+		g.lastPly,
+		g.board,
+	)
 }
 
 func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDraw int16, initialBoard *Board, initalPlayer Color) *Game {
@@ -102,6 +113,19 @@ func (g *Game) Plies() []Ply {
 
 func (g *Game) ToPlay() Color {
 	return g.toPlay
+}
+
+func (g *Game) GenerateHistory() []Game {
+	g = g.Copy()
+	gs := make([]Game, len(g.history)+1)
+	gs[len(g.history)] = *g
+	gs[len(g.history)].board = g.board.Copy()
+	for i := len(g.history) - 1; i >= 0; i-- {
+		g.UndoLastPly()
+		gs[i] = *g
+		gs[i].board = g.board.Copy()
+	}
+	return gs
 }
 
 func (g *Game) PieceCount() PieceCount {
