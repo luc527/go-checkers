@@ -41,6 +41,14 @@ type Instruction struct {
 	d [2]byte
 }
 
+func (i Instruction) Equals(o Instruction) bool {
+	return i.t == o.t &&
+		i.row == o.row &&
+		i.col == o.col &&
+		i.d[0] == o.d[0] &&
+		i.d[1] == o.d[1]
+}
+
 func (i Instruction) String() string {
 	buf := new(bytes.Buffer)
 	fmt.Fprintf(buf, "{%s (%d, %d)", i.t.String(), i.row, i.col)

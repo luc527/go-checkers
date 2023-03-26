@@ -28,18 +28,21 @@ func play() {
 	for !quit {
 		fmt.Printf("It's %s's turn!\n", g.ToPlay())
 
-		if g.IsOver() {
-			if !g.HasWinner() {
+		state := g.ComputeState()
+		if state.IsOver() {
+			if !state.HasWinner() {
 				fmt.Println("It's a draw, no one wins")
 			} else {
-				fmt.Printf("The winner is %s!\n", g.Winner())
+				fmt.Printf("The winner is %s!\n", state.Winner())
 			}
 		}
 
 		plies := g.Plies()
 
-		for i, p := range plies {
-			fmt.Printf("[%2d]: %s\n", i, p.String())
+		if !state.IsOver() {
+			for i, p := range plies {
+				fmt.Printf("[%2d]: %s\n", i, p.String())
+			}
 		}
 		if g.HasLastPly() {
 			fmt.Println("[ u]: undo last move")

@@ -2,33 +2,48 @@ package main
 
 import "fmt"
 
-type gameState byte
+type GameState byte
 
 const (
-	playingState = gameState(iota)
-	whiteWonState
-	blackWonState
-	drawState
+	PlayingState = GameState(iota)
+	WhiteWonState
+	BlackWonState
+	DrawState
 )
 
-func (s gameState) String() string {
+func (s GameState) IsOver() bool {
+	return s != PlayingState
+}
+
+func (s GameState) HasWinner() bool {
+	return s == WhiteWonState || s == BlackWonState
+}
+
+func (s GameState) Winner() Color {
+	if s == WhiteWonState {
+		return WhiteColor
+	} else {
+		return BlackColor
+	}
+}
+
+func (s GameState) String() string {
 	switch s {
-	case playingState:
+	case PlayingState:
 		return "playing"
-	case whiteWonState:
+	case WhiteWonState:
 		return "white won"
-	case blackWonState:
+	case BlackWonState:
 		return "black won"
-	case drawState:
+	case DrawState:
 		return "draw"
 	default:
-		return "INVALID gameState"
+		return "INVALID GameState"
 	}
 }
 
 // the part of the state that you need to remember in order to undo
 type rememberedState struct {
-	state                gameState
 	plies                []Ply
 	lastPly              Ply
 	turnsSinceCapture    int16
@@ -78,7 +93,7 @@ func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDr
 	g.turnsInSpecialEnding = 0
 	// once we get in a special ending turnsInSpecialEnding becomes 1 and increases each turn
 
-	g.BoardChanged()
+	g.BoardChanged(nil)
 
 	return &g
 
@@ -86,21 +101,6 @@ func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDr
 
 func NewStandardGame(captureRule CaptureRule, bestRule BestRule) *Game {
 	return NewCustomGame(captureRule, bestRule, 20, nil, WhiteColor)
-}
-
-func (g *Game) IsOver() bool {
-	return g.state != playingState
-}
-
-func (g *Game) HasWinner() bool {
-	return g.state == whiteWonState || g.state == blackWonState
-}
-
-func (g *Game) Winner() Color {
-	if g.state == whiteWonState {
-		return WhiteColor
-	}
-	return BlackColor
 }
 
 func (g *Game) Board() *Board {
@@ -133,11 +133,6 @@ func (g *Game) PieceCount() PieceCount {
 }
 
 func (g *Game) DoPly(p Ply) {
-	// maybe it'd be safer for DoPly to receive an index into the g.plies slice
-	// because there's no guarantee the given Ply is one in the slice,
-	// so it can be invalid (e.g. moving from an empty position etc.)
-	// but idk if it would work with minimax
-
 	PerformInstructions(g.board, p)
 	g.toPlay = g.toPlay.Opposite()
 
@@ -145,42 +140,37 @@ func (g *Game) DoPly(p Ply) {
 	g.history = append(g.history, g.rememberedState)
 	g.lastPly = p
 
-	g.BoardChanged()
+	g.BoardChanged(p)
+}
 
-	if g.IsOver() {
-		return
+func (g *Game) ComputeState() GameState {
+	count := g.pieceCount
+	whiteCount := count.WhiteKings + count.WhitePawns
+	blackCount := count.BlackKings + count.BlackPawns
+
+	if whiteCount == 0 {
+		return BlackWonState
+	} else if blackCount == 0 {
+		return WhiteWonState
 	}
 
-	isCapture := false
-	isPawnMove := false
-
-	for _, ins := range p {
-		if ins.t == captureInstruction {
-			isCapture = true
+	if len(g.plies) == 0 {
+		if g.toPlay == WhiteColor {
+			return BlackWonState
+		} else {
+			return WhiteWonState
 		}
-		if ins.t == moveInstruction {
-			_, kind := g.board.Get(ins.row, ins.col)
-			if kind == PawnKind {
-				isPawnMove = true
-			}
-		}
 	}
 
-	if isCapture {
-		g.turnsSinceCapture = 0
-	} else {
-		g.turnsSinceCapture++
-	}
-
-	if isPawnMove {
-		g.turnsSincePawnMove = 0
-	} else {
-		g.turnsSincePawnMove++
+	if g.turnsInSpecialEnding == 5 {
+		return DrawState
 	}
 
 	if g.turnsSincePawnMove >= g.stagnantTurnsToDraw && g.turnsSinceCapture >= g.stagnantTurnsToDraw {
-		g.state = drawState
+		return DrawState
 	}
+
+	return PlayingState
 }
 
 func (g *Game) HasLastPly() bool {
@@ -200,12 +190,13 @@ func (g *Game) UndoLastPly() {
 	g.history = g.history[:len(g.history)-1]
 }
 
+// These two copy methods have kind of a crappy/leaky interface
+
 func (g *Game) Copy() *Game {
 	// plies, lastPly, history all shallow-copied
 	// board deep-copied
 	return &Game{
 		rememberedState: rememberedState{
-			state:   g.state,
 			plies:   g.plies,
 			lastPly: g.lastPly,
 		},
@@ -224,7 +215,6 @@ func (g *Game) DeepCopy() *Game {
 	copy(history, g.history)
 	return &Game{
 		rememberedState: rememberedState{
-			state:   g.state,
 			plies:   g.plies,
 			lastPly: g.lastPly,
 		},
@@ -260,52 +250,57 @@ func (g *Game) Equals(o *Game) bool {
 
 	return g.captureRule == o.captureRule &&
 		g.bestRule == o.bestRule &&
-		g.state == o.state &&
 		g.toPlay == o.toPlay &&
 		g.board.Equals(o.board) &&
 		sliceEq(g.lastPly, o.lastPly) &&
 		pliesEq(g.plies, o.plies)
 }
 
-// If you modify the g.Board() manully, you need to call this function afterwards
-// in order for the game state to update its internal state according to the updated board
-func (g *Game) BoardChanged() {
+func (g *Game) BoardChanged(ply Ply) {
 	count := g.board.PieceCount()
-	whiteCount := count.WhiteKings + count.WhitePawns
-	blackCount := count.BlackKings + count.BlackPawns
-
-	if whiteCount == 0 {
-		g.state = blackWonState
-	} else if blackCount == 0 {
-		g.state = whiteWonState
-	}
 
 	if inSpecialEnding(count) {
 		g.turnsInSpecialEnding++
-		if g.turnsInSpecialEnding == 5 {
-			g.state = drawState
-		}
 	} else {
 		g.turnsInSpecialEnding = 0
 	}
 
-	g.pieceCount = count
+	if ply != nil {
+		isCapture := false
+		isPawnMove := false
 
-	// so if the game is over we don't say with the previous' state plies because of the early return
-	g.plies = nil
+		for _, ins := range ply {
+			if ins.t == captureInstruction {
+				isCapture = true
+			}
+			if ins.t == moveInstruction {
+				_, kind := g.board.Get(ins.row, ins.col)
+				if kind == PawnKind {
+					isPawnMove = true
+				}
+			}
+		}
 
-	if g.IsOver() {
-		return
-	}
-
-	g.plies = GeneratePlies(make([]Ply, 0, 10), g.board, g.toPlay, g.captureRule, g.bestRule)
-	if len(g.plies) == 0 {
-		if g.toPlay == WhiteColor {
-			g.state = blackWonState
+		if isCapture {
+			g.turnsSinceCapture = 0
 		} else {
-			g.state = whiteWonState
+			g.turnsSinceCapture++
+		}
+
+		if isPawnMove {
+			g.turnsSincePawnMove = 0
+		} else {
+			g.turnsSincePawnMove++
 		}
 	}
+
+	g.pieceCount = count
+
+	g.plies = g.generatePlies()
+}
+
+func (g *Game) generatePlies() []Ply {
+	return GeneratePlies(make([]Ply, 0, 10), g.board, g.toPlay, g.captureRule, g.bestRule)
 }
 
 func oneColorSpecialEnding(ourKings, ourPawns, theirKings, theirPawns int8) bool {

@@ -29,10 +29,11 @@ func (m Minimax) searchAt(g *Game, depth int) (float64, Ply) {
 }
 
 func (m Minimax) searchImpl(g *Game, depth int, alpha, beta float64) (float64, Ply) {
-	if g.IsOver() {
-		if !g.HasWinner() {
+	state := g.ComputeState()
+	if state.IsOver() {
+		if !state.HasWinner() {
 			return drawValue, nil
-		} else if m.ToMaximize == g.Winner() {
+		} else if m.ToMaximize == state.Winner() {
 			return winValue, nil
 		} else {
 			return lossValue, nil

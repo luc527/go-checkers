@@ -8,8 +8,13 @@ import (
 func autoplay(captureRule CaptureRule, bestRule BestRule, whiteBot Minimax, blackBot Minimax) {
 	g := NewStandardGame(captureRule, bestRule)
 
+	var state GameState
 	start := time.Now()
-	for !g.IsOver() {
+	for {
+		state = g.ComputeState()
+		if state.IsOver() {
+			break
+		}
 		toPlay := whiteBot
 		if g.ToPlay() == BlackColor {
 			toPlay = blackBot
@@ -27,8 +32,8 @@ func autoplay(captureRule CaptureRule, bestRule BestRule, whiteBot Minimax, blac
 	// 	fmt.Println(&g)
 	// }
 
-	if g.HasWinner() {
-		fmt.Println(g.Winner(), "wins!")
+	if state.HasWinner() {
+		fmt.Println(state.Winner(), "wins!")
 	} else {
 		fmt.Println("Draw")
 	}

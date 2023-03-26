@@ -5,11 +5,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
 func badRequest(w http.ResponseWriter, err error) {
 	http.Error(w, err.Error(), http.StatusBadRequest)
+}
+
+func serverError(w http.ResponseWriter, err error) {
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
 type coordObject struct {
@@ -100,7 +105,7 @@ func parsePlayer(s string) (player Color, err error) {
 	} else if s == "black" || s == "b" {
 		player = BlackColor
 	} else {
-		err = fmt.Errorf("invalid player: %s", s)
+		err = fmt.Errorf("invalid player: %q", s)
 	}
 	return
 }
@@ -111,7 +116,7 @@ func parseCaptureRule(s string) (rule CaptureRule, err error) {
 	} else if s == "notmandatory" || s == "capturesnotmandatory" {
 		rule = CapturesNotMandatory
 	} else {
-		err = fmt.Errorf("invalid capture rule %s", s)
+		err = fmt.Errorf("invalid capture rule %q", s)
 	}
 	return
 }
@@ -122,8 +127,107 @@ func parseBestRule(s string) (rule BestRule, err error) {
 	} else if s == "notmandatory" || s == "bestnotmandatory" {
 		rule = BestNotMandatory
 	} else {
-		err = fmt.Errorf("invalid best rule %s", s)
+		err = fmt.Errorf("invalid best rule %q", s)
 	}
+	return
+}
+
+func parseState(s string) (g GameState, err error) {
+	switch s {
+	case "playing":
+		g = PlayingState
+	case "whiteWon":
+		g = WhiteWonState
+	case "blackWon":
+		g = BlackWonState
+	case "draw":
+		g = DrawState
+	default:
+		err = fmt.Errorf("invalid state %q", s)
+	}
+	return
+}
+
+func parsePly(s string) (ply Ply, err error) {
+	stringInstructions := strings.Split(s, ",")
+	ply = make([]Instruction, len(stringInstructions))
+	for k, stringInstruction := range stringInstructions {
+		var instruction Instruction
+		instruction, err = parseInstruction(stringInstruction)
+		if err != nil {
+			return
+		}
+		ply[k] = instruction
+	}
+	return
+}
+
+func isCoord(r rune) bool {
+	return r >= '0' && r <= '7'
+}
+
+// TODO test parsing stuff
+// specially parseInstruction
+
+// capture instruction will be returned incomplete
+// it has no access to the board to tell what kind of piece
+// was captured, and
+func parseInstruction(s string) (instruction Instruction, err error) {
+	if len(s) < 3 {
+		err = fmt.Errorf("empty instruction %q", s)
+		return
+	}
+
+	var t instructionType
+	switch s[0] {
+	case 'k':
+		t = crownInstruction
+	case 'c':
+		t = captureInstruction
+	case 'm':
+		t = moveInstruction
+	}
+
+	r1 := rune(s[1])
+	if !isCoord(r1) {
+		err = fmt.Errorf("invalid instruction ([1] not row) %q", s)
+		return
+	}
+	r2 := rune(s[2])
+	if !isCoord(r2) || r2 < '0' || r2 > '7' {
+		err = fmt.Errorf("invalid instruction ([2] not col) %q", s)
+		return
+	}
+
+	row, col := byte(r1-'0'), byte(r2-'0')
+
+	switch t {
+	case moveInstruction:
+		if len(s) != 5 {
+			err = fmt.Errorf("invalid instruction (missing move destination) %q", s)
+			return
+		}
+		d1 := rune(s[3])
+		if !isCoord(d1) {
+			err = fmt.Errorf("invalid instruction ([3] not row) %q", s)
+			return
+		}
+		d2 := rune(s[4])
+		if !isCoord(d2) {
+			err = fmt.Errorf("invalid instruction ([3] not col) %q", s)
+			return
+		}
+		drow, dcol := byte(d1-'0'), byte(d2-'0')
+
+		instruction = MoveInstruction(row, col, drow, dcol)
+	case captureInstruction:
+		placeholderColor := WhiteColor
+		placeholderKind := KingKind
+		instruction = CaptureInstruction(row, col, placeholderColor, placeholderKind)
+	case crownInstruction:
+		instruction = CrownInstruction(row, col)
+	}
+
 	return
 }
 
@@ -133,47 +237,25 @@ func handleGeneratePlies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var strBoard string
-	var strPlayer string
-	var strCaptureRule string
-	var strBestRule string
-
-	for param, values := range r.Form {
-		if len(values) == 0 {
-			continue
-		}
-		value := values[len(values)-1]
-		switch param {
-		case "board":
-			strBoard = strings.ToLower(value)
-		case "player":
-			strPlayer = strings.ToLower(value)
-		case "captureRule":
-			strCaptureRule = strings.ToLower(value)
-		case "bestRule":
-			strBestRule = strings.ToLower(value)
-		}
-	}
-
-	board, err := parseBoard(strBoard)
+	board, err := parseBoard(strings.ToLower(r.Form.Get("board")))
 	if err != nil {
 		badRequest(w, err)
 		return
 	}
 
-	player, err := parsePlayer(strPlayer)
+	player, err := parsePlayer(strings.ToLower(r.Form.Get("player")))
 	if err != nil {
 		badRequest(w, err)
 		return
 	}
 
-	captureRule, err := parseCaptureRule(strCaptureRule)
+	captureRule, err := parseCaptureRule(strings.ToLower(r.Form.Get("captureRule")))
 	if err != nil {
 		badRequest(w, err)
 		return
 	}
 
-	bestRule, err := parseBestRule(strBestRule)
+	bestRule, err := parseBestRule(strings.ToLower(r.Form.Get("bestRule")))
 	if err != nil {
 		badRequest(w, err)
 		return
@@ -199,34 +281,97 @@ func handleGeneratePlies(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(body))
 }
 
-// func handleAI(w http.ResponseWriter, r *http.Request) {
-// 	if err := r.ParseForm(); err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+func handleDoPly(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		serverError(w, err)
+		return
+	}
 
-// 	for param, values := range r.Form {
-// 		if len(values) == 0 {
-// 			continue
-// 		}
-// 		value := values[len(values)-1]
-// 		switch param {
-// 		case "board":
-// 		case "player":
-// 		case "captureRule":
-// 		case "bestRule":
-// 		case "turnsSinceCapture":
-// 		case "turnsSincePawnMove":
-// 		case "turnsInSpecialEnding":
-// 		}
-// 	}
+	form := r.Form
 
-// 	g := new(Game)
-// }
+	board, err := parseBoard(form.Get("board"))
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	player, err := parsePlayer(strings.ToLower(form.Get("player")))
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	captureRule, err := parseCaptureRule(strings.ToLower(form.Get("captureRule")))
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	bestRule, err := parseBestRule(strings.ToLower(form.Get("bestRule")))
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	turnsSinceCapture, err := strconv.Atoi(form.Get("turnsSinceCapture"))
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	turnsSincePawnMove, err := strconv.Atoi(form.Get("turnsSincePawnMove"))
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	turnsInSpecialEnding, err := strconv.Atoi(form.Get("turnsInSpecialEnding"))
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	state, err := parseState(form.Get("state"))
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	ply, err := parsePly(form.Get("ply"))
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	g := new(Game)
+
+	g.stagnantTurnsToDraw = 20 // default
+	g.pieceCount = board.PieceCount()
+	g.plies = g.generatePlies()
+
+	g.board = board
+	g.toPlay = player
+	g.captureRule = captureRule
+	g.bestRule = bestRule
+	g.turnsSinceCapture = int16(turnsSinceCapture)
+	g.turnsSincePawnMove = int16(turnsSincePawnMove)
+	g.turnsInSpecialEnding = int16(turnsInSpecialEnding)
+
+	if state.IsOver() {
+		badRequest(w, fmt.Errorf("TODO(1)"))
+	}
+
+	g.DoPly(ply)
+
+	badRequest(w, fmt.Errorf("TODO(2)"))
+}
+
+// TODO finish implementing /doPly
+// TODO test /doPly
 
 func runServer() {
 	http.HandleFunc("/generatePlies", handleGeneratePlies)
-	// http.HandleFunc("/ai", handleAI)
+	http.HandleFunc("/doPly", handleDoPly)
 	fmt.Println("Running server at http://localhost:8080")
 	log.Fatalln(http.ListenAndServe("localhost:8080", nil))
 }

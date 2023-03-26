@@ -30,7 +30,7 @@ func prof() {
 	trials := 100_000
 	for t := 0; t < trials; t++ {
 		g := NewStandardGame(CapturesMandatory, BestNotMandatory)
-		for !g.IsOver() {
+		for !g.ComputeState().IsOver() {
 			plies := g.Plies()
 
 			// pc := g.pieceCount
