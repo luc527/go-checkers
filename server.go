@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+func badRequest(w http.ResponseWriter, err error) {
+	http.Error(w, err.Error(), http.StatusBadRequest)
+}
+
 type coordObject struct {
 	Row byte `json:"row"`
 	Col byte `json:"col"`
@@ -90,6 +94,39 @@ func parseBoard(s string) (*Board, error) {
 	return b, nil
 }
 
+func parsePlayer(s string) (player Color, err error) {
+	if s == "white" || s == "w" {
+		player = WhiteColor
+	} else if s == "black" || s == "b" {
+		player = BlackColor
+	} else {
+		err = fmt.Errorf("invalid player: %s", s)
+	}
+	return
+}
+
+func parseCaptureRule(s string) (rule CaptureRule, err error) {
+	if s == "mandatory" || s == "capturesmandatory" {
+		rule = CapturesMandatory
+	} else if s == "notmandatory" || s == "capturesnotmandatory" {
+		rule = CapturesNotMandatory
+	} else {
+		err = fmt.Errorf("invalid capture rule %s", s)
+	}
+	return
+}
+
+func parseBestRule(s string) (rule BestRule, err error) {
+	if s == "mandatory" || s == "bestmandatory" {
+		rule = BestMandatory
+	} else if s == "notmandatory" || s == "bestnotmandatory" {
+		rule = BestNotMandatory
+	} else {
+		err = fmt.Errorf("invalid best rule %s", s)
+	}
+	return
+}
+
 func handleGeneratePlies(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -120,37 +157,25 @@ func handleGeneratePlies(w http.ResponseWriter, r *http.Request) {
 
 	board, err := parseBoard(strBoard)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		badRequest(w, err)
 		return
 	}
 
-	var player Color
-	if strPlayer == "white" || strPlayer == "w" {
-		player = WhiteColor
-	} else if strPlayer == "black" || strPlayer == "b" {
-		player = BlackColor
-	} else {
-		http.Error(w, "invalid player "+strPlayer, http.StatusBadRequest)
+	player, err := parsePlayer(strPlayer)
+	if err != nil {
+		badRequest(w, err)
 		return
 	}
 
-	var captureRule CaptureRule
-	if strCaptureRule == "mandatory" || strCaptureRule == "capturesmandatory" {
-		captureRule = CapturesMandatory
-	} else if strCaptureRule == "notmandatory" || strCaptureRule == "capturesnotmandatory" {
-		captureRule = CapturesNotMandatory
-	} else {
-		http.Error(w, "invalid capture rule "+strCaptureRule, http.StatusBadRequest)
+	captureRule, err := parseCaptureRule(strCaptureRule)
+	if err != nil {
+		badRequest(w, err)
 		return
 	}
 
-	var bestRule BestRule
-	if strBestRule == "mandatory" || strBestRule == "bestsmandatory" {
-		bestRule = BestMandatory
-	} else if strBestRule == "notmandatory" || strBestRule == "bestsnotmandatory" {
-		bestRule = BestNotMandatory
-	} else {
-		http.Error(w, "invalid best rule "+strBestRule, http.StatusBadRequest)
+	bestRule, err := parseBestRule(strBestRule)
+	if err != nil {
+		badRequest(w, err)
 		return
 	}
 
@@ -174,8 +199,34 @@ func handleGeneratePlies(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(body))
 }
 
+// func handleAI(w http.ResponseWriter, r *http.Request) {
+// 	if err := r.ParseForm(); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	for param, values := range r.Form {
+// 		if len(values) == 0 {
+// 			continue
+// 		}
+// 		value := values[len(values)-1]
+// 		switch param {
+// 		case "board":
+// 		case "player":
+// 		case "captureRule":
+// 		case "bestRule":
+// 		case "turnsSinceCapture":
+// 		case "turnsSincePawnMove":
+// 		case "turnsInSpecialEnding":
+// 		}
+// 	}
+
+// 	g := new(Game)
+// }
+
 func runServer() {
 	http.HandleFunc("/generatePlies", handleGeneratePlies)
+	// http.HandleFunc("/ai", handleAI)
 	fmt.Println("Running server at http://localhost:8080")
 	log.Fatalln(http.ListenAndServe("localhost:8080", nil))
 }
