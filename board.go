@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"math/bits"
 	"strings"
 )
@@ -258,6 +259,7 @@ func (b *Board) Equals(o *Board) bool {
 	return true
 }
 
+// This is used for testing
 func decodeBoard(s string) *Board {
 	rawLines := strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n")
 
@@ -304,3 +306,77 @@ func decodeBoard(s string) *Board {
 
 	return b
 }
+
+// This is for passing the board over a network
+func (b *Board) Serialize() string {
+	if b == nil {
+		return ""
+	}
+	var sb strings.Builder
+	for row := byte(0); row < 8; row++ {
+		for c := byte(0); c < 8; c++ {
+			if !b.IsOccupied(row, c) {
+				continue
+			}
+			color, kind := b.Get(row, c)
+			sb.WriteByte(row + '0')
+			sb.WriteByte(c + '0')
+
+			if color == WhiteColor {
+				sb.WriteByte('w')
+			} else {
+				sb.WriteByte('b')
+			}
+
+			if kind == KingKind {
+				sb.WriteByte('k')
+			} else {
+				sb.WriteByte('p')
+			}
+		}
+	}
+	return sb.String()
+}
+
+func UnserializeBoard(s string) (*Board, error) {
+	var b Board
+	if len(s)%4 != 0 {
+		return nil, fmt.Errorf("unserialize board: invalid board string (length %d not multiple of 4)", len(s))
+	}
+	for len(s) > 0 {
+		rowRune, colRune, colorRune, kindRune := s[0], s[1], s[2], s[3]
+		row := byte(rowRune) - '0'
+		col := byte(colRune) - '0'
+
+		if row > 7 || col > 7 {
+			return nil, fmt.Errorf("unserialize board: invalid position (row %d, col %d)", row, col)
+		}
+
+		var color Color
+		colorByte := byte(colorRune)
+		if colorByte == 'w' {
+			color = WhiteColor
+		} else if colorByte == 'b' {
+			color = BlackColor
+		} else {
+			return nil, fmt.Errorf("unserialize board: invalid color %c", colorByte)
+		}
+
+		var kind Kind
+		kindByte := byte(kindRune)
+		if kindByte == 'k' {
+			kind = KingKind
+		} else if kindByte == 'p' {
+			kind = PawnKind
+		} else {
+			return nil, fmt.Errorf("unserialize board: invalid kind %c", kindByte)
+		}
+
+		b.Set(row, col, color, kind)
+
+		s = s[4:]
+	}
+	return &b, nil
+}
+
+// TODO also make function to check whether a board is valid

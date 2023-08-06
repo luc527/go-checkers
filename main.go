@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -70,5 +71,9 @@ func prof() {
 }
 
 func main() {
-	play()
+	g0 := NewStandardGame(CapturesMandatory, BestNotMandatory)
+	s, err := g0.SerializeOut()
+	fmt.Println(err)
+	g1, err := UnserializeGameIn(s)
+	fmt.Println(g1, err)
 }

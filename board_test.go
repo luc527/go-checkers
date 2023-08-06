@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestColorString(t *testing.T) {
 	if WhiteColor.String() != "white" {
@@ -323,4 +326,93 @@ func TestPieceCount(t *testing.T) {
 	b.Set(7, 1, WhiteColor, PawnKind)
 	wp++
 	assertPieceCount(t, b.PieceCount(), wp, wk, bp, bk)
+}
+
+func TestSerializeBoard(t *testing.T) {
+	b := new(Board)
+
+	if (*Board)(nil).Serialize() != "" {
+		t.Log("serializing the nil board should return the empty string")
+		t.Fail()
+	}
+
+	if b.Serialize() != "" {
+		t.Log("serializing empty board should return the empty string")
+		t.Fail()
+	}
+
+	b.Set(4, 6, WhiteColor, KingKind)
+	b.Set(2, 7, WhiteColor, PawnKind)
+	b.Set(5, 1, BlackColor, PawnKind)
+	b.Set(6, 0, BlackColor, KingKind)
+
+	if b.Serialize() != "27wp46wk51bp60bk" {
+		t.Log("serializing failed")
+		t.Fail()
+	}
+}
+
+func TestUnserializeBoard(t *testing.T) {
+	assertUnserializeErr := func(err error) {
+		if err == nil {
+			t.Log("unserializing succeeded but should've returned an error")
+			t.Fail()
+		}
+		if !strings.HasPrefix(err.Error(), "unserialize board: ") {
+			t.Log("unseralize error message should start with 'unserialize board: '")
+			t.Fail()
+		}
+	}
+
+	{
+		b, err := UnserializeBoard("")
+		if err != nil {
+			t.Logf("unserializing returned err when it should've succeeded: %v", err)
+			t.Fail()
+		}
+		count := b.PieceCount()
+		if count.WhiteKings > 0 || count.WhitePawns > 0 || count.BlackKings > 0 || count.BlackPawns > 0 {
+			t.Log("unserializing empty string failed, should've returned an empty board")
+			t.Fail()
+		}
+	}
+
+	{
+		b0, err := UnserializeBoard("11wp22wk33wk14bp27bk07bk")
+		if err != nil {
+			t.Logf("unserializing returned err when it should've succeeded: %v", err)
+			t.Fail()
+		}
+		b1 := new(Board)
+		b1.Set(1, 1, WhiteColor, PawnKind)
+		b1.Set(2, 2, WhiteColor, KingKind)
+		b1.Set(3, 3, WhiteColor, KingKind)
+		b1.Set(1, 4, BlackColor, PawnKind)
+		b1.Set(2, 7, BlackColor, KingKind)
+		b1.Set(0, 7, BlackColor, KingKind)
+		if !b0.Equals(b1) {
+			t.Log("unserializing failed")
+			t.Fail()
+		}
+	}
+
+	{
+		_, err := UnserializeBoard("11wp22w")
+		assertUnserializeErr(err)
+	}
+
+	{
+		_, err := UnserializeBoard("11wp80wk")
+		assertUnserializeErr(err)
+	}
+
+	{
+		_, err := UnserializeBoard("12wp37wl")
+		assertUnserializeErr(err)
+	}
+
+	{
+		_, err := UnserializeBoard("12wp37mp")
+		assertUnserializeErr(err)
+	}
 }

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 )
 
@@ -385,5 +387,85 @@ func TestGameEquals(t *testing.T) {
 	if !g.Equals(h) {
 		t.Log("Game should be back to equal after undoing ply")
 		t.Fail()
+	}
+}
+
+func TestSerializeUnserializeGameFuzzy(t *testing.T) {
+	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
+
+	ttd := g.stagnantTurnsToDraw
+	cr := g.captureRule
+	br := g.bestRule
+
+	for !g.Result().IsOver() {
+		s, err := g.SerializeOut()
+		if err != nil {
+			t.Log("expected serialize to succeed, but returned err")
+			t.Fail()
+		}
+		h, err := UnserializeGameIn(s)
+		if err != nil {
+			t.Log("expected unserialize to succeed, but returned err")
+			t.Fail()
+		}
+		h.stagnantTurnsToDraw = ttd
+		h.captureRule = cr
+		h.bestRule = br
+		if !g.Equals(h) {
+			t.Log("serializing then unserializing failed")
+			t.Fail()
+		}
+
+		plies := g.Plies()
+		r := rand.Int() % len(plies)
+		g.DoPly(plies[r])
+	}
+}
+
+func TestGameUnserializeErrors(t *testing.T) {
+	assertUnserializeErr := func(err error, ctx string) {
+		if err == nil {
+			t.Logf("expected unserializing game to return err, but succeeded (context: %s)", ctx)
+			t.Fail()
+			return
+		}
+		if !strings.HasPrefix(err.Error(), "unserialize game: ") {
+			t.Log("game unserializing error should start with 'unserialize game: '")
+			t.Fail()
+		}
+	}
+
+	{
+		_, err := UnserializeGameIn("")
+		assertUnserializeErr(err, "empty string")
+	}
+
+	{
+		_, err := UnserializeGameIn("{B: test} this json is invalid")
+		assertUnserializeErr(err, "invalid json")
+	}
+
+	{
+		// cr, br values out of range
+		_, err := UnserializeGameIn(`{"b": "", "p":0, "tsc":1, "tsp":1, "tis": 0, "cr": 1, "br": 2, "ttd": 5}`)
+		assertUnserializeErr(err, "cr, br out of range")
+	}
+
+	{
+		// turn values out of range
+		for i, s := range []string{
+			`{"b": "", "p":0, "tsc":-1, "tsp": 2, "tis": 4, "cr": false, "br": false, "ttd": 5}`,
+			`{"b": "", "p":0, "tsc": 1, "tsp":-2, "tis": 4, "cr": false, "br": false, "ttd": 5}`,
+			`{"b": "", "p":0, "tsc": 1, "tsp": 2, "tis":-4, "cr": false, "br": false, "ttd": 5}`,
+			`{"b": "", "p":0, "tsc": 1, "tsp": 2, "tis": 4, "cr": false, "br": false, "ttd":-5}`,
+		} {
+			_, err := UnserializeGameIn(s)
+			assertUnserializeErr(err, fmt.Sprintf("turn values out of range, %d", i))
+		}
+	}
+
+	{
+		_, err := UnserializeGameIn(`{"b": "abcd", "p":0, "tsc": 1, "tsp": 2, "tis": 4, "cr": false, "br": false, "ttd":-5}`)
+		assertUnserializeErr(err, "invalid board")
 	}
 }
