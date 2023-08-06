@@ -88,10 +88,4 @@ func play() {
 		}
 
 	}
-
-	fmt.Print("\nHistory\n")
-	gs := g.GenerateHistory()
-	for _, g := range gs {
-		fmt.Println(&g)
-	}
 }

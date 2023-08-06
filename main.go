@@ -33,10 +33,6 @@ func prof() {
 		for !g.ComputeState().IsOver() {
 			plies := g.Plies()
 
-			// pc := g.pieceCount
-			// c := int(pc.BlackKings) + int(pc.BlackPawns) + int(pc.WhiteKings) + int(pc.WhitePawns)
-			// plyCounts[c] = append(plyCounts[c], len(plies))
-
 			random := plies[rand.Int()%len(plies)]
 			g.DoPly(random)
 		}
@@ -73,5 +69,5 @@ func prof() {
 }
 
 func main() {
-	runServer()
+	play()
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"math/bits"
 	"strings"
 )
 
@@ -56,6 +57,13 @@ func (k Kind) String() string {
 	} else {
 		return "pawn"
 	}
+}
+
+func (k Kind) Opposite() Kind {
+	if k == KingKind {
+		return PawnKind
+	}
+	return KingKind
 }
 
 type Board struct {
@@ -209,28 +217,19 @@ type PieceCount struct {
 func (b *Board) PieceCount() PieceCount {
 	var c PieceCount
 
-	for row := byte(0); row < 8; row++ {
-		for col := byte(0); col < 8; col++ {
-			if !b.IsOccupied(row, col) {
-				continue
-			}
+	king := b.occupied & b.king
+	pawn := b.occupied &^ b.king
 
-			color, kind := b.Get(row, col)
-			if color == WhiteColor {
-				if kind == PawnKind {
-					c.WhitePawns++
-				} else {
-					c.WhiteKings++
-				}
-			} else {
-				if kind == PawnKind {
-					c.BlackPawns++
-				} else {
-					c.BlackKings++
-				}
-			}
-		}
-	}
+	kings := bits.OnesCount64(king)
+	pawns := bits.OnesCount64(pawn)
+
+	whitePawns := bits.OnesCount64(pawn & b.white)
+	c.WhitePawns = int8(whitePawns)
+	c.BlackPawns = int8(pawns - whitePawns)
+
+	whiteKings := bits.OnesCount64(king & b.white)
+	c.WhiteKings = int8(whiteKings)
+	c.BlackKings = int8(kings - whiteKings)
 
 	return c
 }

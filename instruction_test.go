@@ -282,4 +282,45 @@ func assertEmpty(b *Board, t *testing.T, row, col byte) {
 	}
 }
 
-// TODO test random instruction sequence
+func TestInstructionEquals(t *testing.T) {
+	mov1 := MoveInstruction(1, 2, 3, 4)
+	mov2 := MoveInstruction(1, 2, 3, 6)
+
+	if mov1.Equals(mov2) {
+		t.Fail()
+	}
+	if !mov1.Equals(mov1) {
+		t.Fail()
+	}
+
+	cap1 := CaptureInstruction(1, 2, BlackColor, KingKind)
+	cap2 := CaptureInstruction(1, 2, WhiteColor, KingKind)
+	if cap1.Equals(cap2) {
+		t.Fail()
+	}
+	if !cap1.Equals(cap1) {
+		t.Fail()
+	}
+
+	cro1 := CrownInstruction(1, 2)
+	cro2 := CrownInstruction(7, 6)
+	if cro1.Equals(cro2) {
+		t.Fail()
+	}
+	if !cro1.Equals(cro1) {
+		t.Fail()
+	}
+
+	// Test different types
+	ins := []Instruction{mov1, cap1, cro1}
+	for i, ins1 := range ins {
+		for j, ins2 := range ins {
+			if i == j {
+				continue
+			}
+			if ins1.Equals(ins2) {
+				t.Fail()
+			}
+		}
+	}
+}

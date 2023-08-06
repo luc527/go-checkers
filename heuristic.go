@@ -21,7 +21,7 @@ var _ Heuristic = UnweightedCountHeuristic
 var _ Heuristic = WeightedCountHeuristic
 
 func UnweightedCountHeuristic(g *Game, player Color) float64 {
-	count := g.PieceCount()
+	count := g.Board().PieceCount()
 	whites := int(count.WhitePawns + count.WhiteKings)
 	blacks := int(count.BlackPawns + count.BlackKings)
 
@@ -39,7 +39,7 @@ func WeightedCountHeuristic(g *Game, player Color) float64 {
 		kingWeight = 2
 	)
 
-	count := g.PieceCount()
+	count := g.Board().PieceCount()
 	whites := int(count.WhitePawns*pawnWeight + count.WhiteKings*kingWeight)
 	blacks := int(count.BlackPawns*pawnWeight + count.BlackKings*kingWeight)
 

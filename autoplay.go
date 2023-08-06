@@ -27,11 +27,6 @@ func autoplay(captureRule CaptureRule, bestRule BestRule, whiteBot Minimax, blac
 	duration := end.Sub(start)
 	fmt.Println("Game duration:", duration)
 
-	// gs := g.GenerateHistory()
-	// for _, g := range gs {
-	// 	fmt.Println(&g)
-	// }
-
 	if state.HasWinner() {
 		fmt.Println(state.Winner(), "wins!")
 	} else {

@@ -20,6 +20,15 @@ func TestKindString(t *testing.T) {
 	}
 }
 
+func TestKindOpposite(t *testing.T) {
+	if PawnKind.Opposite() != KingKind {
+		t.Fail()
+	}
+	if KingKind.Opposite() != PawnKind {
+		t.Fail()
+	}
+}
+
 func TestNewEmptyBoard(t *testing.T) {
 	board := new(Board)
 	for row := uint8(0); row < 8; row++ {
@@ -234,4 +243,84 @@ func TestBoardEquals(t *testing.T) {
 	if !b.Equals(c) {
 		t.Fail()
 	}
+}
+
+func TestBoardNotEquals(t *testing.T) {
+	nilBoard := (*Board)(nil)
+	b := new(Board)
+	if b.Equals(nilBoard) || nilBoard.Equals(b) {
+		t.Fail()
+	}
+
+	c := new(Board)
+
+	b.Set(0, 0, WhiteColor, PawnKind)
+	if c.Equals(b) {
+		t.Fail()
+	}
+
+	c.Set(0, 0, BlackColor, PawnKind)
+	if c.Equals(b) {
+		t.Fail()
+	}
+
+	c.Set(0, 0, WhiteColor, KingKind)
+	if c.Equals(b) {
+		t.Fail()
+	}
+
+	emptyBoard := (*Board)(nil)
+	if emptyBoard.Equals(b) {
+		t.Fail()
+	}
+}
+
+func assertPieceCount(t *testing.T, c PieceCount, wp, wk, bp, bk int8) {
+	if wp != c.WhitePawns {
+		t.Fail()
+	}
+	if wk != c.WhiteKings {
+		t.Fail()
+	}
+	if bp != c.BlackPawns {
+		t.Fail()
+	}
+	if bk != c.BlackKings {
+		t.Fail()
+	}
+}
+
+func TestPieceCount(t *testing.T) {
+	b := new(Board)
+
+	var wp, wk, bp, bk int8
+
+	assertPieceCount(t, b.PieceCount(), wp, wk, bp, bk)
+
+	b.Set(0, 0, BlackColor, PawnKind)
+	bp++
+	b.Set(0, 1, BlackColor, PawnKind)
+	bp++
+	b.Set(0, 2, BlackColor, PawnKind)
+	bp++
+
+	assertPieceCount(t, b.PieceCount(), wp, wk, bp, bk)
+
+	b.Set(2, 3, WhiteColor, PawnKind)
+	wp++
+
+	assertPieceCount(t, b.PieceCount(), wp, wk, bp, bk)
+
+	b.Set(3, 3, WhiteColor, KingKind)
+	wk++
+
+	assertPieceCount(t, b.PieceCount(), wp, wk, bp, bk)
+
+	b.Set(4, 4, BlackColor, KingKind)
+	bk++
+	assertPieceCount(t, b.PieceCount(), wp, wk, bp, bk)
+
+	b.Set(7, 1, WhiteColor, PawnKind)
+	wp++
+	assertPieceCount(t, b.PieceCount(), wp, wk, bp, bk)
 }

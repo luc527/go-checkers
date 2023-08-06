@@ -40,6 +40,19 @@ func (p Ply) CountCaptures() int {
 	return c
 }
 
+func (p Ply) Equals(q Ply) bool {
+	if len(p) != len(q) {
+		return false
+	}
+	n := len(p)
+	for i := 0; i < n; i++ {
+		if p[i] != q[i] {
+			return false
+		}
+	}
+	return true
+}
+
 // the generateSimplePawnPlies and followPawnCaptures procedures
 // are special cases of the same procedures for king pieces
 // that have the distance bound to 1 (simple move) or 2 (capture)

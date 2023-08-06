@@ -49,7 +49,6 @@ type rememberedState struct {
 	turnsSinceCapture    int16
 	turnsSincePawnMove   int16
 	turnsInSpecialEnding int16
-	pieceCount           PieceCount
 }
 
 type Game struct {
@@ -115,23 +114,6 @@ func (g *Game) ToPlay() Color {
 	return g.toPlay
 }
 
-func (g *Game) GenerateHistory() []Game {
-	g = g.Copy()
-	gs := make([]Game, len(g.history)+1)
-	gs[len(g.history)] = *g
-	gs[len(g.history)].board = g.board.Copy()
-	for i := len(g.history) - 1; i >= 0; i-- {
-		g.UndoLastPly()
-		gs[i] = *g
-		gs[i].board = g.board.Copy()
-	}
-	return gs
-}
-
-func (g *Game) PieceCount() PieceCount {
-	return g.pieceCount
-}
-
 func (g *Game) DoPly(p Ply) {
 	PerformInstructions(g.board, p)
 	g.toPlay = g.toPlay.Opposite()
@@ -144,7 +126,7 @@ func (g *Game) DoPly(p Ply) {
 }
 
 func (g *Game) ComputeState() GameState {
-	count := g.pieceCount
+	count := g.board.PieceCount()
 	whiteCount := count.WhiteKings + count.WhitePawns
 	blackCount := count.BlackKings + count.BlackPawns
 
@@ -209,24 +191,6 @@ func (g *Game) Copy() *Game {
 	}
 }
 
-func (g *Game) DeepCopy() *Game {
-	// not really 100% deep, just deep copying everything that can be modified
-	history := make([]rememberedState, len(g.history))
-	copy(history, g.history)
-	return &Game{
-		rememberedState: rememberedState{
-			plies:   g.plies,
-			lastPly: g.lastPly,
-		},
-		stagnantTurnsToDraw: g.stagnantTurnsToDraw,
-		captureRule:         g.captureRule,
-		bestRule:            g.bestRule,
-		board:               g.board.Copy(),
-		toPlay:              g.toPlay,
-		history:             history,
-	}
-}
-
 func (g *Game) Equals(o *Game) bool {
 	if g == nil && o == nil {
 		return true
@@ -239,9 +203,9 @@ func (g *Game) Equals(o *Game) bool {
 		if len(a) != len(b) {
 			return false
 		}
-		for i, x := range a {
-			y := b[i]
-			if !sliceEq(x, y) {
+		n := len(a)
+		for i := 0; i < n; i++ {
+			if !a[i].Equals(b[i]) {
 				return false
 			}
 		}
@@ -252,7 +216,7 @@ func (g *Game) Equals(o *Game) bool {
 		g.bestRule == o.bestRule &&
 		g.toPlay == o.toPlay &&
 		g.board.Equals(o.board) &&
-		sliceEq(g.lastPly, o.lastPly) &&
+		g.lastPly.Equals(o.lastPly) &&
 		pliesEq(g.plies, o.plies)
 }
 
@@ -293,8 +257,6 @@ func (g *Game) BoardChanged(ply Ply) {
 			g.turnsSincePawnMove++
 		}
 	}
-
-	g.pieceCount = count
 
 	g.plies = g.generatePlies()
 }

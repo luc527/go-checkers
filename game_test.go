@@ -11,6 +11,16 @@ func TestDoUndoState(t *testing.T) {
 
 	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
 
+	if g.HasLastPly() {
+		t.Fail()
+	}
+
+	g1 := g.Copy()
+	g1.UndoLastPly()
+	if !g1.Equals(g) {
+		t.Fail()
+	}
+
 	var states []*Game
 
 	for !g.ComputeState().IsOver() {
@@ -310,20 +320,69 @@ func TestDrawBySpecialEnding(t *testing.T) {
 	`))
 }
 
-func BenchmarkGame(b *testing.B) {
-	trials := 100_000
-	for t := 0; t < trials; t++ {
-		g := NewStandardGame(CapturesMandatory, BestMandatory)
-		for !g.ComputeState().IsOver() {
-			plies := g.Plies()
-			randomPly := plies[rand.Int()%len(plies)]
-			g.DoPly(randomPly)
-		}
-		for g.HasLastPly() {
-			g.UndoLastPly()
-		}
+func TestGameState(t *testing.T) {
+	if PlayingState.IsOver() {
+		t.Fail()
+	}
+	if PlayingState.HasWinner() {
+		t.Fail()
 	}
 
-	// before best alloc only when needed optimization:  13.082s
-	// after  best alloc only when needed optimization:  11.723s
+	if !WhiteWonState.IsOver() {
+		t.Fail()
+	}
+	if !WhiteWonState.HasWinner() {
+		t.Fail()
+	}
+	if WhiteWonState.Winner() != WhiteColor {
+		t.Fail()
+	}
+
+	if !BlackWonState.IsOver() {
+		t.Fail()
+	}
+	if !BlackWonState.HasWinner() {
+		t.Fail()
+	}
+	if BlackWonState.Winner() != BlackColor {
+		t.Fail()
+	}
+
+	if !DrawState.IsOver() {
+		t.Fail()
+	}
+	if DrawState.HasWinner() {
+		t.Fail()
+	}
+}
+
+func TestGameEquals(t *testing.T) {
+	nilGame := (*Game)(nil)
+	if !nilGame.Equals(nilGame) {
+		t.Fail()
+	}
+
+	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
+	if nilGame.Equals(g) || g.Equals(nilGame) {
+		t.Fail()
+	}
+
+	if !g.Equals(g) {
+		t.Fail()
+	}
+
+	h := g.Copy()
+	if !g.Equals(h) {
+		t.Fail()
+	}
+
+	h.DoPly(h.Plies()[0])
+	if g.Equals(h) {
+		t.Fail()
+	}
+
+	h.UndoLastPly()
+	if !g.Equals(h) {
+		t.Fail()
+	}
 }
