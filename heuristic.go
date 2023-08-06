@@ -11,6 +11,8 @@ import (
 // and some heuristics rely on the piece count
 // -- maybe not a very nice abstraction
 
+// TODO now the game doesn't cache the piece count, redo this with the heuristics taking Board
+
 type Heuristic func(g *Game, player Color) float64
 
 func (h Heuristic) String() string {

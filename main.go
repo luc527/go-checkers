@@ -30,15 +30,16 @@ func prof() {
 	trials := 100_000
 	for t := 0; t < trials; t++ {
 		g := NewStandardGame(CapturesMandatory, BestNotMandatory)
-		for !g.ComputeState().IsOver() {
+		for !g.Result().IsOver() {
 			plies := g.Plies()
 
 			random := plies[rand.Int()%len(plies)]
 			g.DoPly(random)
 		}
-		for g.HasLastPly() {
-			g.UndoLastPly()
-		}
+		// TODO
+		// for g.HasLastPly() {
+		// 	g.UndoLastPly()
+		// }
 	}
 
 	// for i := 0; i <= 26; i++ {

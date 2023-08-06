@@ -1,5 +1,7 @@
 package main
 
+// TODO maybe there's some way to optimize this using the bit masks
+
 // both offSets
 var offBoth = [2]int8{-1, +1}
 
@@ -38,19 +40,6 @@ func (p Ply) CountCaptures() int {
 		}
 	}
 	return c
-}
-
-func (p Ply) Equals(q Ply) bool {
-	if len(p) != len(q) {
-		return false
-	}
-	n := len(p)
-	for i := 0; i < n; i++ {
-		if p[i] != q[i] {
-			return false
-		}
-	}
-	return true
 }
 
 // the generateSimplePawnPlies and followPawnCaptures procedures
@@ -165,16 +154,10 @@ func followPawnCaptures(ps []Ply, stack []Instruction, b *Board, row, col byte, 
 			b.Set(mrow, mcol, mcolor, mkind)
 			b.Move(drow, dcol, row, col)
 			stack = stack[:len(stack)-2]
-
-			// I could make another stack variable 'substack', copy the slice stack to it, append
-			// the Instructions to that one and pass it to the recursive call,
-			// so I don't need to shrink the stack at the end,
-			// BUT this can be less efficient if appending the substack grows the slice:
-			// currently if the stack grows once it can use that leftover capacity in further recursive calls;
-			// if we used a substack and it grew, it'd grow again in the next iteration of the loop
 		}
 	}
 
+	// TODO cleanup, someMeaningfulName := stack != nil, then if sink && someMeaningfulName
 	// stack is nil at the first call when no captures have been made yet
 	if sink && stack != nil {
 		isLen := len(stack)
@@ -313,6 +296,8 @@ func GeneratePlies(ps []Ply, b *Board, player Color, captureRule CaptureRule, be
 				maxCaptureCount = captureCount
 			}
 		}
+
+		// only allocate best []Ply if really needed
 
 		needToFilterBest := fstCaptureCount != maxCaptureCount
 

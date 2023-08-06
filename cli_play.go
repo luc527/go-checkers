@@ -7,9 +7,6 @@ import (
 	"strconv"
 )
 
-// TODO make server, then make a web client
-// try to reuse most of the pin3-checkers client
-
 func play() {
 
 	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
@@ -28,7 +25,7 @@ func play() {
 	for !quit {
 		fmt.Printf("It's %s's turn!\n", g.ToPlay())
 
-		state := g.ComputeState()
+		state := g.Result()
 		if state.IsOver() {
 			if !state.HasWinner() {
 				fmt.Println("It's a draw, no one wins")
@@ -43,9 +40,6 @@ func play() {
 			for i, p := range plies {
 				fmt.Printf("[%2d]: %s\n", i, p.String())
 			}
-		}
-		if g.HasLastPly() {
-			fmt.Println("[ u]: undo last move")
 		}
 		fmt.Println("[ q]: quit")
 
@@ -63,10 +57,7 @@ func play() {
 			}
 
 			text := input.Text()
-			if text == "u" {
-				g.UndoLastPly() // undo AI
-				g.UndoLastPly() // undo player
-			} else if text == "q" {
+			if text == "q" {
 				quit = true
 			} else {
 				i, err := strconv.Atoi(text)

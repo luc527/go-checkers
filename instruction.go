@@ -35,8 +35,8 @@ type Instruction struct {
 	row byte
 	col byte
 	// arbitraty data
-	// row, col for moveInstruction
-	// color, kind for captureInstruction
+	// destination row and col for moveInstruction
+	// color and kind for captureInstruction
 	// unused for crownInstruction
 	d [2]byte
 }
@@ -103,9 +103,6 @@ func PerformInstructions(b *Board, is []Instruction) {
 			row, col := i.row, i.col
 			capturedColor, capturedKind := Color(i.d[0]), Kind(i.d[1])
 			actualColor, actualKind := b.Get(row, col)
-
-			// TODO return err instead of panicking?
-
 			if capturedColor != actualColor || capturedKind != actualKind {
 				panic(fmt.Sprintf(
 					"performed capture instruction of %s %s on row %d %d but piece is a %s %s",
@@ -123,8 +120,8 @@ func PerformInstructions(b *Board, is []Instruction) {
 	}
 }
 
-// if you pass is to PerformInstructions
-// the same is passed to UndoInstructions will undo the instructionList performed
+// if you pass 'is' to PerformInstructions
+// the same 'is' passed to UndoInstructions will undo the instructions performed
 // you don't need to reverse them
 func UndoInstructions(b *Board, is []Instruction) {
 	for k := len(is) - 1; k >= 0; k-- {

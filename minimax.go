@@ -29,7 +29,7 @@ func (m Minimax) searchAt(g *Game, depth int) (float64, Ply) {
 }
 
 func (m Minimax) searchImpl(g *Game, depth int, alpha, beta float64) (float64, Ply) {
-	state := g.ComputeState()
+	state := g.Result()
 	if state.IsOver() {
 		if !state.HasWinner() {
 			return drawValue, nil
@@ -63,7 +63,7 @@ func (m Minimax) searchImpl(g *Game, depth int, alpha, beta float64) (float64, P
 	var ply Ply
 
 	for _, subPly := range plies {
-		g.DoPly(subPly)
+		undoInfo := g.DoPly(subPly)
 
 		subValue, _ := m.searchImpl(g, depth+1, alpha, beta)
 
@@ -74,7 +74,7 @@ func (m Minimax) searchImpl(g *Game, depth int, alpha, beta float64) (float64, P
 			}
 			alpha = math.Max(alpha, subValue)
 			if subValue >= beta {
-				g.UndoLastPly()
+				g.UndoPly(undoInfo)
 				return value, ply
 			}
 		} else {
@@ -84,12 +84,12 @@ func (m Minimax) searchImpl(g *Game, depth int, alpha, beta float64) (float64, P
 			}
 			beta = math.Min(beta, subValue)
 			if subValue <= alpha {
-				g.UndoLastPly()
+				g.UndoPly(undoInfo)
 				return value, ply
 			}
 		}
 
-		g.UndoLastPly()
+		g.UndoPly(undoInfo)
 	}
 
 	return value, ply

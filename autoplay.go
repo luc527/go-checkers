@@ -8,10 +8,10 @@ import (
 func autoplay(captureRule CaptureRule, bestRule BestRule, whiteBot Minimax, blackBot Minimax) {
 	g := NewStandardGame(captureRule, bestRule)
 
-	var state GameState
+	var state GameResult
 	start := time.Now()
 	for {
-		state = g.ComputeState()
+		state = g.Result()
 		if state.IsOver() {
 			break
 		}

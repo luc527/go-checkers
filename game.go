@@ -2,70 +2,74 @@ package main
 
 import "fmt"
 
-type GameState byte
+type GameResult byte
 
 const (
-	PlayingState = GameState(iota)
-	WhiteWonState
-	BlackWonState
-	DrawState
+	PlayingResult = GameResult(iota)
+	WhiteWonResult
+	BlackWonResult
+	DrawResult
 )
 
-func (s GameState) IsOver() bool {
-	return s != PlayingState
+func (s GameResult) IsOver() bool {
+	return s != PlayingResult
 }
 
-func (s GameState) HasWinner() bool {
-	return s == WhiteWonState || s == BlackWonState
+func (s GameResult) HasWinner() bool {
+	return s == WhiteWonResult || s == BlackWonResult
 }
 
-func (s GameState) Winner() Color {
-	if s == WhiteWonState {
+func (s GameResult) Winner() Color {
+	if s == WhiteWonResult {
 		return WhiteColor
 	} else {
 		return BlackColor
 	}
 }
 
-func (s GameState) String() string {
+func (s GameResult) String() string {
 	switch s {
-	case PlayingState:
+	case PlayingResult:
 		return "playing"
-	case WhiteWonState:
+	case WhiteWonResult:
 		return "white won"
-	case BlackWonState:
+	case BlackWonResult:
 		return "black won"
-	case DrawState:
+	case DrawResult:
 		return "draw"
 	default:
-		return "INVALID GameState"
+		return "INVALID GameResult"
 	}
 }
 
-// the part of the state that you need to remember in order to undo
-type rememberedState struct {
-	plies                []Ply
-	lastPly              Ply
+type gameState struct {
+	toPlay               Color
 	turnsSinceCapture    int16
 	turnsSincePawnMove   int16
 	turnsInSpecialEnding int16
+	plies                []Ply
+}
+
+type UndoInfo struct {
+	plyDone   Ply
+	prevState gameState
 }
 
 type Game struct {
-	rememberedState
 	stagnantTurnsToDraw int16 // stagnant here means no captures and no pawn moves
 	captureRule         CaptureRule
 	bestRule            BestRule
 	board               *Board
-	toPlay              Color
-	history             []rememberedState
+	state               gameState
 }
 
 func (g *Game) String() string {
 	return fmt.Sprintf(
-		"{ToPlay: %v, LastPly: %v, Board:\n%v\n}",
-		g.toPlay,
-		g.lastPly,
+		"{ToPlay: %v, turnsSinceCapture: %v, turnsSincePawnMove: %v, turnsInSpecialEnding: %v, Board:\n%v\n}",
+		g.state.toPlay,
+		g.state.turnsSinceCapture,
+		g.state.turnsSincePawnMove,
+		g.state.turnsInSpecialEnding,
 		g.board,
 	)
 }
@@ -84,18 +88,16 @@ func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDr
 	g.bestRule = bestRule
 	g.stagnantTurnsToDraw = stagnantTurnsToDraw
 
-	g.toPlay = initalPlayer
+	g.state.toPlay = initalPlayer
 
-	g.lastPly = nil
-	g.turnsSinceCapture = 0
-	g.turnsSincePawnMove = 0
-	g.turnsInSpecialEnding = 0
+	g.state.turnsSinceCapture = 0
+	g.state.turnsSincePawnMove = 0
+	g.state.turnsInSpecialEnding = 0
 	// once we get in a special ending turnsInSpecialEnding becomes 1 and increases each turn
 
 	g.BoardChanged(nil)
 
 	return &g
-
 }
 
 func NewStandardGame(captureRule CaptureRule, bestRule BestRule) *Game {
@@ -106,88 +108,70 @@ func (g *Game) Board() *Board {
 	return g.board
 }
 
-func (g *Game) Plies() []Ply {
-	return g.plies
-}
-
 func (g *Game) ToPlay() Color {
-	return g.toPlay
+	return g.state.toPlay
 }
 
-func (g *Game) DoPly(p Ply) {
+func (g *Game) DoPly(p Ply) UndoInfo {
 	PerformInstructions(g.board, p)
-	g.toPlay = g.toPlay.Opposite()
 
-	// save current state in the history
-	g.history = append(g.history, g.rememberedState)
-	g.lastPly = p
-
+	prevState := g.state
+	g.state.toPlay = g.state.toPlay.Opposite()
 	g.BoardChanged(p)
+
+	return UndoInfo{plyDone: p, prevState: prevState}
 }
 
-func (g *Game) ComputeState() GameState {
+func (g *Game) Result() GameResult {
 	count := g.board.PieceCount()
 	whiteCount := count.WhiteKings + count.WhitePawns
 	blackCount := count.BlackKings + count.BlackPawns
 
 	if whiteCount == 0 {
-		return BlackWonState
+		return BlackWonResult
 	} else if blackCount == 0 {
-		return WhiteWonState
+		return WhiteWonResult
 	}
 
-	if len(g.plies) == 0 {
-		if g.toPlay == WhiteColor {
-			return BlackWonState
+	if g.state.turnsInSpecialEnding == 5 {
+		return DrawResult
+	}
+
+	if g.state.turnsSincePawnMove >= g.stagnantTurnsToDraw && g.state.turnsSinceCapture >= g.stagnantTurnsToDraw {
+		return DrawResult
+	}
+
+	if len(g.Plies()) == 0 {
+		if g.state.toPlay == WhiteColor {
+			return BlackWonResult
 		} else {
-			return WhiteWonState
+			return WhiteWonResult
 		}
 	}
 
-	if g.turnsInSpecialEnding == 5 {
-		return DrawState
-	}
-
-	if g.turnsSincePawnMove >= g.stagnantTurnsToDraw && g.turnsSinceCapture >= g.stagnantTurnsToDraw {
-		return DrawState
-	}
-
-	return PlayingState
+	return PlayingResult
 }
 
-func (g *Game) HasLastPly() bool {
-	return len(g.history) > 0
+func (g *Game) UndoPly(undo UndoInfo) {
+	UndoInstructions(g.board, undo.plyDone)
+	g.state = undo.prevState
 }
-
-// TODO maybe should return err if there's no lastply
-func (g *Game) UndoLastPly() {
-	if g.lastPly == nil {
-		return
-	}
-
-	UndoInstructions(g.board, g.lastPly)
-	g.toPlay = g.toPlay.Opposite()
-	g.rememberedState = g.history[len(g.history)-1]
-
-	g.history = g.history[:len(g.history)-1]
-}
-
-// These two copy methods have kind of a crappy/leaky interface
 
 func (g *Game) Copy() *Game {
-	// plies, lastPly, history all shallow-copied
+	// plies shallow-copied
 	// board deep-copied
 	return &Game{
-		rememberedState: rememberedState{
-			plies:   g.plies,
-			lastPly: g.lastPly,
+		state: gameState{
+			toPlay:               g.state.toPlay,
+			turnsSinceCapture:    g.state.turnsSinceCapture,
+			turnsSincePawnMove:   g.state.turnsSincePawnMove,
+			turnsInSpecialEnding: g.state.turnsInSpecialEnding,
+			plies:                g.state.plies,
 		},
 		stagnantTurnsToDraw: g.stagnantTurnsToDraw,
 		captureRule:         g.captureRule,
 		bestRule:            g.bestRule,
 		board:               g.board.Copy(),
-		toPlay:              g.toPlay,
-		history:             g.history,
 	}
 }
 
@@ -199,34 +183,22 @@ func (g *Game) Equals(o *Game) bool {
 		return false
 	}
 
-	pliesEq := func(a []Ply, b []Ply) bool {
-		if len(a) != len(b) {
-			return false
-		}
-		n := len(a)
-		for i := 0; i < n; i++ {
-			if !a[i].Equals(b[i]) {
-				return false
-			}
-		}
-		return true
-	}
-
 	return g.captureRule == o.captureRule &&
 		g.bestRule == o.bestRule &&
-		g.toPlay == o.toPlay &&
-		g.board.Equals(o.board) &&
-		g.lastPly.Equals(o.lastPly) &&
-		pliesEq(g.plies, o.plies)
+		g.state.toPlay == o.state.toPlay &&
+		g.state.turnsInSpecialEnding == o.state.turnsInSpecialEnding &&
+		g.state.turnsSinceCapture == o.state.turnsSinceCapture &&
+		g.state.turnsSincePawnMove == o.state.turnsSincePawnMove &&
+		g.board.Equals(o.board)
 }
 
 func (g *Game) BoardChanged(ply Ply) {
 	count := g.board.PieceCount()
 
 	if inSpecialEnding(count) {
-		g.turnsInSpecialEnding++
+		g.state.turnsInSpecialEnding++
 	} else {
-		g.turnsInSpecialEnding = 0
+		g.state.turnsInSpecialEnding = 0
 	}
 
 	if ply != nil {
@@ -246,23 +218,31 @@ func (g *Game) BoardChanged(ply Ply) {
 		}
 
 		if isCapture {
-			g.turnsSinceCapture = 0
+			g.state.turnsSinceCapture = 0
 		} else {
-			g.turnsSinceCapture++
+			g.state.turnsSinceCapture++
 		}
 
 		if isPawnMove {
-			g.turnsSincePawnMove = 0
+			g.state.turnsSincePawnMove = 0
 		} else {
-			g.turnsSincePawnMove++
+			g.state.turnsSincePawnMove++
 		}
 	}
 
-	g.plies = g.generatePlies()
+	g.state.plies = nil
 }
 
 func (g *Game) generatePlies() []Ply {
-	return GeneratePlies(make([]Ply, 0, 10), g.board, g.toPlay, g.captureRule, g.bestRule)
+	return GeneratePlies(make([]Ply, 0, 10), g.board, g.state.toPlay, g.captureRule, g.bestRule)
+}
+
+func (g *Game) Plies() []Ply {
+	// Generated on demand, then cached
+	if g.state.plies == nil {
+		g.state.plies = g.generatePlies()
+	}
+	return g.state.plies
 }
 
 func oneColorSpecialEnding(ourKings, ourPawns, theirKings, theirPawns int8) bool {

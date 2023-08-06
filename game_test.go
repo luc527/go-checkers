@@ -6,43 +6,38 @@ import (
 )
 
 func TestDoUndoState(t *testing.T) {
-
-	// this should already fully test g.history and g.lastPly
-
 	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
 
-	if g.HasLastPly() {
-		t.Fail()
-	}
-
-	g1 := g.Copy()
-	g1.UndoLastPly()
-	if !g1.Equals(g) {
-		t.Fail()
-	}
-
 	var states []*Game
+	var undos []UndoInfo
 
-	for !g.ComputeState().IsOver() {
+	for !g.Result().IsOver() {
 		states = append(states, g.Copy())
-		r := rand.Int() % len(g.Plies())
-		t.Log(g.Plies()[r])
-		g.DoPly(g.Plies()[r])
+		plies := g.Plies()
+		r := rand.Int() % len(plies)
+		t.Log(plies[r])
+		undos = append(undos, g.DoPly(plies[r]))
 	}
 
 	t.Log("\n" + g.Board().String())
 
 	for i := len(states) - 1; i >= 0; i-- {
-		g.UndoLastPly()
+		undo := undos[len(undos)-1]
+		undos = undos[:len(undos)-1]
+		g.UndoPly(undo)
 		if !g.Equals(states[i]) {
+			t.Log("\n Failed, expected")
+			t.Log(g)
+			t.Log("got")
+			t.Log(states[i])
 			t.Fail()
 			break
 		}
 	}
 }
 
-func assertGameState(t *testing.T, g *Game, want GameState) {
-	got := g.ComputeState()
+func assertGameResult(t *testing.T, g *Game, want GameResult) {
+	got := g.Result()
 	if got != want {
 		t.Errorf("expected game to be in the %v state, but it's in the %v state", want, got)
 	}
@@ -57,7 +52,7 @@ func TestWhiteWinsByNoBlackPieces(t *testing.T) {
 	`)
 	t.Log("\n" + b.String())
 	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
-	assertGameState(t, g, WhiteWonState)
+	assertGameResult(t, g, WhiteWonResult)
 }
 
 func TestBlackWinsByNoWhitePieces(t *testing.T) {
@@ -71,7 +66,7 @@ func TestBlackWinsByNoWhitePieces(t *testing.T) {
 	`)
 	t.Log("\n" + b.String())
 	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
-	assertGameState(t, g, BlackWonState)
+	assertGameResult(t, g, BlackWonResult)
 }
 
 func TestWhiteWinsByNoBlackPlies(t *testing.T) {
@@ -87,7 +82,7 @@ func TestWhiteWinsByNoBlackPlies(t *testing.T) {
 	`)
 	t.Log("\n" + b.String())
 	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, BlackColor)
-	assertGameState(t, g, WhiteWonState)
+	assertGameResult(t, g, WhiteWonResult)
 }
 
 func TestBlackWinsByNoWhitePlies(t *testing.T) {
@@ -102,7 +97,7 @@ func TestBlackWinsByNoWhitePlies(t *testing.T) {
 	t.Log("\n" + b.String())
 	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
 	t.Log()
-	assertGameState(t, g, BlackWonState)
+	assertGameResult(t, g, BlackWonResult)
 }
 
 func assertEqualBoards(t *testing.T, a *Board, b *Board) {
@@ -130,7 +125,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	`)
 
 	g := NewCustomGame(CapturesMandatory, BestMandatory, 3, b, WhiteColor)
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 
 	g.DoPly(Ply{MoveInstruction(3, 3, 2, 2)})
 
@@ -145,7 +140,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		.
 		ooooooo
 	`))
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 	// at this point turnsSincePawnMove=0, turnsSinceCapture=1
 
 	g.DoPly(Ply{MoveInstruction(0, 6, 1, 5)})
@@ -159,7 +154,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		.
 		ooooooo
 	`))
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 	// at this point turnsSincePawnMove=1, turnsSinceCapture=2
 
 	g.DoPly(Ply{MoveInstruction(4, 4, 6, 2)})
@@ -173,7 +168,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		..@
 		ooooooo
 	`))
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 	// at this point turnsSincePawnMove=2, turnsSinceCapture=3
 
 	// let's reset a counter, ply doesn't have to be legal
@@ -188,7 +183,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		..@
 		ooooooo
 	`))
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 	// at this point turnsSincePawnMove=0, turnsSinceCapture=4
 
 	// let's reset another counter
@@ -203,7 +198,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		..@
 		ooooooo
 	`))
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 	// at this point turnsSincePawnMove=1, turnsSinceCapture=0
 
 	// now let's keep the state stagnant
@@ -219,7 +214,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		.
 		ooooooo
 	`))
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 	// turnsSincePawnMove=2, turnsSinceCapture=1
 
 	g.DoPly(Ply{MoveInstruction(3, 3, 2, 2)})
@@ -233,7 +228,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		.
 		ooooooo
 	`))
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 	// turnsSincePawnMove=3, turnsSinceCapture=2
 
 	g.DoPly(Ply{MoveInstruction(5, 3, 4, 4)})
@@ -248,34 +243,34 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		ooooooo
 	`))
 	// turnsSincePawnMove=3, turnsSinceCapture=2, should draw now!
-	assertGameState(t, g, DrawState)
+	assertGameResult(t, g, DrawResult)
 }
 
 func assertSpecialEnding(t *testing.T, b *Board) {
 	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
 	t.Log("\n" + g.Board().String())
 	// 1 turn in special ending
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 
 	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
 	t.Log("\n" + g.Board().String())
 	// 2 turns in special ending
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 
 	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
 	t.Log("\n" + g.Board().String())
 	// 3 turns in special ending
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 
 	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
 	t.Log("\n" + g.Board().String())
 	// 4 turns in special ending
-	assertGameState(t, g, PlayingState)
+	assertGameResult(t, g, PlayingResult)
 
 	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
 	t.Log("\n" + g.Board().String())
 	// 5 turns in special ending
-	assertGameState(t, g, DrawState)
+	assertGameResult(t, g, DrawResult)
 }
 
 func TestDrawBySpecialEnding(t *testing.T) {
@@ -320,38 +315,38 @@ func TestDrawBySpecialEnding(t *testing.T) {
 	`))
 }
 
-func TestGameState(t *testing.T) {
-	if PlayingState.IsOver() {
+func TestGameResult(t *testing.T) {
+	if PlayingResult.IsOver() {
 		t.Fail()
 	}
-	if PlayingState.HasWinner() {
-		t.Fail()
-	}
-
-	if !WhiteWonState.IsOver() {
-		t.Fail()
-	}
-	if !WhiteWonState.HasWinner() {
-		t.Fail()
-	}
-	if WhiteWonState.Winner() != WhiteColor {
+	if PlayingResult.HasWinner() {
 		t.Fail()
 	}
 
-	if !BlackWonState.IsOver() {
+	if !WhiteWonResult.IsOver() {
 		t.Fail()
 	}
-	if !BlackWonState.HasWinner() {
+	if !WhiteWonResult.HasWinner() {
 		t.Fail()
 	}
-	if BlackWonState.Winner() != BlackColor {
+	if WhiteWonResult.Winner() != WhiteColor {
 		t.Fail()
 	}
 
-	if !DrawState.IsOver() {
+	if !BlackWonResult.IsOver() {
 		t.Fail()
 	}
-	if DrawState.HasWinner() {
+	if !BlackWonResult.HasWinner() {
+		t.Fail()
+	}
+	if BlackWonResult.Winner() != BlackColor {
+		t.Fail()
+	}
+
+	if !DrawResult.IsOver() {
+		t.Fail()
+	}
+	if DrawResult.HasWinner() {
 		t.Fail()
 	}
 }
@@ -359,30 +354,36 @@ func TestGameState(t *testing.T) {
 func TestGameEquals(t *testing.T) {
 	nilGame := (*Game)(nil)
 	if !nilGame.Equals(nilGame) {
+		t.Log("Nil game should be equal to nil game")
 		t.Fail()
 	}
 
 	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
 	if nilGame.Equals(g) || g.Equals(nilGame) {
+		t.Log("Nil game should not be equal to actual game")
 		t.Fail()
 	}
 
 	if !g.Equals(g) {
+		t.Log("Game should be equal to itself")
 		t.Fail()
 	}
 
 	h := g.Copy()
 	if !g.Equals(h) {
+		t.Log("Game should be equal to a copy of iteself")
 		t.Fail()
 	}
 
-	h.DoPly(h.Plies()[0])
+	undoInfo := h.DoPly(h.Plies()[0])
 	if g.Equals(h) {
+		t.Log("Game should not be equal after a ply")
 		t.Fail()
 	}
 
-	h.UndoLastPly()
+	h.UndoPly(undoInfo)
 	if !g.Equals(h) {
+		t.Log("Game should be back to equal after undoing ply")
 		t.Fail()
 	}
 }
