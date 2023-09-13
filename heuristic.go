@@ -1,4 +1,4 @@
-package checkers
+package go_checkers
 
 import (
 	"fmt"
