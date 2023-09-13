@@ -4,11 +4,11 @@ import (
 	"testing"
 )
 
-func TestCrownInstruction(t *testing.T) {
+func TestMakeCrownInstruction(t *testing.T) {
 	var row, col byte
 	row, col = 5, 6
-	i := CrownInstruction(row, col)
-	if i.t != crownInstruction {
+	i := MakeCrownInstruction(row, col)
+	if i.t != CrownInstruction {
 		t.Errorf("expected instruction to be of type crown, is %s", i.t)
 		return
 	}
@@ -17,7 +17,7 @@ func TestCrownInstruction(t *testing.T) {
 	}
 }
 
-func TestMoveInstruction(t *testing.T) {
+func TestMakeMoveInstruction(t *testing.T) {
 	var srow, scol byte
 	var drow, dcol byte
 
@@ -25,9 +25,9 @@ func TestMoveInstruction(t *testing.T) {
 	srow, scol = 1, 3
 	drow, dcol = 2, 5
 
-	i := MoveInstruction(srow, scol, drow, dcol)
+	i := MakeMoveInstruction(srow, scol, drow, dcol)
 
-	if i.t != moveInstruction {
+	if i.t != MoveInstruction {
 		t.Errorf("expected type move but is of type %s", i.t)
 		return
 	}
@@ -43,7 +43,7 @@ func TestMoveInstruction(t *testing.T) {
 	}
 }
 
-func TestCaptureInstruction(t *testing.T) {
+func TestMakeCaptureInstruction(t *testing.T) {
 	type testCase struct {
 		row, col byte
 		c        Color
@@ -59,9 +59,9 @@ func TestCaptureInstruction(t *testing.T) {
 
 	for _, test := range cases {
 		row, col, c, k := test.row, test.col, test.c, test.k
-		i := CaptureInstruction(row, col, c, k)
+		i := MakeCaptureInstruction(row, col, c, k)
 
-		if i.t != captureInstruction {
+		if i.t != CaptureInstruction {
 			t.Errorf("expected type capture but got type %s", i.t)
 			return
 		}
@@ -86,7 +86,7 @@ func TestCaptureInstruction(t *testing.T) {
 
 }
 
-func TestMakeCrownInstruction(t *testing.T) {
+func TestMakeMakeCrownInstruction(t *testing.T) {
 	b := new(Board)
 
 	var row, col byte
@@ -94,7 +94,7 @@ func TestMakeCrownInstruction(t *testing.T) {
 
 	b.Set(row, col, WhiteColor, PawnKind)
 
-	i := CrownInstruction(row, col)
+	i := MakeCrownInstruction(row, col)
 	is := []Instruction{i}
 
 	PerformInstructions(b, is)
@@ -112,7 +112,7 @@ func TestMakeCrownInstruction(t *testing.T) {
 	}
 }
 
-func TestMakeMoveInstruction(t *testing.T) {
+func TestMakeMakeMoveInstruction(t *testing.T) {
 	b := new(Board)
 
 	var frow, fcol byte //from
@@ -124,7 +124,7 @@ func TestMakeMoveInstruction(t *testing.T) {
 
 	b.Set(frow, fcol, c, k)
 
-	i := MoveInstruction(frow, fcol, trow, tcol)
+	i := MakeMoveInstruction(frow, fcol, trow, tcol)
 	is := []Instruction{i}
 
 	PerformInstructions(b, is)
@@ -158,7 +158,7 @@ func TestMakeMoveInstruction(t *testing.T) {
 	}
 }
 
-func TestMakeCaptureInstruction(t *testing.T) {
+func TestMakeMakeCaptureInstruction(t *testing.T) {
 	b := new(Board)
 
 	var row, col byte
@@ -170,7 +170,7 @@ func TestMakeCaptureInstruction(t *testing.T) {
 	t.Log("Before capture:")
 	t.Log(b)
 
-	i := CaptureInstruction(row, col, color, kind)
+	i := MakeCaptureInstruction(row, col, color, kind)
 	is := []Instruction{i}
 
 	PerformInstructions(b, is)
@@ -216,12 +216,12 @@ func TestInsSequence(t *testing.T) {
 	before := b.Copy()
 
 	is := []Instruction{
-		MoveInstruction(3, 5, 2, 4),
-		CrownInstruction(2, 4),
-		CaptureInstruction(2, 4, WhiteColor, KingKind),
-		MoveInstruction(1, 0, 4, 6),
-		MoveInstruction(2, 2, 3, 5),
-		CrownInstruction(3, 5),
+		MakeMoveInstruction(3, 5, 2, 4),
+		MakeCrownInstruction(2, 4),
+		MakeCaptureInstruction(2, 4, WhiteColor, KingKind),
+		MakeMoveInstruction(1, 0, 4, 6),
+		MakeMoveInstruction(2, 2, 3, 5),
+		MakeCrownInstruction(3, 5),
 	}
 
 	PerformInstructions(b, is)
@@ -283,8 +283,8 @@ func assertEmpty(b *Board, t *testing.T, row, col byte) {
 }
 
 func TestInstructionEquals(t *testing.T) {
-	mov1 := MoveInstruction(1, 2, 3, 4)
-	mov2 := MoveInstruction(1, 2, 3, 6)
+	mov1 := MakeMoveInstruction(1, 2, 3, 4)
+	mov2 := MakeMoveInstruction(1, 2, 3, 6)
 
 	if mov1.Equals(mov2) {
 		t.Fail()
@@ -293,8 +293,8 @@ func TestInstructionEquals(t *testing.T) {
 		t.Fail()
 	}
 
-	cap1 := CaptureInstruction(1, 2, BlackColor, KingKind)
-	cap2 := CaptureInstruction(1, 2, WhiteColor, KingKind)
+	cap1 := MakeCaptureInstruction(1, 2, BlackColor, KingKind)
+	cap2 := MakeCaptureInstruction(1, 2, WhiteColor, KingKind)
 	if cap1.Equals(cap2) {
 		t.Fail()
 	}
@@ -302,8 +302,8 @@ func TestInstructionEquals(t *testing.T) {
 		t.Fail()
 	}
 
-	cro1 := CrownInstruction(1, 2)
-	cro2 := CrownInstruction(7, 6)
+	cro1 := MakeCrownInstruction(1, 2)
+	cro2 := MakeCrownInstruction(7, 6)
 	if cro1.Equals(cro2) {
 		t.Fail()
 	}
@@ -326,16 +326,16 @@ func TestInstructionEquals(t *testing.T) {
 }
 
 func TestInstructionString(t *testing.T) {
-	if moveInstruction.String() != "move" {
+	if MoveInstruction.String() != "move" {
 		t.Fail()
 	}
-	if captureInstruction.String() != "capture" {
+	if CaptureInstruction.String() != "capture" {
 		t.Fail()
 	}
-	if crownInstruction.String() != "crown" {
+	if CrownInstruction.String() != "crown" {
 		t.Fail()
 	}
-	if instructionType(9).String() != "UNKNOWN" {
+	if InstructionType(9).String() != "UNKNOWN" {
 		t.Fail()
 	}
 }

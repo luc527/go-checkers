@@ -47,5 +47,5 @@ func randomInoffensiveMove(b *Board, player Color) Ply {
 		}
 	}
 
-	return Ply{MoveInstruction(srow, scol, drow, dcol)}
+	return Ply{MakeMoveInstruction(srow, scol, drow, dcol)}
 }

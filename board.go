@@ -149,16 +149,16 @@ func PlaceInitialPieces(b *Board) {
 	}
 }
 
-func CoordMask(row, col byte) uint64 {
+func coordMask(row, col byte) uint64 {
 	return uint64(1 << (uint64(row)*8 + uint64(col)))
 }
 
 func (b *Board) Clear(row, col byte) {
-	b.occupied &^= CoordMask(row, col)
+	b.occupied &^= coordMask(row, col)
 }
 
 func (b *Board) Set(row, col byte, c Color, k Kind) {
-	x := CoordMask(row, col)
+	x := coordMask(row, col)
 
 	b.occupied |= x
 
@@ -182,7 +182,7 @@ func (b *Board) Move(srow, scol, drow, dcol byte) {
 }
 
 func (b *Board) Crown(row, col byte) {
-	x := CoordMask(row, col)
+	x := coordMask(row, col)
 	b.king |= x
 }
 
@@ -192,7 +192,7 @@ func (b *Board) Uncrown(row, col byte) {
 }
 
 func (b *Board) IsOccupied(row, col byte) bool {
-	x := CoordMask(row, col)
+	x := coordMask(row, col)
 	return b.occupied&x != 0
 }
 
@@ -382,5 +382,3 @@ func UnserializeBoard(s string) (*Board, error) {
 	}
 	return &b, nil
 }
-
-// TODO also make function to check whether a board is valid

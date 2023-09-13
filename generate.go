@@ -32,10 +32,10 @@ func (p Ply) String() string {
 	return instructionsToString(p)
 }
 
-func (p Ply) CountCaptures() int {
+func (p Ply) countCaptures() int {
 	c := 0
 	for _, i := range p {
-		if i.t == captureInstruction {
+		if i.t == CaptureInstruction {
 			c++
 		}
 	}
@@ -63,9 +63,9 @@ func generateSimplePawnPlies(ps []Ply, b *Board, row, col byte, color Color) []P
 			continue
 		}
 		var is []Instruction
-		is = append(is, MoveInstruction(row, col, drow, dcol))
+		is = append(is, MakeMoveInstruction(row, col, drow, dcol))
 		if crown {
-			is = append(is, CrownInstruction(drow, dcol))
+			is = append(is, MakeCrownInstruction(drow, dcol))
 		}
 		ps = append(ps, Ply(is))
 	}
@@ -82,7 +82,7 @@ func generateSimpleKingPlies(ps []Ply, b *Board, row, col byte, color Color) []P
 					break
 				}
 
-				is := []Instruction{MoveInstruction(row, col, drow, dcol)}
+				is := []Instruction{MakeMoveInstruction(row, col, drow, dcol)}
 				ps = append(ps, Ply(is))
 
 				dist++
@@ -143,8 +143,8 @@ func followPawnCaptures(ps []Ply, stack []Instruction, b *Board, row, col byte, 
 			sink = false
 
 			// do
-			stack = append(stack, MoveInstruction(row, col, drow, dcol))
-			stack = append(stack, CaptureInstruction(mrow, mcol, mcolor, mkind))
+			stack = append(stack, MakeMoveInstruction(row, col, drow, dcol))
+			stack = append(stack, MakeCaptureInstruction(mrow, mcol, mcolor, mkind))
 			b.Move(row, col, drow, dcol)
 			b.Clear(mrow, mcol)
 
@@ -168,7 +168,7 @@ func followPawnCaptures(ps []Ply, stack []Instruction, b *Board, row, col byte, 
 		is := make([]Instruction, isLen)
 		copy(is, stack)
 		if crown {
-			is[isLen-1] = CrownInstruction(row, col)
+			is[isLen-1] = MakeCrownInstruction(row, col)
 		}
 		ps = append(ps, Ply(is))
 	}
@@ -215,8 +215,8 @@ func followKingCaptures(ps []Ply, stack []Instruction, b *Board, row, col byte, 
 					sink = false
 
 					// do
-					stack = append(stack, MoveInstruction(row, col, irow, icol))
-					stack = append(stack, CaptureInstruction(crow, ccol, ccolor, ckind))
+					stack = append(stack, MakeMoveInstruction(row, col, irow, icol))
+					stack = append(stack, MakeCaptureInstruction(crow, ccol, ccolor, ckind))
 					b.Move(row, col, irow, icol)
 					b.Clear(crow, ccol)
 
@@ -288,7 +288,7 @@ func GeneratePlies(ps []Ply, b *Board, player Color, captureRule CaptureRule, be
 		fstCaptureCount := 0
 
 		for k, p := range ps {
-			captureCount := p.CountCaptures()
+			captureCount := p.countCaptures()
 			if k == 0 {
 				fstCaptureCount = captureCount
 			}
@@ -304,7 +304,7 @@ func GeneratePlies(ps []Ply, b *Board, player Color, captureRule CaptureRule, be
 		if needToFilterBest {
 			var best []Ply
 			for _, p := range ps {
-				if p.CountCaptures() == maxCaptureCount {
+				if p.countCaptures() == maxCaptureCount {
 					best = append(best, p)
 				}
 			}

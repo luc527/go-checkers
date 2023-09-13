@@ -82,35 +82,35 @@ func TestSimplePawnMove(t *testing.T) {
 	blackPliesGot := generateSimplePlies(nil, b, BlackColor)
 
 	blackPliesWant := []Ply{
-		{MoveInstruction(1, 1, 2, 2)},
-		{MoveInstruction(1, 1, 2, 0)},
-		{MoveInstruction(0, 2, 1, 3)},
-		{MoveInstruction(1, 7, 2, 6)},
-		{MoveInstruction(3, 0, 4, 1)},
+		{MakeMoveInstruction(1, 1, 2, 2)},
+		{MakeMoveInstruction(1, 1, 2, 0)},
+		{MakeMoveInstruction(0, 2, 1, 3)},
+		{MakeMoveInstruction(1, 7, 2, 6)},
+		{MakeMoveInstruction(3, 0, 4, 1)},
 		{
-			MoveInstruction(6, 6, 7, 7),
-			CrownInstruction(7, 7),
+			MakeMoveInstruction(6, 6, 7, 7),
+			MakeCrownInstruction(7, 7),
 		},
 		{
-			MoveInstruction(6, 6, 7, 5),
-			CrownInstruction(7, 5),
+			MakeMoveInstruction(6, 6, 7, 5),
+			MakeCrownInstruction(7, 5),
 		},
 	}
 	assertEqualPlies(t, blackPliesGot, blackPliesWant)
 
 	whitePliesWant := []Ply{
-		{MoveInstruction(6, 1, 5, 0)},
-		{MoveInstruction(6, 1, 5, 2)},
-		{MoveInstruction(7, 2, 6, 3)},
-		{MoveInstruction(4, 0, 3, 1)},
-		{MoveInstruction(4, 7, 3, 6)},
+		{MakeMoveInstruction(6, 1, 5, 0)},
+		{MakeMoveInstruction(6, 1, 5, 2)},
+		{MakeMoveInstruction(7, 2, 6, 3)},
+		{MakeMoveInstruction(4, 0, 3, 1)},
+		{MakeMoveInstruction(4, 7, 3, 6)},
 		{
-			MoveInstruction(1, 5, 0, 6),
-			CrownInstruction(0, 6),
+			MakeMoveInstruction(1, 5, 0, 6),
+			MakeCrownInstruction(0, 6),
 		},
 		{
-			MoveInstruction(1, 5, 0, 4),
-			CrownInstruction(0, 4),
+			MakeMoveInstruction(1, 5, 0, 4),
+			MakeCrownInstruction(0, 4),
 		},
 	}
 	whitePliesGot := generateSimplePlies(nil, b, WhiteColor)
@@ -138,27 +138,27 @@ func TestSimpleKingMove(t *testing.T) {
 		// moving the white king at (5, 5)
 		//
 		// down, right
-		{MoveInstruction(5, 5, 6, 6)},
-		{MoveInstruction(5, 5, 7, 7)},
+		{MakeMoveInstruction(5, 5, 6, 6)},
+		{MakeMoveInstruction(5, 5, 7, 7)},
 		// down, left
-		{MoveInstruction(5, 5, 6, 4)},
-		{MoveInstruction(5, 5, 7, 3)},
+		{MakeMoveInstruction(5, 5, 6, 4)},
+		{MakeMoveInstruction(5, 5, 7, 3)},
 		// up, left
-		{MoveInstruction(5, 5, 4, 4)},
-		{MoveInstruction(5, 5, 3, 3)}, // gets stopped by the black king (no (2,2), (1,1), (0,0))
+		{MakeMoveInstruction(5, 5, 4, 4)},
+		{MakeMoveInstruction(5, 5, 3, 3)}, // gets stopped by the black king (no (2,2), (1,1), (0,0))
 		// up, right
-		{MoveInstruction(5, 5, 4, 6)},
-		{MoveInstruction(5, 5, 3, 7)},
+		{MakeMoveInstruction(5, 5, 4, 6)},
+		{MakeMoveInstruction(5, 5, 3, 7)},
 		//
 		// moving the white king at (0, 7)
 		//
-		{MoveInstruction(0, 7, 1, 6)},
-		{MoveInstruction(0, 7, 2, 5)},
-		{MoveInstruction(0, 7, 3, 4)},
-		{MoveInstruction(0, 7, 4, 3)},
-		{MoveInstruction(0, 7, 5, 2)},
-		{MoveInstruction(0, 7, 6, 1)},
-		{MoveInstruction(0, 7, 7, 0)},
+		{MakeMoveInstruction(0, 7, 1, 6)},
+		{MakeMoveInstruction(0, 7, 2, 5)},
+		{MakeMoveInstruction(0, 7, 3, 4)},
+		{MakeMoveInstruction(0, 7, 4, 3)},
+		{MakeMoveInstruction(0, 7, 5, 2)},
+		{MakeMoveInstruction(0, 7, 6, 1)},
+		{MakeMoveInstruction(0, 7, 7, 0)},
 	}
 
 	assertEqualPlies(t, whitePliesGot, whitePliesWant)
@@ -168,17 +168,17 @@ func TestSimpleKingMove(t *testing.T) {
 		// moving the black king at (2, 2)
 		//
 		// down, right
-		{MoveInstruction(2, 2, 3, 3)},
-		{MoveInstruction(2, 2, 4, 4)}, // gets stopped by the white king (no (5,5) etc.)
+		{MakeMoveInstruction(2, 2, 3, 3)},
+		{MakeMoveInstruction(2, 2, 4, 4)}, // gets stopped by the white king (no (5,5) etc.)
 		// down, left
-		{MoveInstruction(2, 2, 3, 1)},
-		{MoveInstruction(2, 2, 4, 0)},
+		{MakeMoveInstruction(2, 2, 3, 1)},
+		{MakeMoveInstruction(2, 2, 4, 0)},
 		// up, right
-		{MoveInstruction(2, 2, 1, 3)},
-		{MoveInstruction(2, 2, 0, 4)},
+		{MakeMoveInstruction(2, 2, 1, 3)},
+		{MakeMoveInstruction(2, 2, 0, 4)},
 		// up, left
-		{MoveInstruction(2, 2, 1, 1)},
-		{MoveInstruction(2, 2, 0, 0)},
+		{MakeMoveInstruction(2, 2, 1, 1)},
+		{MakeMoveInstruction(2, 2, 0, 0)},
 	}
 	blackPliesGot := generateSimplePlies(nil, b, BlackColor)
 
@@ -203,13 +203,13 @@ func TestCapturePawnMove(t *testing.T) {
 
 	blackPliesWant := []Ply{
 		{
-			MoveInstruction(3, 5, 5, 7),
-			CaptureInstruction(4, 6, WhiteColor, PawnKind),
+			MakeMoveInstruction(3, 5, 5, 7),
+			MakeCaptureInstruction(4, 6, WhiteColor, PawnKind),
 		},
 		{
-			MoveInstruction(5, 3, 7, 5),
-			CaptureInstruction(6, 4, WhiteColor, PawnKind),
-			CrownInstruction(7, 5),
+			MakeMoveInstruction(5, 3, 7, 5),
+			MakeCaptureInstruction(6, 4, WhiteColor, PawnKind),
+			MakeCrownInstruction(7, 5),
 		},
 	}
 
@@ -217,26 +217,26 @@ func TestCapturePawnMove(t *testing.T) {
 
 	whitePliesWant := []Ply{
 		{
-			MoveInstruction(4, 6, 2, 4),
-			CaptureInstruction(3, 5, BlackColor, PawnKind),
-			MoveInstruction(2, 4, 0, 2),
-			CaptureInstruction(1, 3, BlackColor, PawnKind),
-			CrownInstruction(0, 2),
+			MakeMoveInstruction(4, 6, 2, 4),
+			MakeCaptureInstruction(3, 5, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 4, 0, 2),
+			MakeCaptureInstruction(1, 3, BlackColor, PawnKind),
+			MakeCrownInstruction(0, 2),
 		},
 		{
-			MoveInstruction(4, 6, 2, 4),
-			CaptureInstruction(3, 5, BlackColor, PawnKind),
-			MoveInstruction(2, 4, 4, 2),
-			CaptureInstruction(3, 3, BlackColor, PawnKind),
+			MakeMoveInstruction(4, 6, 2, 4),
+			MakeCaptureInstruction(3, 5, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 4, 4, 2),
+			MakeCaptureInstruction(3, 3, BlackColor, PawnKind),
 		},
 		{
-			MoveInstruction(6, 4, 4, 2),
-			CaptureInstruction(5, 3, BlackColor, PawnKind),
-			MoveInstruction(4, 2, 2, 4),
-			CaptureInstruction(3, 3, BlackColor, PawnKind),
-			MoveInstruction(2, 4, 0, 2),
-			CaptureInstruction(1, 3, BlackColor, PawnKind),
-			CrownInstruction(0, 2),
+			MakeMoveInstruction(6, 4, 4, 2),
+			MakeCaptureInstruction(5, 3, BlackColor, PawnKind),
+			MakeMoveInstruction(4, 2, 2, 4),
+			MakeCaptureInstruction(3, 3, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 4, 0, 2),
+			MakeCaptureInstruction(1, 3, BlackColor, PawnKind),
+			MakeCrownInstruction(0, 2),
 		},
 	}
 	whitePliesGot := generateCapturePlies(nil, b, WhiteColor)
@@ -259,12 +259,12 @@ func TestCaptureThroughCrowningRowDoesntCrown(t *testing.T) {
 
 	pliesWant := []Ply{
 		{
-			MoveInstruction(4, 7, 2, 5),
-			CaptureInstruction(3, 6, BlackColor, PawnKind),
-			MoveInstruction(2, 5, 0, 3),
-			CaptureInstruction(1, 4, BlackColor, PawnKind),
-			MoveInstruction(0, 3, 2, 1),
-			CaptureInstruction(1, 2, BlackColor, PawnKind),
+			MakeMoveInstruction(4, 7, 2, 5),
+			MakeCaptureInstruction(3, 6, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 5, 0, 3),
+			MakeCaptureInstruction(1, 4, BlackColor, PawnKind),
+			MakeMoveInstruction(0, 3, 2, 1),
+			MakeCaptureInstruction(1, 2, BlackColor, PawnKind),
 		},
 	}
 	pliesGot := generateCapturePlies(nil, b, WhiteColor)
@@ -281,12 +281,12 @@ func TestCaptureKingMoveOneDiagonal(t *testing.T) {
 	pliesGot := generateCapturePlies(nil, b, WhiteColor)
 	pliesWant := []Ply{
 		{
-			MoveInstruction(3, 3, 6, 6),
-			CaptureInstruction(5, 5, BlackColor, PawnKind),
+			MakeMoveInstruction(3, 3, 6, 6),
+			MakeCaptureInstruction(5, 5, BlackColor, PawnKind),
 		},
 		{
-			MoveInstruction(3, 3, 7, 7),
-			CaptureInstruction(5, 5, BlackColor, PawnKind),
+			MakeMoveInstruction(3, 3, 7, 7),
+			MakeCaptureInstruction(5, 5, BlackColor, PawnKind),
 		},
 	}
 
@@ -308,41 +308,41 @@ func TestAllowOverPreviousTile(t *testing.T) {
 
 	pliesWant := []Ply{
 		{
-			MoveInstruction(4, 7, 2, 5),
-			CaptureInstruction(3, 6, BlackColor, PawnKind),
-			MoveInstruction(2, 5, 0, 7),
-			CaptureInstruction(1, 6, BlackColor, PawnKind),
-			CrownInstruction(0, 7),
+			MakeMoveInstruction(4, 7, 2, 5),
+			MakeCaptureInstruction(3, 6, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 5, 0, 7),
+			MakeCaptureInstruction(1, 6, BlackColor, PawnKind),
+			MakeCrownInstruction(0, 7),
 		},
 		{
-			MoveInstruction(4, 7, 2, 5),
-			CaptureInstruction(3, 6, BlackColor, PawnKind),
-			MoveInstruction(2, 5, 0, 3),
-			CaptureInstruction(1, 4, BlackColor, PawnKind),
-			MoveInstruction(0, 3, 2, 1),
-			CaptureInstruction(1, 2, BlackColor, PawnKind),
-			MoveInstruction(2, 1, 4, 3),
-			CaptureInstruction(3, 2, BlackColor, PawnKind),
-			MoveInstruction(4, 3, 2, 5),
-			CaptureInstruction(3, 4, BlackColor, PawnKind),
-			MoveInstruction(2, 5, 0, 7),
-			CaptureInstruction(1, 6, BlackColor, PawnKind),
-			CrownInstruction(0, 7),
+			MakeMoveInstruction(4, 7, 2, 5),
+			MakeCaptureInstruction(3, 6, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 5, 0, 3),
+			MakeCaptureInstruction(1, 4, BlackColor, PawnKind),
+			MakeMoveInstruction(0, 3, 2, 1),
+			MakeCaptureInstruction(1, 2, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 1, 4, 3),
+			MakeCaptureInstruction(3, 2, BlackColor, PawnKind),
+			MakeMoveInstruction(4, 3, 2, 5),
+			MakeCaptureInstruction(3, 4, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 5, 0, 7),
+			MakeCaptureInstruction(1, 6, BlackColor, PawnKind),
+			MakeCrownInstruction(0, 7),
 		},
 		{
-			MoveInstruction(4, 7, 2, 5),
-			CaptureInstruction(3, 6, BlackColor, PawnKind),
-			MoveInstruction(2, 5, 4, 3),
-			CaptureInstruction(3, 4, BlackColor, PawnKind),
-			MoveInstruction(4, 3, 2, 1),
-			CaptureInstruction(3, 2, BlackColor, PawnKind),
-			MoveInstruction(2, 1, 0, 3),
-			CaptureInstruction(1, 2, BlackColor, PawnKind),
-			MoveInstruction(0, 3, 2, 5),
-			CaptureInstruction(1, 4, BlackColor, PawnKind),
-			MoveInstruction(2, 5, 0, 7),
-			CaptureInstruction(1, 6, BlackColor, PawnKind),
-			CrownInstruction(0, 7),
+			MakeMoveInstruction(4, 7, 2, 5),
+			MakeCaptureInstruction(3, 6, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 5, 4, 3),
+			MakeCaptureInstruction(3, 4, BlackColor, PawnKind),
+			MakeMoveInstruction(4, 3, 2, 1),
+			MakeCaptureInstruction(3, 2, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 1, 0, 3),
+			MakeCaptureInstruction(1, 2, BlackColor, PawnKind),
+			MakeMoveInstruction(0, 3, 2, 5),
+			MakeCaptureInstruction(1, 4, BlackColor, PawnKind),
+			MakeMoveInstruction(2, 5, 0, 7),
+			MakeCaptureInstruction(1, 6, BlackColor, PawnKind),
+			MakeCrownInstruction(0, 7),
 		},
 	}
 	pliesGot := generateCapturePlies(nil, b, WhiteColor)

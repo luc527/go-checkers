@@ -6,21 +6,21 @@ import (
 	"strings"
 )
 
-type instructionType byte
+type InstructionType byte
 
 const (
-	moveInstruction = instructionType(iota)
-	captureInstruction
-	crownInstruction
+	MoveInstruction = InstructionType(iota)
+	CaptureInstruction
+	CrownInstruction
 )
 
-func (t instructionType) String() string {
+func (t InstructionType) String() string {
 	switch t {
-	case moveInstruction:
+	case MoveInstruction:
 		return "move"
-	case captureInstruction:
+	case CaptureInstruction:
 		return "capture"
-	case crownInstruction:
+	case CrownInstruction:
 		return "crown"
 	default:
 		return "UNKNOWN"
@@ -31,13 +31,13 @@ func (t instructionType) String() string {
 // that's the reason for storing the color and kind of the captured piece
 
 type Instruction struct {
-	t   instructionType
+	t   InstructionType
 	row byte
 	col byte
 	// arbitraty data
-	// destination row and col for moveInstruction
-	// color and kind for captureInstruction
-	// unused for crownInstruction
+	// destination row and col for MoveInstruction
+	// color and kind for CaptureInstruction
+	// unused for CrownInstruction
 	d [2]byte
 }
 
@@ -52,9 +52,9 @@ func (i Instruction) Equals(o Instruction) bool {
 func (i Instruction) String() string {
 	buf := new(bytes.Buffer)
 	fmt.Fprintf(buf, "{%s (%d, %d)", i.t.String(), i.row, i.col)
-	if i.t == moveInstruction {
+	if i.t == MoveInstruction {
 		fmt.Fprintf(buf, " to (%d, %d)", i.d[0], i.d[1])
-	} else if i.t == captureInstruction {
+	} else if i.t == CaptureInstruction {
 		fmt.Fprintf(buf, " %s %s", Color(i.d[0]), Kind(i.d[1]))
 	}
 	buf.WriteRune('}')
@@ -69,55 +69,56 @@ func instructionsToString(is []Instruction) string {
 	return strings.Join(ss, ";")
 }
 
-func MoveInstruction(sourceRow, sourceCol, destinationRow, destinationCol byte) Instruction {
+func MakeMoveInstruction(sourceRow, sourceCol, destinationRow, destinationCol byte) Instruction {
 	var i Instruction
-	i.t = moveInstruction
+	i.t = MoveInstruction
 	i.row, i.col = sourceRow, sourceCol
 	i.d[0], i.d[1] = destinationRow, destinationCol
 	return i
 }
 
-func CaptureInstruction(row, col byte, c Color, k Kind) Instruction {
+func MakeCaptureInstruction(row, col byte, c Color, k Kind) Instruction {
 	var i Instruction
-	i.t = captureInstruction
+	i.t = CaptureInstruction
 	i.row, i.col = row, col
 	i.d[0], i.d[1] = byte(c), byte(k)
 	return i
 }
 
-func CrownInstruction(row, col byte) Instruction {
+func MakeCrownInstruction(row, col byte) Instruction {
 	var i Instruction
-	i.t = crownInstruction
+	i.t = CrownInstruction
 	i.row, i.col = row, col
 	return i
 }
 
-func PerformInstructions(b *Board, is []Instruction) {
+func PerformInstructions(b *Board, is []Instruction) error {
 	for _, i := range is {
 		switch i.t {
-		case moveInstruction:
+		case MoveInstruction:
 			fromRow, fromCol := i.row, i.col
 			toRow, toCol := i.d[0], i.d[1]
 			b.Move(fromRow, fromCol, toRow, toCol)
-		case captureInstruction:
+		case CaptureInstruction:
 			row, col := i.row, i.col
 			capturedColor, capturedKind := Color(i.d[0]), Kind(i.d[1])
 			actualColor, actualKind := b.Get(row, col)
 			if capturedColor != actualColor || capturedKind != actualKind {
-				panic(fmt.Sprintf(
+				return fmt.Errorf(
 					"performed capture instruction of %s %s on row %d %d but piece is a %s %s",
 					capturedColor, capturedKind,
 					row, col,
 					actualColor, actualKind,
-				))
+				)
 			}
 			b.Clear(row, col)
-		case crownInstruction:
+		case CrownInstruction:
 			b.Crown(i.row, i.col)
 		default:
-			panic(fmt.Sprintf("Invalid instruction type %s", i.t))
+			return fmt.Errorf("invalid instruction type %s", i.t)
 		}
 	}
+	return nil
 }
 
 // if you pass 'is' to PerformInstructions
@@ -127,15 +128,15 @@ func UndoInstructions(b *Board, is []Instruction) {
 	for k := len(is) - 1; k >= 0; k-- {
 		i := is[k]
 		switch i.t {
-		case moveInstruction:
+		case MoveInstruction:
 			fromRow, fromCol := i.row, i.col
 			toRow, toCol := i.d[0], i.d[1]
 			b.Move(toRow, toCol, fromRow, fromCol)
-		case captureInstruction:
+		case CaptureInstruction:
 			row, col := i.row, i.col
 			capturedColor, capturedKind := Color(i.d[0]), Kind(i.d[1])
 			b.Set(row, col, capturedColor, capturedKind)
-		case crownInstruction:
+		case CrownInstruction:
 			b.Uncrown(i.row, i.col)
 		default:
 			panic(fmt.Sprintf("Invalid instruction type %s", i.t))

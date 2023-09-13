@@ -9,14 +9,18 @@ func TestDoUndoState(t *testing.T) {
 	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
 
 	var states []*Game
-	var undos []UndoInfo
+	var undos []*UndoInfo
 
 	for !g.Result().IsOver() {
 		states = append(states, g.Copy())
 		plies := g.Plies()
 		r := rand.Int() % len(plies)
 		t.Log(plies[r])
-		undos = append(undos, g.DoPly(plies[r]))
+		undo, err := g.DoPly(plies[r])
+		if err != nil {
+			t.Fail()
+		}
+		undos = append(undos, undo)
 	}
 
 	t.Log("\n" + g.Board().String())
@@ -127,7 +131,12 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	g := NewCustomGame(CapturesMandatory, BestMandatory, 3, b, WhiteColor)
 	assertGameResult(t, g, PlayingResult)
 
-	g.DoPly(Ply{MoveInstruction(3, 3, 2, 2)})
+	var err error
+
+	_, err = g.DoPly(Ply{MakeMoveInstruction(3, 3, 2, 2)})
+	if err != nil {
+		t.Fail()
+	}
 
 	// just to make the code more legible by showing what each intermediary board looks like
 	assertEqualBoards(t, g.Board(), decodeBoard(`
@@ -143,7 +152,10 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	assertGameResult(t, g, PlayingResult)
 	// at this point turnsSincePawnMove=0, turnsSinceCapture=1
 
-	g.DoPly(Ply{MoveInstruction(0, 6, 1, 5)})
+	_, err = g.DoPly(Ply{MakeMoveInstruction(0, 6, 1, 5)})
+	if err != nil {
+		t.Fail()
+	}
 	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.....#
@@ -157,7 +169,10 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	assertGameResult(t, g, PlayingResult)
 	// at this point turnsSincePawnMove=1, turnsSinceCapture=2
 
-	g.DoPly(Ply{MoveInstruction(4, 4, 6, 2)})
+	_, err = g.DoPly(Ply{MakeMoveInstruction(4, 4, 6, 2)})
+	if err != nil {
+		t.Fail()
+	}
 	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.....#
@@ -172,7 +187,10 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	// at this point turnsSincePawnMove=2, turnsSinceCapture=3
 
 	// let's reset a counter, ply doesn't have to be legal
-	g.DoPly(Ply{MoveInstruction(2, 2, 2, 4)})
+	_, err = g.DoPly(Ply{MakeMoveInstruction(2, 2, 2, 4)})
+	if err != nil {
+		t.Fail()
+	}
 	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.....#
@@ -187,7 +205,10 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	// at this point turnsSincePawnMove=0, turnsSinceCapture=4
 
 	// let's reset another counter
-	g.DoPly(Ply{MoveInstruction(1, 5, 3, 3), CaptureInstruction(2, 4, WhiteColor, PawnKind)})
+	_, err = g.DoPly(Ply{MakeMoveInstruction(1, 5, 3, 3), MakeCaptureInstruction(2, 4, WhiteColor, PawnKind)})
+	if err != nil {
+		t.Fail()
+	}
 	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.
@@ -203,7 +224,10 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 
 	// now let's keep the state stagnant
 
-	g.DoPly(Ply{MoveInstruction(6, 2, 5, 3)})
+	_, err = g.DoPly(Ply{MakeMoveInstruction(6, 2, 5, 3)})
+	if err != nil {
+		t.Fail()
+	}
 	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.
@@ -217,7 +241,10 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	assertGameResult(t, g, PlayingResult)
 	// turnsSincePawnMove=2, turnsSinceCapture=1
 
-	g.DoPly(Ply{MoveInstruction(3, 3, 2, 2)})
+	_, err = g.DoPly(Ply{MakeMoveInstruction(3, 3, 2, 2)})
+	if err != nil {
+		t.Fail()
+	}
 	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.
@@ -231,7 +258,10 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	assertGameResult(t, g, PlayingResult)
 	// turnsSincePawnMove=3, turnsSinceCapture=2
 
-	g.DoPly(Ply{MoveInstruction(5, 3, 4, 4)})
+	_, err = g.DoPly(Ply{MakeMoveInstruction(5, 3, 4, 4)})
+	if err != nil {
+		t.Fail()
+	}
 	assertEqualBoards(t, g.Board(), decodeBoard(`
 	  ..x
 		.
@@ -252,22 +282,36 @@ func assertSpecialEnding(t *testing.T, b *Board) {
 	// 1 turn in special ending
 	assertGameResult(t, g, PlayingResult)
 
-	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
+	var err error
+
+	_, err = g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
+	if err != nil {
+		t.Fail()
+	}
+
 	t.Log("\n" + g.Board().String())
 	// 2 turns in special ending
 	assertGameResult(t, g, PlayingResult)
 
-	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
+	_, err = g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
+	if err != nil {
+		t.Fail()
+	}
 	t.Log("\n" + g.Board().String())
 	// 3 turns in special ending
 	assertGameResult(t, g, PlayingResult)
 
-	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
+	if _, err := g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay())); err != nil {
+		t.Fail()
+	}
+
 	t.Log("\n" + g.Board().String())
 	// 4 turns in special ending
 	assertGameResult(t, g, PlayingResult)
 
-	g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay()))
+	if _, err := g.DoPly(randomInoffensiveMove(g.Board(), g.ToPlay())); err != nil {
+		t.Fail()
+	}
 	t.Log("\n" + g.Board().String())
 	// 5 turns in special ending
 	assertGameResult(t, g, DrawResult)
@@ -375,7 +419,10 @@ func TestGameEquals(t *testing.T) {
 		t.Fail()
 	}
 
-	undoInfo := h.DoPly(h.Plies()[0])
+	undoInfo, err := h.DoPly(h.Plies()[0])
+	if err != nil {
+		t.Fail()
+	}
 	if g.Equals(h) {
 		t.Log("Game should not be equal after a ply")
 		t.Fail()

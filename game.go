@@ -114,14 +114,15 @@ func (g *Game) ToPlay() Color {
 	return g.state.toPlay
 }
 
-func (g *Game) DoPly(p Ply) UndoInfo {
-	PerformInstructions(g.board, p)
-
+func (g *Game) DoPly(p Ply) (*UndoInfo, error) {
+	if err := PerformInstructions(g.board, p); err != nil {
+		return nil, err
+	}
 	prevState := g.state
 	g.state.toPlay = g.state.toPlay.Opposite()
 	g.BoardChanged(p)
 
-	return UndoInfo{plyDone: p, prevState: prevState}
+	return &UndoInfo{plyDone: p, prevState: prevState}, nil
 }
 
 func (g *Game) Result() GameResult {
@@ -154,7 +155,7 @@ func (g *Game) Result() GameResult {
 	return PlayingResult
 }
 
-func (g *Game) UndoPly(undo UndoInfo) {
+func (g *Game) UndoPly(undo *UndoInfo) {
 	UndoInstructions(g.board, undo.plyDone)
 	g.state = undo.prevState
 }
@@ -208,10 +209,10 @@ func (g *Game) BoardChanged(ply Ply) {
 		isPawnMove := false
 
 		for _, ins := range ply {
-			if ins.t == captureInstruction {
+			if ins.t == CaptureInstruction {
 				isCapture = true
 			}
-			if ins.t == moveInstruction {
+			if ins.t == MoveInstruction {
 				_, kind := g.board.Get(ins.row, ins.col)
 				if kind == PawnKind {
 					isPawnMove = true
