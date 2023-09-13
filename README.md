@@ -1,3 +1,0 @@
-# go-checkers
-
-TODO readme

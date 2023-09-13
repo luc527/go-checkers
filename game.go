@@ -1,7 +1,6 @@
-package main
+package checkers
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
@@ -66,25 +65,6 @@ type Game struct {
 	state               gameState
 }
 
-// TODO with the `json:""` stuff it's not necessary
-// for the actual golang struct field names to be
-// abbreviated
-
-type GameMessageOut struct {
-	B   string `json:"b"`
-	P   Color  `json:"p"`
-	Tsc int16  `json:"tsc"`
-	Tsp int16  `json:"tsp"`
-	Tis int16  `json:"tis"`
-}
-
-type GameMessageIn struct {
-	GameMessageOut
-	Ttd int16       `json:"ttd"`
-	Cr  CaptureRule `json:"cr"`
-	Br  BestRule    `json:"br"`
-}
-
 func (g *Game) String() string {
 	return fmt.Sprintf(
 		"{ToPlay: %v, turnsSinceCapture: %v, turnsSincePawnMove: %v, turnsInSpecialEnding: %v, Board:\n%v\n}",
@@ -124,51 +104,6 @@ func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDr
 
 func NewStandardGame(captureRule CaptureRule, bestRule BestRule) *Game {
 	return NewCustomGame(captureRule, bestRule, 20, nil, WhiteColor)
-}
-
-func (g *Game) SerializeOut() (string, error) {
-	msg := GameMessageOut{
-		B:   g.board.Serialize(),
-		P:   g.state.toPlay,
-		Tsc: g.state.turnsSinceCapture,
-		Tsp: g.state.turnsSincePawnMove,
-		Tis: g.state.turnsInSpecialEnding,
-	}
-	bytes, err := json.Marshal(msg)
-	if err != nil {
-		err = fmt.Errorf("serialize game: %v", err)
-	}
-	return string(bytes), err
-}
-
-func UnserializeGameIn(s string) (*Game, error) {
-	in := &GameMessageIn{}
-	err := json.Unmarshal([]byte(s), in)
-	if err != nil {
-		err = fmt.Errorf("unserialize game: %v", err)
-		return nil, err
-	}
-
-	g := new(Game)
-
-	g.board, err = UnserializeBoard(in.B)
-	if err != nil {
-		err = fmt.Errorf("unserialize game: %v", err)
-		return nil, err
-	}
-
-	if in.Tsc < 0 || in.Tsp < 0 || in.Tis < 0 || in.Ttd < 0 {
-		return nil, fmt.Errorf("unserialize game: negative number of turns")
-	}
-
-	g.state.toPlay = in.P
-	g.state.turnsSinceCapture = in.Tsc
-	g.state.turnsSincePawnMove = in.Tsp
-	g.state.turnsInSpecialEnding = in.Tis
-	g.stagnantTurnsToDraw = in.Ttd
-	g.captureRule = in.Cr
-	g.bestRule = in.Br
-	return g, nil
 }
 
 func (g *Game) Board() *Board {

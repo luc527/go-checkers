@@ -1,4 +1,4 @@
-package main
+package checkers
 
 import (
 	"math/rand"
@@ -14,44 +14,6 @@ func rnColor() Color {
 
 func rnKind() Kind {
 	return Kind(rand.Uint32() % 2)
-}
-
-func randomAction(b boardInterface) {
-	x := rand.Uint32() % 5
-	if x == 0 { // happens 1/5 of the times
-		b.Clear(rn8(), rn8())
-	} else if x == 1 || x == 2 || x == 3 { // happens 3/5 of the times
-		b.Set(rn8(), rn8(), rnColor(), rnKind())
-	} else { // x == 4, x == 5, happens 2/5 of the time
-
-		// flip
-
-		r, c := rn8(), rn8()
-		if b.IsOccupied(r, c) {
-			color, kind := b.Get(r, c)
-
-			if color == WhiteColor {
-				color = BlackColor
-			} else {
-				color = WhiteColor
-			}
-
-			if kind == KingKind {
-				kind = PawnKind
-			} else {
-				kind = KingKind
-			}
-
-			b.Set(r, c, color, kind)
-		}
-	}
-}
-
-func nRandomActions(b boardInterface, n int) {
-	for n > 0 {
-		randomAction(b)
-		n--
-	}
 }
 
 func randomInoffensiveMove(b *Board, player Color) Ply {

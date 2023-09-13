@@ -1,4 +1,4 @@
-package main
+package checkers
 
 import (
 	"bytes"
@@ -149,12 +149,16 @@ func PlaceInitialPieces(b *Board) {
 	}
 }
 
+func CoordMask(row, col byte) uint64 {
+	return uint64(1 << (uint64(row)*8 + uint64(col)))
+}
+
 func (b *Board) Clear(row, col byte) {
-	b.occupied &^= uint64(1 << (uint64(row)*8 + uint64(col)))
+	b.occupied &^= CoordMask(row, col)
 }
 
 func (b *Board) Set(row, col byte, c Color, k Kind) {
-	x := uint64(1 << (uint64(row)*8 + uint64(col)))
+	x := CoordMask(row, col)
 
 	b.occupied |= x
 
@@ -178,7 +182,7 @@ func (b *Board) Move(srow, scol, drow, dcol byte) {
 }
 
 func (b *Board) Crown(row, col byte) {
-	x := uint64(1 << (uint64(row)*8 + uint64(col)))
+	x := CoordMask(row, col)
 	b.king |= x
 }
 
@@ -188,7 +192,7 @@ func (b *Board) Uncrown(row, col byte) {
 }
 
 func (b *Board) IsOccupied(row, col byte) bool {
-	x := uint64(1 << (uint64(row)*8 + uint64(col)))
+	x := CoordMask(row, col)
 	return b.occupied&x != 0
 }
 

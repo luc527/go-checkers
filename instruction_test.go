@@ -1,4 +1,4 @@
-package main
+package checkers
 
 import (
 	"testing"
@@ -322,5 +322,20 @@ func TestInstructionEquals(t *testing.T) {
 				t.Fail()
 			}
 		}
+	}
+}
+
+func TestInstructionString(t *testing.T) {
+	if moveInstruction.String() != "move" {
+		t.Fail()
+	}
+	if captureInstruction.String() != "capture" {
+		t.Fail()
+	}
+	if crownInstruction.String() != "crown" {
+		t.Fail()
+	}
+	if instructionType(9).String() != "UNKNOWN" {
+		t.Fail()
 	}
 }
