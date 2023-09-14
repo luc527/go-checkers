@@ -1,4 +1,4 @@
-package go_checkers
+package core
 
 import (
 	"bytes"
@@ -264,7 +264,7 @@ func (b *Board) Equals(o *Board) bool {
 }
 
 // This is used for testing
-func decodeBoard(s string) *Board {
+func DecodeBoard(s string) *Board {
 	rawLines := strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n")
 
 	// trim all liens and filter empty ones

@@ -1,4 +1,4 @@
-package go_checkers
+package core
 
 import (
 	"math/rand"
@@ -48,7 +48,7 @@ func assertGameResult(t *testing.T, g *Game, want GameResult) {
 }
 
 func TestWhiteWinsByNoBlackPieces(t *testing.T) {
-	b := decodeBoard(`
+	b := DecodeBoard(`
 		.
 		...@
 		.....o
@@ -60,7 +60,7 @@ func TestWhiteWinsByNoBlackPieces(t *testing.T) {
 }
 
 func TestBlackWinsByNoWhitePieces(t *testing.T) {
-	b := decodeBoard(`
+	b := DecodeBoard(`
 		.x....#
 		....x..
 		..#....
@@ -74,7 +74,7 @@ func TestBlackWinsByNoWhitePieces(t *testing.T) {
 }
 
 func TestWhiteWinsByNoBlackPlies(t *testing.T) {
-	b := decodeBoard(`
+	b := DecodeBoard(`
 		....x
 		...@.o
 		..o...o
@@ -90,7 +90,7 @@ func TestWhiteWinsByNoBlackPlies(t *testing.T) {
 }
 
 func TestBlackWinsByNoWhitePlies(t *testing.T) {
-	b := decodeBoard(`
+	b := DecodeBoard(`
 		x.o
 		.o
 		.
@@ -117,7 +117,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 
 	// we put all those white pawns at the bottom just we don't accidentaly get into a special ending
 
-	b := decodeBoard(`
+	b := DecodeBoard(`
 	  ..x...#
 		.
 		.
@@ -139,7 +139,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	}
 
 	// just to make the code more legible by showing what each intermediary board looks like
-	assertEqualBoards(t, g.Board(), decodeBoard(`
+	assertEqualBoards(t, g.Board(), DecodeBoard(`
 	  ..x...#
 		.
 		..o
@@ -156,7 +156,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	assertEqualBoards(t, g.Board(), decodeBoard(`
+	assertEqualBoards(t, g.Board(), DecodeBoard(`
 	  ..x
 		.....#
 		..o
@@ -173,7 +173,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	assertEqualBoards(t, g.Board(), decodeBoard(`
+	assertEqualBoards(t, g.Board(), DecodeBoard(`
 	  ..x
 		.....#
 		..o
@@ -191,7 +191,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	assertEqualBoards(t, g.Board(), decodeBoard(`
+	assertEqualBoards(t, g.Board(), DecodeBoard(`
 	  ..x
 		.....#
 		....o
@@ -209,7 +209,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	assertEqualBoards(t, g.Board(), decodeBoard(`
+	assertEqualBoards(t, g.Board(), DecodeBoard(`
 	  ..x
 		.
 		.
@@ -228,7 +228,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	assertEqualBoards(t, g.Board(), decodeBoard(`
+	assertEqualBoards(t, g.Board(), DecodeBoard(`
 	  ..x
 		.
 		.
@@ -245,7 +245,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	assertEqualBoards(t, g.Board(), decodeBoard(`
+	assertEqualBoards(t, g.Board(), DecodeBoard(`
 	  ..x
 		.
 		..#
@@ -262,7 +262,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	assertEqualBoards(t, g.Board(), decodeBoard(`
+	assertEqualBoards(t, g.Board(), DecodeBoard(`
 	  ..x
 		.
 		..#
@@ -319,7 +319,7 @@ func assertSpecialEnding(t *testing.T, b *Board) {
 
 func TestDrawBySpecialEnding(t *testing.T) {
 	//a
-	assertSpecialEnding(t, decodeBoard(`
+	assertSpecialEnding(t, DecodeBoard(`
 	  ..@
 		....@
 		.
@@ -328,7 +328,7 @@ func TestDrawBySpecialEnding(t *testing.T) {
 	`))
 
 	//b
-	assertSpecialEnding(t, decodeBoard(`
+	assertSpecialEnding(t, DecodeBoard(`
 	  ..@
 		.
 		.....#
@@ -336,7 +336,7 @@ func TestDrawBySpecialEnding(t *testing.T) {
 	`))
 
 	//c
-	assertSpecialEnding(t, decodeBoard(`
+	assertSpecialEnding(t, DecodeBoard(`
 	  ..@
 		....@
 		.
@@ -345,14 +345,14 @@ func TestDrawBySpecialEnding(t *testing.T) {
 	`))
 
 	//d
-	assertSpecialEnding(t, decodeBoard(`
+	assertSpecialEnding(t, DecodeBoard(`
 	  ..@
 		.
 		.#
 	`))
 
 	//e
-	assertSpecialEnding(t, decodeBoard(`
+	assertSpecialEnding(t, DecodeBoard(`
 	  ..@.x
 		.
 		.#

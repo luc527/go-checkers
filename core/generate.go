@@ -1,4 +1,4 @@
-package go_checkers
+package core
 
 // TODO maybe there's some way to optimize this using the bit masks
 

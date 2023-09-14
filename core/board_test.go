@@ -1,4 +1,4 @@
-package go_checkers
+package core
 
 import (
 	"strings"
@@ -184,7 +184,7 @@ func TestDecodeBoard(t *testing.T) {
 		...@
 	`
 
-	b := decodeBoard(s)
+	b := DecodeBoard(s)
 
 	t.Log("\n" + b.String())
 
