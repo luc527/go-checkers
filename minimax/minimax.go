@@ -18,19 +18,15 @@ const (
 	lossValue = -1_000_000
 )
 
-// TODO should the receiver be (m *Minimax) or (m Minimax)?
-// Minimax is really just a config, it's read-only
-// compare performance between the two
-
-func (m Minimax) Search(g *c.Game) (float64, c.Ply) {
+func (m *Minimax) Search(g *c.Game) (float64, c.Ply) {
 	return m.searchAt(g, 0)
 }
 
-func (m Minimax) searchAt(g *c.Game, depth int) (float64, c.Ply) {
+func (m *Minimax) searchAt(g *c.Game, depth int) (float64, c.Ply) {
 	return m.searchImpl(g, depth, math.Inf(-1), math.Inf(1))
 }
 
-func (m Minimax) searchImpl(g *c.Game, depth int, alpha, beta float64) (float64, c.Ply) {
+func (m *Minimax) searchImpl(g *c.Game, depth int, alpha, beta float64) (float64, c.Ply) {
 	state := g.Result()
 	if state.IsOver() {
 		if !state.HasWinner() {

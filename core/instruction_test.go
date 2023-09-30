@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestMakeCrownInstruction(t *testing.T) {
+func TestCrownInstruction(t *testing.T) {
 	var row, col byte
 	row, col = 5, 6
 	i := MakeCrownInstruction(row, col)
@@ -17,7 +17,7 @@ func TestMakeCrownInstruction(t *testing.T) {
 	}
 }
 
-func TestMakeMoveInstruction(t *testing.T) {
+func TestMoveInstruction(t *testing.T) {
 	var srow, scol byte
 	var drow, dcol byte
 
@@ -43,7 +43,7 @@ func TestMakeMoveInstruction(t *testing.T) {
 	}
 }
 
-func TestMakeCaptureInstruction(t *testing.T) {
+func TestCaptureInstruction(t *testing.T) {
 	type testCase struct {
 		row, col byte
 		c        Color
@@ -86,7 +86,7 @@ func TestMakeCaptureInstruction(t *testing.T) {
 
 }
 
-func TestMakeMakeCrownInstruction(t *testing.T) {
+func TestMakeCrownInstruction(t *testing.T) {
 	b := new(Board)
 
 	var row, col byte
@@ -112,7 +112,7 @@ func TestMakeMakeCrownInstruction(t *testing.T) {
 	}
 }
 
-func TestMakeMakeMoveInstruction(t *testing.T) {
+func TestMakeMoveInstruction(t *testing.T) {
 	b := new(Board)
 
 	var frow, fcol byte //from
@@ -158,7 +158,7 @@ func TestMakeMakeMoveInstruction(t *testing.T) {
 	}
 }
 
-func TestMakeMakeCaptureInstruction(t *testing.T) {
+func TestMakeCaptureInstruction(t *testing.T) {
 	b := new(Board)
 
 	var row, col byte
