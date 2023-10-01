@@ -1,8 +1,5 @@
 package minimax
 
-// TODO test TimeLimitedSearcher
-// TODO when that's done, release new version of the module
-
 import (
 	"math"
 	"math/rand"
@@ -59,11 +56,7 @@ func (s TimeLimitedSearcher) Search(g *c.Game) c.Ply {
 		tlim = MaxTimeLimit
 	}
 
-	// TODO: could stop the search earlier if we know the next depth is going to
-	// be cancelled anyways. If the current search took 500ms and there's only 400ms left,
-	// we know it will be cancelled midway so we won't even bother. If the current
-	// search took 500ms and there's 600ms left, but we know the next depth, in
-	// average, takes 700ms, we may choose to stop early again.
+	stopTime := time.Now().Add(tlim)
 
 	var ply c.Ply
 	ctx := searchContext{toMax: s.ToMax, h: s.Heuristic, stop: closeAfter(tlim)}
@@ -72,11 +65,19 @@ func (s TimeLimitedSearcher) Search(g *c.Game) c.Ply {
 		// if the ply0 search went all the way to the end. Otherwise, it's possible that the search has
 		// stopped in a node at an early depth in the tree, *which might have a large heuristic value
 		// without it actually being a good move*
+		searchStart := time.Now()
 		_, ply0 := ctx.search(g, dlim, math.Inf(-1), math.Inf(1))
 		if ctx.cancelled() {
 			break
 		}
 		ply = ply0
+
+		searchDuration := time.Since(searchStart)
+		timeLeft := time.Until(stopTime)
+		delta := searchDuration - timeLeft
+		if delta >= 0 || -delta < 100*time.Millisecond {
+			break
+		}
 	}
 
 	return ply
@@ -148,25 +149,23 @@ func (ctx searchContext) search(g *c.Game, depthLeft int, alpha float64, beta fl
 		subValue, _ := ctx.search(g, depthLeft-1, alpha, beta)
 
 		if maximizeTurn {
-			if subValue >= value {
-				ply = subPly
-				value = subValue
+			if subValue > value {
+				ply, value = subPly, subValue
+				alpha = math.Max(alpha, subValue)
 			}
-			// alpha = math.Max(alpha, subValue)
-			// if subValue >= beta {
-			// 	g.UndoPly(undoInfo)
-			// 	return value, ply
-			// }
+			if subValue >= beta {
+				g.UndoPly(undoInfo)
+				return value, ply
+			}
 		} else {
 			if subValue <= value {
-				ply = subPly
-				value = subValue
+				ply, value = subPly, subValue
+				beta = math.Min(beta, subValue)
 			}
-			// beta = math.Min(beta, subValue)
-			// if subValue <= alpha {
-			// 	g.UndoPly(undoInfo)
-			// 	return value, ply
-			// }
+			if subValue <= alpha {
+				g.UndoPly(undoInfo)
+				return value, ply
+			}
 		}
 
 		g.UndoPly(undoInfo)

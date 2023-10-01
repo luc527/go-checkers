@@ -9,7 +9,7 @@ import (
 	mm "github.com/luc527/go_checkers/minimax"
 )
 
-func main() {
+func a() {
 	results := make(chan core.GameResult)
 
 	sema := make(chan struct{}, 8)
@@ -43,18 +43,34 @@ func main() {
 
 }
 
+func main() {
+	a()
+}
+
 func play(id int, results chan<- core.GameResult) core.GameResult {
-	var aiWhite mm.Searcher = mm.TimeLimitedSearcher{
-		ToMax:     core.WhiteColor,
-		Heuristic: mm.WeightedCountHeuristic,
-		TimeLimit: 4000 * time.Millisecond,
-	}
+	// var aiWhite mm.Searcher = mm.TimeLimitedSearcher{
+	// 	ToMax:     core.WhiteColor,
+	// 	Heuristic: mm.WeightedCountHeuristic,
+	// 	TimeLimit: 4000 * time.Millisecond,
+	// }
 
 	var aiBlack mm.Searcher = mm.TimeLimitedSearcher{
 		ToMax:     core.BlackColor,
 		Heuristic: mm.WeightedCountHeuristic,
-		TimeLimit: 400 * time.Millisecond,
+		TimeLimit: 2000 * time.Millisecond,
 	}
+
+	var aiWhite mm.Searcher = mm.DepthLimitedSearcher{
+		ToMax:      core.WhiteColor,
+		Heuristic:  mm.WeightedCountHeuristic,
+		DepthLimit: 8,
+	}
+
+	// var aiBlack mm.Searcher = mm.DepthLimitedSearcher{
+	// 	ToMax:      core.BlackColor,
+	// 	Heuristic:  mm.WeightedCountHeuristic,
+	// 	DepthLimit: 8,
+	// }
 
 	g := core.NewStandardGame()
 	var res core.GameResult
