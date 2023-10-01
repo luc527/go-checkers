@@ -13,7 +13,7 @@ const (
 	DrawResult
 )
 
-func (s GameResult) IsOver() bool {
+func (s GameResult) Over() bool {
 	return s != PlayingResult
 }
 
@@ -45,7 +45,6 @@ func (s GameResult) String() string {
 }
 
 type gameState struct {
-	toPlay               Color
 	turnsSinceCapture    int16
 	turnsSincePawnMove   int16
 	turnsInSpecialEnding int16
@@ -62,13 +61,14 @@ type Game struct {
 	captureRule         CaptureRule
 	bestRule            BestRule
 	board               *Board
+	toPlay              Color
 	state               gameState
 }
 
 func (g *Game) String() string {
 	return fmt.Sprintf(
 		"{ToPlay: %v, turnsSinceCapture: %v, turnsSincePawnMove: %v, turnsInSpecialEnding: %v, Board:\n%v\n}",
-		g.state.toPlay,
+		g.toPlay,
 		g.state.turnsSinceCapture,
 		g.state.turnsSincePawnMove,
 		g.state.turnsInSpecialEnding,
@@ -90,7 +90,7 @@ func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDr
 	g.bestRule = bestRule
 	g.stagnantTurnsToDraw = stagnantTurnsToDraw
 
-	g.state.toPlay = initalPlayer
+	g.toPlay = initalPlayer
 
 	g.state.turnsSinceCapture = 0
 	g.state.turnsSincePawnMove = 0
@@ -102,7 +102,11 @@ func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDr
 	return &g
 }
 
-func NewStandardGame(captureRule CaptureRule, bestRule BestRule) *Game {
+func NewStandardGame() *Game {
+	return NewCustomGame(CapturesMandatory, BestNotMandatory, 20, nil, WhiteColor)
+}
+
+func NewGame(captureRule CaptureRule, bestRule BestRule) *Game {
 	return NewCustomGame(captureRule, bestRule, 20, nil, WhiteColor)
 }
 
@@ -111,15 +115,26 @@ func (g *Game) Board() *Board {
 }
 
 func (g *Game) ToPlay() Color {
-	return g.state.toPlay
+	return g.toPlay
+}
+
+func (g *Game) WhiteToPlay() bool {
+	return g.toPlay == WhiteColor
+}
+
+func (g *Game) BlackToPlay() bool {
+	return g.toPlay == BlackColor
 }
 
 func (g *Game) DoPly(p Ply) (*UndoInfo, error) {
+	if len(p) == 0 {
+		return nil, fmt.Errorf("game: empty ply")
+	}
 	if err := PerformInstructions(g.board, p); err != nil {
 		return nil, err
 	}
 	prevState := g.state
-	g.state.toPlay = g.state.toPlay.Opposite()
+	g.toPlay = g.toPlay.Opposite()
 	g.BoardChanged(p)
 
 	return &UndoInfo{plyDone: p, prevState: prevState}, nil
@@ -145,7 +160,7 @@ func (g *Game) Result() GameResult {
 	}
 
 	if len(g.Plies()) == 0 {
-		if g.state.toPlay == WhiteColor {
+		if g.toPlay == WhiteColor {
 			return BlackWonResult
 		} else {
 			return WhiteWonResult
@@ -157,6 +172,7 @@ func (g *Game) Result() GameResult {
 
 func (g *Game) UndoPly(undo *UndoInfo) {
 	UndoInstructions(g.board, undo.plyDone)
+	g.toPlay = g.toPlay.Opposite()
 	g.state = undo.prevState
 }
 
@@ -165,7 +181,6 @@ func (g *Game) Copy() *Game {
 	// board deep-copied
 	return &Game{
 		state: gameState{
-			toPlay:               g.state.toPlay,
 			turnsSinceCapture:    g.state.turnsSinceCapture,
 			turnsSincePawnMove:   g.state.turnsSincePawnMove,
 			turnsInSpecialEnding: g.state.turnsInSpecialEnding,
@@ -175,6 +190,7 @@ func (g *Game) Copy() *Game {
 		captureRule:         g.captureRule,
 		bestRule:            g.bestRule,
 		board:               g.board.Copy(),
+		toPlay:              g.toPlay,
 	}
 }
 
@@ -188,7 +204,7 @@ func (g *Game) Equals(o *Game) bool {
 
 	return g.captureRule == o.captureRule &&
 		g.bestRule == o.bestRule &&
-		g.state.toPlay == o.state.toPlay &&
+		g.toPlay == o.toPlay &&
 		g.state.turnsInSpecialEnding == o.state.turnsInSpecialEnding &&
 		g.state.turnsSinceCapture == o.state.turnsSinceCapture &&
 		g.state.turnsSincePawnMove == o.state.turnsSincePawnMove &&
@@ -237,7 +253,7 @@ func (g *Game) BoardChanged(ply Ply) {
 }
 
 func (g *Game) generatePlies() []Ply {
-	return GeneratePlies(make([]Ply, 0, 10), g.board, g.state.toPlay, g.captureRule, g.bestRule)
+	return GeneratePlies(make([]Ply, 0, 10), g.board, g.toPlay, g.captureRule, g.bestRule)
 }
 
 func (g *Game) Plies() []Ply {

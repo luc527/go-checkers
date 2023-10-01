@@ -6,12 +6,12 @@ import (
 )
 
 func TestDoUndoState(t *testing.T) {
-	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
+	g := NewStandardGame()
 
 	var states []*Game
 	var undos []*UndoInfo
 
-	for !g.Result().IsOver() {
+	for !g.Result().Over() {
 		states = append(states, g.Copy())
 		plies := g.Plies()
 		r := rand.Int() % len(plies)
@@ -360,14 +360,14 @@ func TestDrawBySpecialEnding(t *testing.T) {
 }
 
 func TestGameResult(t *testing.T) {
-	if PlayingResult.IsOver() {
+	if PlayingResult.Over() {
 		t.Fail()
 	}
 	if PlayingResult.HasWinner() {
 		t.Fail()
 	}
 
-	if !WhiteWonResult.IsOver() {
+	if !WhiteWonResult.Over() {
 		t.Fail()
 	}
 	if !WhiteWonResult.HasWinner() {
@@ -377,7 +377,7 @@ func TestGameResult(t *testing.T) {
 		t.Fail()
 	}
 
-	if !BlackWonResult.IsOver() {
+	if !BlackWonResult.Over() {
 		t.Fail()
 	}
 	if !BlackWonResult.HasWinner() {
@@ -387,7 +387,7 @@ func TestGameResult(t *testing.T) {
 		t.Fail()
 	}
 
-	if !DrawResult.IsOver() {
+	if !DrawResult.Over() {
 		t.Fail()
 	}
 	if DrawResult.HasWinner() {
@@ -402,7 +402,7 @@ func TestGameEquals(t *testing.T) {
 		t.Fail()
 	}
 
-	g := NewStandardGame(CapturesMandatory, BestNotMandatory)
+	g := NewStandardGame()
 	if nilGame.Equals(g) || g.Equals(nilGame) {
 		t.Log("Nil game should not be equal to actual game")
 		t.Fail()

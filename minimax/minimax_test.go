@@ -7,31 +7,31 @@ import (
 )
 
 func TestDoUndoMinimax(t *testing.T) {
-	g := c.NewStandardGame(c.CapturesMandatory, c.BestMandatory)
+	g := c.NewGame(c.CapturesMandatory, c.BestMandatory)
 
-	whiteMm := Minimax{
-		ToMaximize: c.WhiteColor,
-		Cutoff:     5,
+	whiteMm := DepthLimitedSearcher{
+		ToMax:      c.WhiteColor,
+		DepthLimit: 5,
 		Heuristic:  UnweightedCountHeuristic,
 	}
 
-	blackMm := Minimax{
-		ToMaximize: c.BlackColor,
-		Cutoff:     6,
+	blackMm := DepthLimitedSearcher{
+		ToMax:      c.BlackColor,
+		DepthLimit: 6,
 		Heuristic:  WeightedCountHeuristic,
 	}
 
 	var states []*c.Game
 	var undoInfos []*c.UndoInfo
 
-	for !g.Result().IsOver() {
+	for !g.Result().Over() {
 		states = append(states, g.Copy())
 
 		var ply c.Ply
 		if g.ToPlay() == c.WhiteColor {
-			_, ply = whiteMm.Search(g)
+			ply = whiteMm.Search(g)
 		} else {
-			_, ply = blackMm.Search(g)
+			ply = blackMm.Search(g)
 		}
 		undo, err := g.DoPly(ply)
 		if err != nil {

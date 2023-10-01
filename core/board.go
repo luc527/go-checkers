@@ -150,7 +150,7 @@ func PlaceInitialPieces(b *Board) {
 }
 
 func coordMask(row, col byte) uint64 {
-	return uint64(1 << (uint64(row)*8 + uint64(col)))
+	return 1 << (uint64(row)*8 + uint64(col))
 }
 
 func (b *Board) Clear(row, col byte) {
