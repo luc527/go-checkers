@@ -31,7 +31,7 @@ type DepthLimitedSearcher struct {
 var _ Searcher = DepthLimitedSearcher{}
 
 func (s DepthLimitedSearcher) Search(g *c.Game) c.Ply {
-	ctx := searchContext{toMax: s.ToMax, h: s.Heuristic, stop: nil}
+	ctx := searchContext{toMax: s.ToMax, h: s.Heuristic, timedCloser: nil}
 	_, ply := ctx.search(g, s.DepthLimit, math.Inf(-1), math.Inf(1))
 	return ply
 }
@@ -59,7 +59,7 @@ func (s TimeLimitedSearcher) Search(g *c.Game) c.Ply {
 	stopTime := time.Now().Add(tlim)
 
 	var ply c.Ply
-	ctx := searchContext{toMax: s.ToMax, h: s.Heuristic, stop: closeAfter(tlim)}
+	ctx := searchContext{toMax: s.ToMax, h: s.Heuristic, timedCloser: closeAfter(tlim)}
 	for dlim := 1; ; dlim++ {
 		// We can only assign the result of a search (variable ply0) to the best known ply so far (variable ply)
 		// if the ply0 search went all the way to the end. Otherwise, it's possible that the search has
@@ -67,15 +67,14 @@ func (s TimeLimitedSearcher) Search(g *c.Game) c.Ply {
 		// without it actually being a good move*
 		searchStart := time.Now()
 		_, ply0 := ctx.search(g, dlim, math.Inf(-1), math.Inf(1))
-		if ctx.cancelled() {
+		if ctx.closed() {
 			break
 		}
 		ply = ply0
 
 		searchDuration := time.Since(searchStart)
 		timeLeft := time.Until(stopTime)
-		delta := searchDuration - timeLeft
-		if delta >= 0 || -delta < 100*time.Millisecond {
+		if searchDuration >= timeLeft {
 			break
 		}
 	}
@@ -83,7 +82,9 @@ func (s TimeLimitedSearcher) Search(g *c.Game) c.Ply {
 	return ply
 }
 
-func closeAfter(d time.Duration) <-chan struct{} {
+type timedCloser <-chan struct{}
+
+func closeAfter(d time.Duration) timedCloser {
 	ch := make(chan struct{})
 	go func() {
 		time.Sleep(d)
@@ -94,13 +95,13 @@ func closeAfter(d time.Duration) <-chan struct{} {
 
 type searchContext struct {
 	toMax c.Color
-	stop  <-chan struct{}
-	h     Heuristic
+	timedCloser
+	h Heuristic
 }
 
-func (ctx searchContext) cancelled() bool {
+func (c timedCloser) closed() bool {
 	select {
-	case <-ctx.stop:
+	case <-c:
 		return true
 	default:
 		return false
@@ -124,7 +125,7 @@ func (ctx searchContext) search(g *c.Game, depthLeft int, alpha float64, beta fl
 			return lossValue, nil
 		}
 	}
-	if ctx.cancelled() || depthLeft <= 0 {
+	if ctx.closed() || depthLeft <= 0 {
 		return ctx.h(g, ctx.toMax), nil
 	}
 
