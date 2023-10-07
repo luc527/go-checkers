@@ -74,8 +74,7 @@ func (s TimeLimitedSearcher) Search(g *c.Game) c.Ply {
 
 		searchDuration := time.Since(searchStart)
 		timeLeft := time.Until(stopTime)
-		delta := searchDuration - timeLeft
-		if delta >= 0 || -delta < 100*time.Millisecond {
+		if searchDuration >= timeLeft {
 			break
 		}
 	}
