@@ -1,0 +1,27 @@
+name: Go Build, Test and Quality Gate
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test and generate coverage
+        run: go test -coverprofile=/dev/null ./... | tee go_test_output.txt
+
+      - name: Check coverage
+        run: py ./scripts/check_coverage.py < go_test_output.txt
