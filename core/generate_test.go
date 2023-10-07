@@ -349,3 +349,61 @@ func TestAllowOverPreviousTile(t *testing.T) {
 
 	assertEqualPlies(t, pliesGot, pliesWant)
 }
+
+func TestPlyMarshal(t *testing.T) {
+	type test struct {
+		p Ply
+		s string
+	}
+	tests := []test{
+		{Ply{}, ""},
+		{Ply{MakeMoveInstruction(3, 3, 5, 5), MakeMoveInstruction(5, 5, 3, 3)}, "m3355,m5533"},
+		{Ply{MakeMoveInstruction(1, 2, 3, 4), MakeCrownInstruction(3, 4), MakeCaptureInstruction(6, 6, WhiteColor, KingKind)}, "m1234,k34,c66wk"},
+	}
+	for _, test := range tests {
+		if got, err := test.p.MarshalJSON(); err != nil {
+			t.Logf("error: %v", err)
+			t.Fail()
+		} else if string(got) != test.s {
+			t.Logf("wanted %v got %v", test.s, string(got))
+			t.Fail()
+		}
+	}
+}
+
+func TestPlyUnmarshalCorrectly(t *testing.T) {
+	type test struct {
+		s string
+		p Ply
+	}
+	tests := []test{
+		{"", Ply{}},
+		{"k55", Ply{MakeCrownInstruction(5, 5)}},
+		{"c77wp", Ply{MakeCaptureInstruction(7, 7, WhiteColor, PawnKind)}},
+		{"m1245,c34bk,k45", Ply{MakeMoveInstruction(1, 2, 4, 5), MakeCaptureInstruction(3, 4, BlackColor, KingKind), MakeCrownInstruction(4, 5)}},
+	}
+	for _, test := range tests {
+		p := Ply(nil)
+		if err := p.UnmarshalJSON([]byte(test.s)); err != nil {
+			t.Logf("error: %v", err)
+			t.Fail()
+		}
+		if !p.Equals(test.p) {
+			t.Logf("wanted %v got %v", test.p, p)
+		}
+	}
+}
+
+func TestPlyUnmarshalIncorrectly(t *testing.T) {
+	tests := []string{
+		"m1234,,",
+		"c12wk,  m4455, k12",
+	}
+	for _, test := range tests {
+		p := Ply{}
+		if err := p.UnmarshalJSON([]byte(test)); err == nil {
+			t.Logf("expected error for %v", test)
+			t.Fail()
+		}
+	}
+}
