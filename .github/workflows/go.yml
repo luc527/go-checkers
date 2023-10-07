@@ -23,5 +23,10 @@ jobs:
       - name: Test and generate coverage
         run: go test -coverprofile=/dev/null ./... | tee go_test_output.txt
 
+      - name: Setup Python (for scripts)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
       - name: Check coverage
         run: py ./scripts/check_coverage.py < go_test_output.txt
