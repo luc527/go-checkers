@@ -29,4 +29,4 @@ jobs:
           python-version: '3.10'
 
       - name: Check coverage
-        run: py ./scripts/check_coverage.py < go_test_output.txt
+        run: python3 ./scripts/check_coverage.py < go_test_output.txt
