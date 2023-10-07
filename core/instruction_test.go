@@ -339,3 +339,79 @@ func TestInstructionString(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestInstructionMarshal(t *testing.T) {
+	type test struct {
+		i Instruction
+		e []byte
+	}
+	tests := []test{
+		{MakeMoveInstruction(1, 2, 6, 5), []byte("m1265")},
+		{MakeMoveInstruction(7, 6, 1, 7), []byte("m7617")},
+		{MakeCaptureInstruction(4, 4, WhiteColor, KingKind), []byte("c44wk")},
+		{MakeCaptureInstruction(3, 1, WhiteColor, PawnKind), []byte("c31wp")},
+		{MakeCaptureInstruction(1, 7, BlackColor, PawnKind), []byte("c17bp")},
+		{MakeCaptureInstruction(2, 2, BlackColor, KingKind), []byte("c22bk")},
+		{MakeCrownInstruction(1, 5), []byte("k15")},
+	}
+	for _, test := range tests {
+		json, err := test.i.MarshalJSON()
+		if err != nil {
+			t.Logf("error: %v", err)
+			t.Fail()
+		}
+		if string(json) != string(test.e) {
+			t.Logf("wanted %s got %s", string(test.e), string(json))
+			t.Fail()
+		}
+	}
+}
+
+func TestInstructionUnmarshalCorrectly(t *testing.T) {
+	type test struct {
+		s string
+		i Instruction
+	}
+	tests := []test{
+		{"m1223", MakeMoveInstruction(1, 2, 2, 3)},
+		{"c12wk", MakeCaptureInstruction(1, 2, WhiteColor, KingKind)},
+		{"c24wp", MakeCaptureInstruction(2, 4, WhiteColor, PawnKind)},
+		{"c37bk", MakeCaptureInstruction(3, 7, BlackColor, KingKind)},
+		{"c66bp", MakeCaptureInstruction(6, 6, BlackColor, PawnKind)},
+		{"k45", MakeCrownInstruction(4, 5)},
+	}
+	i := &Instruction{}
+	for _, test := range tests {
+		err := i.UnmarshalJSON([]byte(test.s))
+		if err != nil {
+			t.Logf("error: %v", err)
+			t.Fail()
+		}
+		if !i.Equals(test.i) {
+			t.Logf("wanted %v got %v", test.i, i)
+			t.Fail()
+		}
+	}
+}
+
+func TestInstructionUnmarshalIncorrectly(t *testing.T) {
+	tests := []string{
+		"b1234",
+		"m123",
+		"m1299",
+		"c13w",
+		"c33bb",
+		"c33mp",
+		"c19wk",
+		"k08",
+		"m12345",
+		"c12bkk",
+		"k666",
+	}
+	i := &Instruction{}
+	for _, test := range tests {
+		if err := i.UnmarshalJSON([]byte(test)); err == nil {
+			t.Fail()
+		}
+	}
+}

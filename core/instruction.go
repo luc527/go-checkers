@@ -45,8 +45,9 @@ func (i Instruction) Equals(o Instruction) bool {
 	return i.t == o.t &&
 		i.row == o.row &&
 		i.col == o.col &&
-		i.d[0] == o.d[0] &&
-		i.d[1] == o.d[1]
+		(i.t == CrownInstruction ||
+			(i.d[0] == o.d[0] &&
+				i.d[1] == o.d[1]))
 }
 
 func (i Instruction) String() string {
@@ -59,6 +60,137 @@ func (i Instruction) String() string {
 	}
 	buf.WriteRune('}')
 	return buf.String()
+}
+
+var (
+	colorChar = [...]byte{BlackColor: 'b', WhiteColor: 'w'}
+	kindChar  = [...]byte{PawnKind: 'p', KingKind: 'k'}
+)
+
+func (i Instruction) MarshalInto(buf *bytes.Buffer) error {
+	// Please, The Go Authors™, implement a 'try' keyword...
+	switch i.t {
+	case MoveInstruction:
+		if err := buf.WriteByte('m'); err != nil {
+			return err
+		}
+	case CaptureInstruction:
+		if err := buf.WriteByte('c'); err != nil {
+			return err
+		}
+	case CrownInstruction:
+		if err := buf.WriteByte('k'); err != nil {
+			return err
+		}
+	}
+
+	if err := buf.WriteByte('0' + i.row); err != nil {
+		return err
+	}
+	if err := buf.WriteByte('0' + i.col); err != nil {
+		return err
+	}
+
+	if i.t == MoveInstruction {
+		if err := buf.WriteByte('0' + i.d[0]); err != nil {
+			return err
+		}
+		if err := buf.WriteByte('0' + i.d[1]); err != nil {
+			return err
+		}
+	} else if i.t == CaptureInstruction {
+		if err := buf.WriteByte(colorChar[i.d[0]]); err != nil {
+			return err
+		}
+		if err := buf.WriteByte(kindChar[i.d[1]]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (i Instruction) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	if err := i.MarshalInto(&buf); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (i *Instruction) UnmarshalJSON(bs []byte) error {
+	if len(bs) < 1 {
+		return fmt.Errorf("unmarshal instruction: empty bytes")
+	}
+	tbyte := bs[0]
+	switch tbyte {
+	case 'm':
+		i.t = MoveInstruction
+	case 'c':
+		i.t = CaptureInstruction
+	case 'k':
+		i.t = CrownInstruction
+	default:
+		return fmt.Errorf("unmarshal instruction: invalid type")
+	}
+
+	if len(bs) < 3 {
+		return fmt.Errorf("unmarshal instruction: missing row and col")
+	}
+	row := bs[1] - '0'
+	col := bs[2] - '0'
+	if row > 7 || col > 7 {
+		return fmt.Errorf("unmarshal instruction: out of bounds row or col")
+	}
+	i.row = row
+	i.col = col
+
+	if i.t == CrownInstruction {
+		if len(bs) != 3 {
+			return fmt.Errorf("unmarshal instruction: crown: trailing bytes")
+		}
+		return nil
+	}
+	if i.t == MoveInstruction {
+		if len(bs) != 5 {
+			return fmt.Errorf("unmarshal instruction: move: missing or trailing bytes")
+		}
+		drow := bs[3] - '0'
+		dcol := bs[4] - '0'
+		if drow > 7 || dcol > 7 {
+			return fmt.Errorf("unmarshal instruction: move: out of bounds destination row or col")
+		}
+		i.d[0] = drow
+		i.d[1] = dcol
+		return nil
+	}
+	if i.t == CaptureInstruction {
+		if len(bs) != 5 {
+			return fmt.Errorf("unmarshal instruction: capture: missing or trailing bytes")
+		}
+		var color Color
+		switch bs[3] {
+		case 'b':
+			color = BlackColor
+		case 'w':
+			color = WhiteColor
+		default:
+			return fmt.Errorf("unmarshal instruction: capture: invalid captured color")
+		}
+		var kind Kind
+		switch bs[4] {
+		case 'p':
+			kind = PawnKind
+		case 'k':
+			kind = KingKind
+		default:
+			return fmt.Errorf("unmarshal instruction: capture: invalid captured kind")
+		}
+		i.d[0] = byte(color)
+		i.d[1] = byte(kind)
+		return nil
+	}
+	// Unreachable.
+	return nil
 }
 
 func instructionsToString(is []Instruction) string {

@@ -1,5 +1,10 @@
 package core
 
+import (
+	"bytes"
+	"strings"
+)
+
 // TODO maybe there's some way to optimize this using the bit masks
 
 // both offSets
@@ -40,6 +45,57 @@ func (p Ply) countCaptures() int {
 		}
 	}
 	return c
+}
+
+func (p Ply) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	sep := ""
+	for _, i := range p {
+		if _, err := buf.WriteString(sep); err != nil {
+			return nil, err
+		}
+		if err := i.MarshalInto(&buf); err != nil {
+			return nil, err
+		}
+		sep = ","
+	}
+	return buf.Bytes(), nil
+}
+
+func (p *Ply) UnmarshalJSON(bs []byte) error {
+	s := string(bs)
+	s = strings.Trim(s, " \t\n\r")
+	if len(s) == 0 {
+		*p = Ply{}
+		return nil
+	}
+	sis := strings.Split(string(bs), ",")
+	for _, si := range sis {
+		i := &Instruction{}
+		if err := i.UnmarshalJSON([]byte(si)); err != nil {
+			return err
+		}
+		*p = append(*p, *i)
+	}
+	return nil
+}
+
+func (p Ply) Equals(q Ply) bool {
+	if p == nil && q == nil {
+		return true
+	}
+	if p == nil || q == nil {
+		return false
+	}
+	if len(p) != len(q) {
+		return false
+	}
+	for i, ins := range p {
+		if !ins.Equals(q[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 // the generateSimplePawnPlies and followPawnCaptures procedures
