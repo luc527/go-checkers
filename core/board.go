@@ -379,7 +379,7 @@ func (b *Board) SerializeInto(buf *bytes.Buffer) error {
 	return nil
 }
 
-func (b *Board) Serialize() ([]byte, error) {
+func (b Board) Serialize() ([]byte, error) {
 	var buf bytes.Buffer
 	if err := b.SerializeInto(&buf); err != nil {
 		return nil, err
@@ -387,7 +387,7 @@ func (b *Board) Serialize() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (b *Board) MarshalJSON() ([]byte, error) {
+func (b Board) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	if err := buf.WriteByte('"'); err != nil {
 		return nil, err

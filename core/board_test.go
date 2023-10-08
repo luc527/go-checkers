@@ -323,11 +323,6 @@ func TestPieceCount(t *testing.T) {
 func TestSerializeBoard(t *testing.T) {
 	b := new(Board)
 
-	if bs, err := (*Board)(nil).Serialize(); err != nil || len(bs) != 0 {
-		t.Log("serializing the nil board should return the empty string")
-		t.Fail()
-	}
-
 	if bs, err := b.Serialize(); err != nil || len(bs) != 0 {
 		t.Log("serializing empty board should return the empty string")
 		t.Fail()
