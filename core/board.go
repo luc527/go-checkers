@@ -52,19 +52,34 @@ func (c Color) Opposite() Color {
 	return WhiteColor
 }
 
+func (c Color) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "%q", c)
+	return buf.Bytes(), nil
+}
+
+func (c *Color) UnmarshalJSON(bs []byte) error {
+	if len(bs) < 2 || bs[0] != '"' || bs[len(bs)-1] != '"' {
+		return fmt.Errorf("color unmarshal json: not a string")
+	}
+	s := string(bs[1 : len(bs)-1])
+	switch s {
+	case "white":
+		*c = WhiteColor
+	case "black":
+		*c = BlackColor
+	default:
+		return fmt.Errorf("color unmarshal json: invalid color: %v", s)
+	}
+	return nil
+}
+
 func (k Kind) String() string {
 	if k == KingKind {
 		return "king"
 	} else {
 		return "pawn"
 	}
-}
-
-func (k Kind) Opposite() Kind {
-	if k == KingKind {
-		return PawnKind
-	}
-	return KingKind
 }
 
 type Board struct {
@@ -239,11 +254,23 @@ func (b *Board) PieceCount() PieceCount {
 	return c
 }
 
+func (p PieceCount) Equals(o PieceCount) bool {
+	return p.WhiteKings == o.WhiteKings &&
+		p.WhitePawns == o.WhitePawns &&
+		p.BlackKings == o.BlackKings &&
+		p.BlackPawns == o.BlackPawns
+}
+
 func (b *Board) Equals(o *Board) bool {
 	if b == nil && o == nil {
 		return true
 	}
 	if b == nil || o == nil {
+		return false
+	}
+	// Faster than iterating through the whole board,
+	// and already takes care of mosts cases.
+	if b.PieceCount() != o.PieceCount() {
 		return false
 	}
 	for row := byte(0); row < 8; row++ {
@@ -311,49 +338,80 @@ func DecodeBoard(s string) *Board {
 	return b
 }
 
-// This is for passing the board over a network
-func (b *Board) Serialize() string {
+func (b *Board) SerializeInto(buf *bytes.Buffer) error {
 	if b == nil {
-		return ""
+		return nil
 	}
-	var sb strings.Builder
 	for row := byte(0); row < 8; row++ {
 		for c := byte(0); c < 8; c++ {
 			if !b.IsOccupied(row, c) {
 				continue
 			}
 			color, kind := b.Get(row, c)
-			sb.WriteByte(row + '0')
-			sb.WriteByte(c + '0')
+			if err := buf.WriteByte(row + '0'); err != nil {
+				return err
+			}
+			if err := buf.WriteByte(c + '0'); err != nil {
+				return err
+			}
 
 			if color == WhiteColor {
-				sb.WriteByte('w')
+				if err := buf.WriteByte('w'); err != nil {
+					return err
+				}
 			} else {
-				sb.WriteByte('b')
+				if err := buf.WriteByte('b'); err != nil {
+					return err
+				}
 			}
 
 			if kind == KingKind {
-				sb.WriteByte('k')
+				if err := buf.WriteByte('k'); err != nil {
+					return err
+				}
 			} else {
-				sb.WriteByte('p')
+				if err := buf.WriteByte('p'); err != nil {
+					return err
+				}
 			}
 		}
 	}
-	return sb.String()
+	return nil
 }
 
-func UnserializeBoard(s string) (*Board, error) {
-	var b Board
-	if len(s)%4 != 0 {
-		return nil, fmt.Errorf("unserialize board: invalid board string (length %d not multiple of 4)", len(s))
+func (b *Board) Serialize() ([]byte, error) {
+	var buf bytes.Buffer
+	if err := b.SerializeInto(&buf); err != nil {
+		return nil, err
 	}
-	for len(s) > 0 {
-		rowRune, colRune, colorRune, kindRune := s[0], s[1], s[2], s[3]
+	return buf.Bytes(), nil
+}
+
+func (b *Board) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	if err := buf.WriteByte('"'); err != nil {
+		return nil, err
+	}
+	if err := b.SerializeInto(&buf); err != nil {
+		return nil, err
+	}
+	if err := buf.WriteByte('"'); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (b *Board) Unserialize(bs []byte) error {
+	if len(bs)%4 != 0 {
+		return fmt.Errorf("unserialize board: invalid board string (length %d not multiple of 4)", len(bs))
+	}
+	for len(bs) > 0 {
+		rowRune, colRune, colorRune, kindRune := bs[0], bs[1], bs[2], bs[3]
 		row := byte(rowRune) - '0'
 		col := byte(colRune) - '0'
 
 		if row > 7 || col > 7 {
-			return nil, fmt.Errorf("unserialize board: invalid position (row %d, col %d)", row, col)
+			return fmt.Errorf("unserialize board: invalid position (row %d, col %d)", row, col)
 		}
 
 		var color Color
@@ -363,7 +421,7 @@ func UnserializeBoard(s string) (*Board, error) {
 		} else if colorByte == 'b' {
 			color = BlackColor
 		} else {
-			return nil, fmt.Errorf("unserialize board: invalid color %c", colorByte)
+			return fmt.Errorf("unserialize board: invalid color %c", colorByte)
 		}
 
 		var kind Kind
@@ -373,12 +431,19 @@ func UnserializeBoard(s string) (*Board, error) {
 		} else if kindByte == 'p' {
 			kind = PawnKind
 		} else {
-			return nil, fmt.Errorf("unserialize board: invalid kind %c", kindByte)
+			return fmt.Errorf("unserialize board: invalid kind %c", kindByte)
 		}
 
 		b.Set(row, col, color, kind)
 
-		s = s[4:]
+		bs = bs[4:]
 	}
-	return &b, nil
+	return nil
+}
+
+func (b *Board) UnmarshalJSON(bs []byte) error {
+	if len(bs) < 2 || bs[0] != '"' || bs[len(bs)-1] != '"' {
+		return fmt.Errorf("unmarshal board json: not a string")
+	}
+	return b.Unserialize(bs[1 : len(bs)-1])
 }

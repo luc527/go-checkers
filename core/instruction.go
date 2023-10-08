@@ -199,7 +199,7 @@ func (i *Instruction) UnmarshalJSON(bs []byte) error {
 	if len(bs) < 3 {
 		return fmt.Errorf("unmarshal instruction: empty bytes")
 	}
-	if bs[0] != '"' && bs[len(bs)-1] != '"' {
+	if bs[0] != '"' || bs[len(bs)-1] != '"' {
 		return fmt.Errorf("unmarshal instruction: not a string")
 	}
 	bs = bs[1 : len(bs)-1]

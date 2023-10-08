@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -19,15 +20,6 @@ func TestKindString(t *testing.T) {
 		t.Fail()
 	}
 	if PawnKind.String() != "pawn" {
-		t.Fail()
-	}
-}
-
-func TestKindOpposite(t *testing.T) {
-	if PawnKind.Opposite() != KingKind {
-		t.Fail()
-	}
-	if KingKind.Opposite() != PawnKind {
 		t.Fail()
 	}
 }
@@ -331,12 +323,12 @@ func TestPieceCount(t *testing.T) {
 func TestSerializeBoard(t *testing.T) {
 	b := new(Board)
 
-	if (*Board)(nil).Serialize() != "" {
+	if bs, err := (*Board)(nil).Serialize(); err != nil || len(bs) != 0 {
 		t.Log("serializing the nil board should return the empty string")
 		t.Fail()
 	}
 
-	if b.Serialize() != "" {
+	if bs, err := b.Serialize(); err != nil || len(bs) != 0 {
 		t.Log("serializing empty board should return the empty string")
 		t.Fail()
 	}
@@ -346,10 +338,22 @@ func TestSerializeBoard(t *testing.T) {
 	b.Set(5, 1, BlackColor, PawnKind)
 	b.Set(6, 0, BlackColor, KingKind)
 
-	if b.Serialize() != "27wp46wk51bp60bk" {
-		t.Log("serializing failed")
+	want := []byte("27wp46wk51bp60bk")
+	if got, err := b.Serialize(); err != nil {
+		t.Logf("error serializing: %v", err)
 		t.Fail()
+	} else if len(want) != len(got) {
+		t.Logf("error serializing: len mismatch")
+		t.Fail()
+	} else {
+		for i := range want {
+			if want[i] != got[i] {
+				t.Logf("error serializing: expected %v at [%d], got %v", want[i], i, got[i])
+				t.Fail()
+			}
+		}
 	}
+
 }
 
 func TestUnserializeBoard(t *testing.T) {
@@ -365,7 +369,8 @@ func TestUnserializeBoard(t *testing.T) {
 	}
 
 	{
-		b, err := UnserializeBoard("")
+		var b Board
+		err := b.Unserialize([]byte{})
 		if err != nil {
 			t.Logf("unserializing returned err when it should've succeeded: %v", err)
 			t.Fail()
@@ -378,7 +383,8 @@ func TestUnserializeBoard(t *testing.T) {
 	}
 
 	{
-		b0, err := UnserializeBoard("11wp22wk33wk14bp27bk07bk")
+		var b0 Board
+		err := b0.Unserialize([]byte("11wp22wk33wk14bp27bk07bk"))
 		if err != nil {
 			t.Logf("unserializing returned err when it should've succeeded: %v", err)
 			t.Fail()
@@ -396,23 +402,73 @@ func TestUnserializeBoard(t *testing.T) {
 		}
 	}
 
+	var b Board
+
 	{
-		_, err := UnserializeBoard("11wp22w")
+		err := b.Unserialize([]byte("11wp22w"))
 		assertUnserializeErr(err)
 	}
 
 	{
-		_, err := UnserializeBoard("11wp80wk")
+		err := b.Unserialize([]byte("11wp80wk"))
 		assertUnserializeErr(err)
 	}
 
 	{
-		_, err := UnserializeBoard("12wp37wl")
+		err := b.Unserialize([]byte("12wp37wl"))
 		assertUnserializeErr(err)
 	}
 
 	{
-		_, err := UnserializeBoard("12wp37mp")
+		err := b.Unserialize([]byte("12wp37mp"))
 		assertUnserializeErr(err)
+	}
+}
+
+func TestMarshalUnmarshalBoard(t *testing.T) {
+	b := new(Board)
+	b.Set(1, 4, WhiteColor, PawnKind)
+	b.Set(6, 5, BlackColor, KingKind)
+	b.Set(7, 7, BlackColor, PawnKind)
+	b.Set(1, 1, WhiteColor, PawnKind)
+
+	bs, err := json.Marshal(b)
+	if err != nil {
+		t.Logf("failed to marshal board: %v", err)
+		t.Fail()
+		return
+	}
+
+	t.Logf("marshalled: %v", string(bs))
+
+	var b2 Board
+	if err := json.Unmarshal(bs, &b2); err != nil {
+		t.Logf("failed to unmarshal board: %v", err)
+		t.Fail()
+		return
+	}
+
+	if !b2.Equals(b) {
+		t.Logf("boards are different")
+		t.Fail()
+		return
+	}
+}
+
+func TestMarshalUnmarshalColor(t *testing.T) {
+	for _, c := range []Color{WhiteColor, BlackColor} {
+		if bs, err := json.Marshal(c); err != nil {
+			t.Logf("failed to marshal: %v", err)
+			t.Fail()
+		} else {
+			var c2 Color
+			if err := json.Unmarshal(bs, &c2); err != nil {
+				t.Logf("failed to unmarshal: %v", err)
+				t.Fail()
+			} else if c != c2 {
+				t.Logf("wanted %v got %v", c, c2)
+				t.Fail()
+			}
+		}
 	}
 }
