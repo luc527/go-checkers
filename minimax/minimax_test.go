@@ -69,7 +69,7 @@ func TestTimeLimitedSearcher(t *testing.T) {
 	ai := TimeLimitedSearcher{
 		ToMax:     c.BlackColor,
 		Heuristic: UnweightedCountHeuristic,
-		TimeLimit: 200 * time.Millisecond,
+		TimeLimit: 100 * time.Millisecond,
 	}
 	g := c.NewStandardGame()
 
@@ -94,7 +94,7 @@ func TestTimeLimitedSearcher(t *testing.T) {
 
 		sig <- struct{}{}
 		select {
-		case <-time.After(300 * time.Millisecond):
+		case <-time.After(150 * time.Millisecond):
 			t.Logf("Time limited searcher took too long!")
 			t.Fail()
 		case p := <-ply:

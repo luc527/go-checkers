@@ -50,29 +50,31 @@ func (p Ply) countCaptures() int {
 func (p Ply) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	sep := ""
+	buf.WriteByte('"')
 	for _, i := range p {
 		if _, err := buf.WriteString(sep); err != nil {
 			return nil, err
 		}
-		if err := i.MarshalInto(&buf); err != nil {
+		if err := i.SerializeInto(&buf); err != nil {
 			return nil, err
 		}
 		sep = ","
 	}
+	buf.WriteByte('"')
 	return buf.Bytes(), nil
 }
 
 func (p *Ply) UnmarshalJSON(bs []byte) error {
 	s := string(bs)
-	s = strings.Trim(s, " \t\n\r")
+	s = strings.Trim(s, " \"\t\n\r")
 	if len(s) == 0 {
 		*p = Ply{}
 		return nil
 	}
-	sis := strings.Split(string(bs), ",")
+	sis := strings.Split(s, ",")
 	for _, si := range sis {
 		i := &Instruction{}
-		if err := i.UnmarshalJSON([]byte(si)); err != nil {
+		if err := i.Unserialize([]byte(si)); err != nil {
 			return err
 		}
 		*p = append(*p, *i)
