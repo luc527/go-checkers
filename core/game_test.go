@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"math/rand"
 	"testing"
 )
@@ -451,5 +452,23 @@ func TestGameResultString(t *testing.T) {
 	}
 	if GameResult(10).String() != "INVALID GameResult" {
 		t.Fail()
+	}
+}
+
+func TestMarshalUnmarshalGameResult(t *testing.T) {
+	for _, r := range []GameResult{PlayingResult, WhiteWonResult, BlackWonResult, DrawResult} {
+		if bs, err := json.Marshal(r); err != nil {
+			t.Logf("failed to marshal: %v", err)
+			t.Fail()
+		} else {
+			var r2 GameResult
+			if err := json.Unmarshal(bs, &r2); err != nil {
+				t.Logf("failed to unmarshal: %v", err)
+				t.Fail()
+			} else if r != r2 {
+				t.Logf("wanted %v got %v", r, r2)
+				t.Fail()
+			}
+		}
 	}
 }
