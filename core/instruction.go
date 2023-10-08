@@ -67,7 +67,7 @@ var (
 	kindChar  = [...]byte{PawnKind: 'p', KingKind: 'k'}
 )
 
-func (i Instruction) MarshalInto(buf *bytes.Buffer) error {
+func (i Instruction) SerializeInto(buf *bytes.Buffer) error {
 	// Please, The Go Authors™, implement a 'try' keyword...
 	switch i.t {
 	case MoveInstruction:
@@ -111,13 +111,15 @@ func (i Instruction) MarshalInto(buf *bytes.Buffer) error {
 
 func (i Instruction) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
-	if err := i.MarshalInto(&buf); err != nil {
+	buf.WriteByte('"')
+	if err := i.SerializeInto(&buf); err != nil {
 		return nil, err
 	}
+	buf.WriteByte('"')
 	return buf.Bytes(), nil
 }
 
-func (i *Instruction) UnmarshalJSON(bs []byte) error {
+func (i *Instruction) Unserialize(bs []byte) error {
 	if len(bs) < 1 {
 		return fmt.Errorf("unmarshal instruction: empty bytes")
 	}
@@ -191,6 +193,17 @@ func (i *Instruction) UnmarshalJSON(bs []byte) error {
 	}
 	// Unreachable.
 	return nil
+}
+
+func (i *Instruction) UnmarshalJSON(bs []byte) error {
+	if len(bs) < 3 {
+		return fmt.Errorf("unmarshal instruction: empty bytes")
+	}
+	if bs[0] != '"' && bs[len(bs)-1] != '"' {
+		return fmt.Errorf("unmarshal instruction: not a string")
+	}
+	bs = bs[1 : len(bs)-1]
+	return i.Unserialize(bs)
 }
 
 func instructionsToString(is []Instruction) string {

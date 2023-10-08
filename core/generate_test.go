@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -356,9 +357,9 @@ func TestPlyMarshal(t *testing.T) {
 		s string
 	}
 	tests := []test{
-		{Ply{}, ""},
-		{Ply{MakeMoveInstruction(3, 3, 5, 5), MakeMoveInstruction(5, 5, 3, 3)}, "m3355,m5533"},
-		{Ply{MakeMoveInstruction(1, 2, 3, 4), MakeCrownInstruction(3, 4), MakeCaptureInstruction(6, 6, WhiteColor, KingKind)}, "m1234,k34,c66wk"},
+		{Ply{}, "\"\""},
+		{Ply{MakeMoveInstruction(3, 3, 5, 5), MakeMoveInstruction(5, 5, 3, 3)}, "\"m3355,m5533\""},
+		{Ply{MakeMoveInstruction(1, 2, 3, 4), MakeCrownInstruction(3, 4), MakeCaptureInstruction(6, 6, WhiteColor, KingKind)}, "\"m1234,k34,c66wk\""},
 	}
 	for _, test := range tests {
 		if got, err := test.p.MarshalJSON(); err != nil {
@@ -377,10 +378,10 @@ func TestPlyUnmarshalCorrectly(t *testing.T) {
 		p Ply
 	}
 	tests := []test{
-		{"", Ply{}},
-		{"k55", Ply{MakeCrownInstruction(5, 5)}},
-		{"c77wp", Ply{MakeCaptureInstruction(7, 7, WhiteColor, PawnKind)}},
-		{"m1245,c34bk,k45", Ply{MakeMoveInstruction(1, 2, 4, 5), MakeCaptureInstruction(3, 4, BlackColor, KingKind), MakeCrownInstruction(4, 5)}},
+		{"\"\"", Ply{}},
+		{"\"k55\"", Ply{MakeCrownInstruction(5, 5)}},
+		{"\"c77wp\"", Ply{MakeCaptureInstruction(7, 7, WhiteColor, PawnKind)}},
+		{"\"m1245,c34bk,k45\"", Ply{MakeMoveInstruction(1, 2, 4, 5), MakeCaptureInstruction(3, 4, BlackColor, KingKind), MakeCrownInstruction(4, 5)}},
 	}
 	for _, test := range tests {
 		p := Ply(nil)
@@ -396,13 +397,39 @@ func TestPlyUnmarshalCorrectly(t *testing.T) {
 
 func TestPlyUnmarshalIncorrectly(t *testing.T) {
 	tests := []string{
-		"m1234,,",
-		"c12wk,  m4455, k12",
+		"\"m1234,,\"",
+		"\"c12wk,  m4455, k12\"",
 	}
 	for _, test := range tests {
 		p := Ply{}
 		if err := p.UnmarshalJSON([]byte(test)); err == nil {
 			t.Logf("expected error for %v", test)
+			t.Fail()
+		}
+	}
+}
+
+func TestMarshalUnmarshalPly(t *testing.T) {
+	ps := []Ply{
+		{},
+		{MakeMoveInstruction(3, 2, 3, 6)},
+		{MakeMoveInstruction(1, 2, 3, 2), MakeCrownInstruction(3, 2), MakeCaptureInstruction(4, 4, BlackColor, KingKind)},
+	}
+	for _, p := range ps {
+		bs, err := json.Marshal(p)
+		if err != nil {
+			t.Logf("error marshalling: %v", err)
+			t.Fail()
+		}
+		// t.Logf("ply: %v, marshalled: %v", p, string(bs))
+		var q Ply
+		err = json.Unmarshal(bs, &q)
+		if err != nil {
+			t.Logf("error unmarshalling: %v", err)
+			t.Fail()
+		}
+		if !p.Equals(q) {
+			t.Logf("before: %v, after: %v", p, q)
 			t.Fail()
 		}
 	}
