@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"fmt"
 )
 
@@ -13,24 +14,24 @@ const (
 	DrawResult
 )
 
-func (s GameResult) Over() bool {
-	return s != PlayingResult
+func (r GameResult) Over() bool {
+	return r != PlayingResult
 }
 
-func (s GameResult) HasWinner() bool {
-	return s == WhiteWonResult || s == BlackWonResult
+func (r GameResult) HasWinner() bool {
+	return r == WhiteWonResult || r == BlackWonResult
 }
 
-func (s GameResult) Winner() Color {
-	if s == WhiteWonResult {
+func (r GameResult) Winner() Color {
+	if r == WhiteWonResult {
 		return WhiteColor
 	} else {
 		return BlackColor
 	}
 }
 
-func (s GameResult) String() string {
-	switch s {
+func (r GameResult) String() string {
+	switch r {
 	case PlayingResult:
 		return "playing"
 	case WhiteWonResult:
@@ -42,6 +43,32 @@ func (s GameResult) String() string {
 	default:
 		return "INVALID GameResult"
 	}
+}
+
+func (r GameResult) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "%q", r.String())
+	return buf.Bytes(), nil
+}
+
+func (r *GameResult) UnmarshalJSON(bs []byte) error {
+	if len(bs) < 2 || bs[0] != '"' || bs[len(bs)-1] != '"' {
+		return fmt.Errorf("gameResult unmarshal json: not a string")
+	}
+	s := string(bs[1 : len(bs)-1])
+	switch s {
+	case "playing":
+		*r = PlayingResult
+	case "white won":
+		*r = WhiteWonResult
+	case "black won":
+		*r = BlackWonResult
+	case "draw":
+		*r = DrawResult
+	default:
+		return fmt.Errorf("gameResult unmarshal json: invalid string: %q", s)
+	}
+	return nil
 }
 
 type gameState struct {
