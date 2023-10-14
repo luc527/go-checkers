@@ -434,3 +434,113 @@ func TestMarshalUnmarshalPly(t *testing.T) {
 		}
 	}
 }
+
+func TestPlyCopy(t *testing.T) {
+	p := Ply{
+		MakeMoveInstruction(1, 2, 3, 4),
+		MakeCaptureInstruction(2, 3, WhiteColor, PawnKind),
+		MakeCrownInstruction(3, 3),
+	}
+	q := p.Copy()
+
+	if !p.Equals(q) {
+		t.Logf("wanted: %v\n", p)
+		t.Logf("got:    %v\n", q)
+		t.Fail()
+	}
+
+	q[1] = MakeMoveInstruction(1, 2, 1, 2)
+
+	if p.Equals(q) {
+		t.Logf("ply copy should be deep")
+		t.Fail()
+	}
+}
+
+func TestCopyPlies(t *testing.T) {
+	ps := []Ply{
+		{
+			MakeMoveInstruction(1, 2, 6, 5),
+			MakeCrownInstruction(3, 3),
+		},
+		{
+			MakeMoveInstruction(4, 5, 2, 3),
+			MakeMoveInstruction(2, 3, 3, 4),
+			MakeMoveInstruction(4, 2, 1, 2),
+		},
+		{
+			MakeCaptureInstruction(4, 5, WhiteColor, KingKind),
+			MakeMoveInstruction(1, 2, 4, 5),
+		},
+	}
+
+	qs := CopyPlies(ps)
+	if !PliesEquals(ps, qs) {
+		t.Logf("wanted: %v", ps)
+		t.Logf("got:    %v", qs)
+		t.Fail()
+	}
+
+	qs[2] = Ply{}
+
+	if PliesEquals(ps, qs) {
+		t.Log("plies copy should be deep")
+		t.Fail()
+	}
+}
+
+func TestPliesEquals(t *testing.T) {
+	type test struct {
+		ps []Ply
+		qs []Ply
+		eq bool
+	}
+
+	tests := []test{
+		{nil, nil, true},
+		{nil, []Ply{}, false},
+		{[]Ply{}, nil, false},
+		{[]Ply{}, []Ply{}, true},
+		{
+			[]Ply{
+				{MakeMoveInstruction(1, 2, 3, 4)},
+				{MakeMoveInstruction(3, 4, 5, 6)},
+			},
+			[]Ply{
+				{MakeMoveInstruction(1, 2, 3, 4)},
+				{MakeMoveInstruction(3, 4, 5, 6)},
+			},
+			true,
+		},
+		{
+			[]Ply{
+				{MakeMoveInstruction(1, 2, 1, 4)},
+			},
+			[]Ply{
+				{MakeMoveInstruction(1, 2, 3, 4)},
+			},
+			false,
+		},
+		{
+			[]Ply{
+				{MakeMoveInstruction(1, 2, 1, 4)},
+				{MakeMoveInstruction(1, 2, 3, 4)},
+				{MakeCaptureInstruction(1, 2, BlackColor, PawnKind)},
+			},
+			[]Ply{
+				{MakeMoveInstruction(1, 2, 3, 4)},
+			},
+			false,
+		},
+	}
+
+	for _, test := range tests {
+		want := test.eq
+		got := PliesEquals(test.ps, test.qs)
+		if want != got {
+			t.Logf("wanted: %v", want)
+			t.Logf("got:    %v", got)
+			t.Fail()
+		}
+	}
+}

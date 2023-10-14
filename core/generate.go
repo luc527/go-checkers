@@ -100,6 +100,38 @@ func (p Ply) Equals(q Ply) bool {
 	return true
 }
 
+func (p Ply) Copy() Ply {
+	is := make([]Instruction, len(p))
+	copy(is, p)
+	return is
+}
+
+func CopyPlies(ps []Ply) []Ply {
+	a := make([]Ply, len(ps))
+	for i, p := range ps {
+		a[i] = p.Copy()
+	}
+	return a
+}
+
+func PliesEquals(ps []Ply, qs []Ply) bool {
+	if ps == nil && qs == nil {
+		return true
+	}
+	if ps == nil || qs == nil {
+		return false
+	}
+	if len(ps) != len(qs) {
+		return false
+	}
+	for i, p := range ps {
+		if !p.Equals(qs[i]) {
+			return false
+		}
+	}
+	return true
+}
+
 // the generateSimplePawnPlies and followPawnCaptures procedures
 // are special cases of the same procedures for king pieces
 // that have the distance bound to 1 (simple move) or 2 (capture)
