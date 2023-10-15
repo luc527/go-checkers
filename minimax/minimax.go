@@ -126,7 +126,7 @@ func (ctx searchContext) search(g *c.Game, depthLeft int, alpha float64, beta fl
 		}
 	}
 	if ctx.closed() || depthLeft <= 0 {
-		return ctx.h(g, ctx.toMax), nil
+		return ctx.h(g.Board(), ctx.toMax), nil
 	}
 
 	plies := g.Plies()
