@@ -7,7 +7,7 @@ import (
 )
 
 func assertHeuristicValue(t *testing.T, h Heuristic, g *c.Game, player c.Color, want float64) {
-	if got := h(g, player); got != want {
+	if got := h(g.Board(), player); got != want {
 		t.Errorf("heuristic %v fails: want %g got %g", h, want, got)
 	}
 }

@@ -8,24 +8,28 @@ import (
 	c "github.com/luc527/go_checkers/core"
 )
 
-// the heuristics take a game and not just a board
-// because the game caches the piece count
-// and some heuristics rely on the piece count
-// -- maybe not a very nice abstraction
-
-// TODO now the game doesn't cache the piece count, redo this with the heuristics taking Board
-
-type Heuristic func(g *c.Game, player c.Color) float64
+type Heuristic func(b *c.Board, player c.Color) float64
 
 func (h Heuristic) String() string {
 	return fmt.Sprintf("%q", runtime.FuncForPC(reflect.ValueOf(h).Pointer()).Name())
 }
 
+func HeuristicFromString(s string) Heuristic {
+	switch s {
+	case "UnweightedCount":
+		return UnweightedCountHeuristic
+	case "WeightedCount":
+		return WeightedCountHeuristic
+	default:
+		return nil
+	}
+}
+
 var _ Heuristic = UnweightedCountHeuristic
 var _ Heuristic = WeightedCountHeuristic
 
-func UnweightedCountHeuristic(g *c.Game, player c.Color) float64 {
-	count := g.Board().PieceCount()
+func UnweightedCountHeuristic(b *c.Board, player c.Color) float64 {
+	count := b.PieceCount()
 	whites := int(count.WhitePawns + count.WhiteKings)
 	blacks := int(count.BlackPawns + count.BlackKings)
 
@@ -37,13 +41,13 @@ func UnweightedCountHeuristic(g *c.Game, player c.Color) float64 {
 	return float64(factor * (whites - blacks))
 }
 
-func WeightedCountHeuristic(g *c.Game, player c.Color) float64 {
+func WeightedCountHeuristic(b *c.Board, player c.Color) float64 {
 	const (
 		pawnWeight = 1
 		kingWeight = 2
 	)
 
-	count := g.Board().PieceCount()
+	count := b.PieceCount()
 	whites := int(count.WhitePawns*pawnWeight + count.WhiteKings*kingWeight)
 	blacks := int(count.BlackPawns*pawnWeight + count.BlackKings*kingWeight)
 
