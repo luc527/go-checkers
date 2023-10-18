@@ -114,6 +114,9 @@ func CopyPlies(ps []Ply) []Ply {
 	return a
 }
 
+// This function doesn't really do what is says. For the two ply lists to be equal,
+// they not only need to contain the same plies, but also in the same order.
+// Although it's mostly used in tests and it works fine there.
 func PliesEquals(ps []Ply, qs []Ply) bool {
 	if ps == nil && qs == nil {
 		return true
