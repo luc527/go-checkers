@@ -8,11 +8,11 @@ import (
 )
 
 type GameState struct {
-	b      core.Board
-	toPlay core.Color
-	result core.GameResult
-	plies  []core.Ply
-	v      int
+	Board   core.Board
+	ToPlay  core.Color
+	Result  core.GameResult
+	Plies   []core.Ply
+	Version int
 }
 
 type Game struct {
@@ -49,7 +49,7 @@ func (g *Game) NextStates() chan GameState {
 
 	c := make(chan GameState)
 	s := g.gameState()
-	if s.result.Over() {
+	if s.Result.Over() {
 		close(c)
 	} else {
 		g.cs[c] = true
@@ -84,13 +84,13 @@ func (g *Game) DetachAll() {
 }
 
 func (g *Game) gameState() GameState {
-	if g.v != g.state.v {
+	if g.v != g.state.Version {
 		g.state = GameState{
-			b:      *g.u.Board(),
-			toPlay: g.u.ToPlay(),
-			result: g.u.Result(),
-			plies:  core.CopyPlies(g.u.Plies()),
-			v:      g.v,
+			Board:   *g.u.Board(),
+			ToPlay:  g.u.ToPlay(),
+			Result:  g.u.Result(),
+			Plies:   core.CopyPlies(g.u.Plies()),
+			Version: g.v,
 		}
 	}
 	return g.state
@@ -100,14 +100,14 @@ func (g *Game) DoPly(v int, i int) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	if g.gameState().result.Over() {
+	if g.gameState().Result.Over() {
 		return errors.New("game already over")
 	}
 	if v != g.v {
 		return errors.New("stale game state version")
 	}
 
-	plies := g.gameState().plies
+	plies := g.gameState().Plies
 	if i < 0 || i >= len(plies) {
 		return errors.New("ply index out of bounds")
 	}
@@ -123,7 +123,7 @@ func (g *Game) DoPly(v int, i int) error {
 	for c := range g.cs {
 		go func(c chan GameState, s GameState) {
 			c <- s
-			if s.result.Over() {
+			if s.Result.Over() {
 				g.Detach(c)
 			}
 		}(c, state)

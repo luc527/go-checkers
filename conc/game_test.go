@@ -13,19 +13,19 @@ import (
 // TODO: redo tests using CurrState() and NextStates()
 
 func assertMatches(t *testing.T, s GameState, g *core.Game) {
-	if !s.b.Equals(g.Board()) {
+	if !s.Board.Equals(g.Board()) {
 		t.Log("boards don't match")
 		t.Fail()
 	}
-	if s.result != g.Result() {
+	if s.Result != g.Result() {
 		t.Log("results don't match")
 		t.Fail()
 	}
-	if s.toPlay != g.ToPlay() {
+	if s.ToPlay != g.ToPlay() {
 		t.Log("current players don't match")
 		t.Fail()
 	}
-	if !core.PliesEquals(s.plies, g.Plies()) {
+	if !core.PliesEquals(s.Plies, g.Plies()) {
 		t.Log("plies don't match")
 		t.Fail()
 	}
@@ -67,7 +67,7 @@ func TestAttachDetach(t *testing.T) {
 	assertMatches(t, s, g.u)
 
 	c := g.NextStates()
-	if err := g.DoPly(s.v, 0); err != nil {
+	if err := g.DoPly(s.Version, 0); err != nil {
 		t.Log(err)
 		t.FailNow()
 	}
@@ -114,8 +114,8 @@ func TestPlayUntilOver(t *testing.T) {
 	o := g.NextStates()
 
 	s := g.CurrentState()
-	r := rand.Intn(len(s.plies))
-	g.DoPly(s.v, r)
+	r := rand.Intn(len(s.Plies))
+	g.DoPly(s.Version, r)
 
 	i := 0
 	for {
@@ -128,12 +128,12 @@ func TestPlayUntilOver(t *testing.T) {
 		s = assertHasPendingState(t, o)
 		assertMatches(t, s, g.u)
 
-		if s.result.Over() {
+		if s.Result.Over() {
 			break
 		}
 
-		r := rand.Intn(len(s.plies))
-		g.DoPly(s.v, r)
+		r := rand.Intn(len(s.Plies))
+		g.DoPly(s.Version, r)
 	}
 
 	assertClosed(t, o)
@@ -186,17 +186,17 @@ func TestConcurrentObservers(t *testing.T) {
 			var seq []GameState
 
 			s := g.CurrentState()
-			r := rand.Intn(len(s.plies))
-			g.DoPly(s.v, r)
+			r := rand.Intn(len(s.Plies))
+			g.DoPly(s.Version, r)
 
 			for s := range o {
 				seq = append(seq, s)
-				if s.result.Over() {
+				if s.Result.Over() {
 					break
 				}
 
-				r := rand.Intn(len(s.plies))
-				g.DoPly(s.v, r)
+				r := rand.Intn(len(s.Plies))
+				g.DoPly(s.Version, r)
 
 				ms := 0 + rand.Intn(40)
 				<-time.After(time.Duration(ms * int(time.Millisecond)))
@@ -219,12 +219,12 @@ func TestConcurrentObservers(t *testing.T) {
 			continue
 		}
 		for _, s := range seq {
-			fmt.Print(s.v, " ")
+			fmt.Print(s.Version, " ")
 		}
 		fmt.Println()
-		prev := seq[0].v
+		prev := seq[0].Version
 		for _, s := range seq[1:] {
-			curr := s.v
+			curr := s.Version
 			if curr != prev+1 {
 				t.FailNow()
 			}
