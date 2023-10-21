@@ -4,6 +4,12 @@ import re
 passed = True
 packages_below = []
 
+per_package = {
+    'core': 90.0,
+    'minimax': 90.0,
+    'conc': 80.0,
+}
+
 for line in sys.stdin:
     line = line.rstrip()
 
@@ -21,12 +27,15 @@ for line in sys.stdin:
 
     print(f'Package {package} has {percentage:.1f}% coverage')
 
-    if percentage < 80:
+    if package not in per_package:
+        print(f'Error: required coverage percent not set for "{package}" ')
+        exit(1)
+    if percentage < per_package[package]:
         passed = False
 
 print()
 if not passed:
-    print(r'Quality gate failed: all packages need >=80% coverage')
+    print('Quality gate failed')
     exit(1)
 else:
     print('Quality gate passed')
