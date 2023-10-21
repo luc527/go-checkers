@@ -23,6 +23,10 @@ jobs:
       - name: Test and generate coverage
         run: go test -coverprofile=/dev/null ./... > go_test_output.txt
 
+      - name: Show test results
+        if: success() || failure()
+        run: cat go_test_output.txt
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
