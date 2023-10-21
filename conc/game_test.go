@@ -1,7 +1,6 @@
 package conc
 
 import (
-	"fmt"
 	"math/rand"
 	"strings"
 	"testing"
@@ -67,7 +66,7 @@ func TestAttachDetach(t *testing.T) {
 	assertMatches(t, s, g.u)
 
 	c := g.NextStates()
-	if err := g.DoPly(s.Version, 0); err != nil {
+	if err := g.DoPly(s.ToPlay, s.Version, 0); err != nil {
 		t.Log(err)
 		t.FailNow()
 	}
@@ -90,7 +89,7 @@ func TestAttachDetachAll(t *testing.T) {
 		os[i] = o
 	}
 
-	if err := g.DoPly(1, 0); err != nil {
+	if err := g.DoPly(core.WhiteColor, 1, 0); err != nil {
 		t.Log(err)
 		t.FailNow()
 	}
@@ -115,7 +114,7 @@ func TestPlayUntilOver(t *testing.T) {
 
 	s := g.CurrentState()
 	r := rand.Intn(len(s.Plies))
-	g.DoPly(s.Version, r)
+	g.DoPly(s.ToPlay, s.Version, r)
 
 	i := 0
 	for {
@@ -133,7 +132,7 @@ func TestPlayUntilOver(t *testing.T) {
 		}
 
 		r := rand.Intn(len(s.Plies))
-		g.DoPly(s.Version, r)
+		g.DoPly(s.ToPlay, s.Version, r)
 	}
 
 	assertClosed(t, o)
@@ -152,22 +151,27 @@ func TestPlyErrors(t *testing.T) {
 
 	var err error
 
-	err = g.DoPly(5, 0)
+	err = g.DoPly(core.WhiteColor, 5, 0)
 	if err == nil || !strings.Contains(err.Error(), "stale") {
 		t.Log("expected stale version error")
 		t.Fail()
 	}
 
-	err = g.DoPly(1, -4)
+	err = g.DoPly(core.WhiteColor, 1, -4)
 	if err == nil || !strings.Contains(err.Error(), "bounds") {
 		t.Log("expected out of bounds ply error")
 		t.Fail()
 	}
 
-	err = g.DoPly(1, 200)
+	err = g.DoPly(core.WhiteColor, 1, 200)
 	if err == nil || !strings.Contains(err.Error(), "bounds") {
 		t.Log("expected out of bounds ply error")
 		t.Fail()
+	}
+
+	err = g.DoPly(core.BlackColor, 1, 0)
+	if err == nil || !strings.Contains(err.Error(), "turn") {
+		t.Log("expected 'not your turn' error")
 	}
 
 	g.Detach(o)
@@ -187,7 +191,7 @@ func TestConcurrentObservers(t *testing.T) {
 
 			s := g.CurrentState()
 			r := rand.Intn(len(s.Plies))
-			g.DoPly(s.Version, r)
+			g.DoPly(s.ToPlay, s.Version, r)
 
 			for s := range o {
 				seq = append(seq, s)
@@ -196,7 +200,7 @@ func TestConcurrentObservers(t *testing.T) {
 				}
 
 				r := rand.Intn(len(s.Plies))
-				g.DoPly(s.Version, r)
+				g.DoPly(s.ToPlay, s.Version, r)
 
 				ms := 0 + rand.Intn(40)
 				<-time.After(time.Duration(ms * int(time.Millisecond)))
@@ -210,25 +214,24 @@ func TestConcurrentObservers(t *testing.T) {
 		seqs = append(seqs, <-seqC)
 	}
 
-	// All observers must observe the game states IN ORDER
-	// We will NOT guarantee that every observer receives the FIRST game state
-	// That doesn't seem possible given how Attach works, and it seems very unlikely going to be a problem
+	// Every observer MUST receive all states that happen after its first call to CurrentState()
+	// We will NOT guarantee that they arrive in order
 
 	for _, seq := range seqs {
 		if len(seq) == 0 {
 			continue
 		}
+		received := make(map[int]bool)
+		first, last := seq[0].Version, seq[0].Version
 		for _, s := range seq {
-			fmt.Print(s.Version, " ")
+			received[s.Version] = true
+			last = s.Version
 		}
-		fmt.Println()
-		prev := seq[0].Version
-		for _, s := range seq[1:] {
-			curr := s.Version
-			if curr != prev+1 {
+		for i := first; i <= last; i++ {
+			if !received[i] {
+				t.Log("failed to receive v", i)
 				t.FailNow()
 			}
-			prev = curr
 		}
 	}
 }
