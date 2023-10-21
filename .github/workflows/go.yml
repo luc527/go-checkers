@@ -21,9 +21,9 @@ jobs:
         run: go build -v ./...
 
       - name: Test and generate coverage
-        run: go test -coverprofile=/dev/null ./... | tee go_test_output.txt
+        run: go test -coverprofile=/dev/null ./... > go_test_output.txt
 
-      - name: Setup Python (for scripts)
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
