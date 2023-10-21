@@ -66,7 +66,7 @@ func TestAttachDetach(t *testing.T) {
 	assertMatches(t, s, g.u)
 
 	c := g.NextStates()
-	if err := g.DoPly(s.ToPlay, s.Version, 0); err != nil {
+	if err := g.DoPlyIndex(s.ToPlay, s.Version, 0); err != nil {
 		t.Log(err)
 		t.FailNow()
 	}
@@ -89,7 +89,7 @@ func TestAttachDetachAll(t *testing.T) {
 		os[i] = o
 	}
 
-	if err := g.DoPly(core.WhiteColor, 1, 0); err != nil {
+	if err := g.DoPlyIndex(core.WhiteColor, 1, 0); err != nil {
 		t.Log(err)
 		t.FailNow()
 	}
@@ -114,7 +114,7 @@ func TestPlayUntilOver(t *testing.T) {
 
 	s := g.CurrentState()
 	r := rand.Intn(len(s.Plies))
-	g.DoPly(s.ToPlay, s.Version, r)
+	g.DoPlyIndex(s.ToPlay, s.Version, r)
 
 	i := 0
 	for {
@@ -132,7 +132,7 @@ func TestPlayUntilOver(t *testing.T) {
 		}
 
 		r := rand.Intn(len(s.Plies))
-		g.DoPly(s.ToPlay, s.Version, r)
+		g.DoPlyIndex(s.ToPlay, s.Version, r)
 	}
 
 	assertClosed(t, o)
@@ -151,25 +151,25 @@ func TestPlyErrors(t *testing.T) {
 
 	var err error
 
-	err = g.DoPly(core.WhiteColor, 5, 0)
+	err = g.DoPlyIndex(core.WhiteColor, 5, 0)
 	if err == nil || !strings.Contains(err.Error(), "stale") {
 		t.Log("expected stale version error")
 		t.Fail()
 	}
 
-	err = g.DoPly(core.WhiteColor, 1, -4)
+	err = g.DoPlyIndex(core.WhiteColor, 1, -4)
 	if err == nil || !strings.Contains(err.Error(), "bounds") {
 		t.Log("expected out of bounds ply error")
 		t.Fail()
 	}
 
-	err = g.DoPly(core.WhiteColor, 1, 200)
+	err = g.DoPlyIndex(core.WhiteColor, 1, 200)
 	if err == nil || !strings.Contains(err.Error(), "bounds") {
 		t.Log("expected out of bounds ply error")
 		t.Fail()
 	}
 
-	err = g.DoPly(core.BlackColor, 1, 0)
+	err = g.DoPlyIndex(core.BlackColor, 1, 0)
 	if err == nil || !strings.Contains(err.Error(), "turn") {
 		t.Log("expected 'not your turn' error")
 	}
@@ -191,7 +191,7 @@ func TestConcurrentObservers(t *testing.T) {
 
 			s := g.CurrentState()
 			r := rand.Intn(len(s.Plies))
-			g.DoPly(s.ToPlay, s.Version, r)
+			g.DoPlyIndex(s.ToPlay, s.Version, r)
 
 			for s := range o {
 				seq = append(seq, s)
@@ -200,7 +200,7 @@ func TestConcurrentObservers(t *testing.T) {
 				}
 
 				r := rand.Intn(len(s.Plies))
-				g.DoPly(s.ToPlay, s.Version, r)
+				g.DoPlyIndex(s.ToPlay, s.Version, r)
 
 				ms := 0 + rand.Intn(40)
 				<-time.After(time.Duration(ms * int(time.Millisecond)))

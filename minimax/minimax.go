@@ -15,7 +15,7 @@ const (
 
 // A Searcher searches for the best ply in the game tree of the given game.
 type Searcher interface {
-	Search(g *c.Game) int
+	Search(g *c.Game) c.Ply
 }
 
 // A DepthLimitedSearcher is a Searcher that stops searching the game tree
@@ -30,7 +30,7 @@ type DepthLimitedSearcher struct {
 
 var _ Searcher = DepthLimitedSearcher{}
 
-func (s DepthLimitedSearcher) Search(g *c.Game) int {
+func (s DepthLimitedSearcher) Search(g *c.Game) c.Ply {
 	ctx := searchContext{toMax: s.ToMax, h: s.Heuristic, timedCloser: nil}
 	_, ply := ctx.search(g, s.DepthLimit, math.Inf(-1), math.Inf(1))
 	return ply
@@ -47,7 +47,7 @@ type TimeLimitedSearcher struct {
 
 var _ Searcher = TimeLimitedSearcher{}
 
-func (s TimeLimitedSearcher) Search(g *c.Game) int {
+func (s TimeLimitedSearcher) Search(g *c.Game) c.Ply {
 	tlim := s.TimeLimit
 	if tlim < MinTimeLimit {
 		tlim = MinTimeLimit
@@ -58,7 +58,7 @@ func (s TimeLimitedSearcher) Search(g *c.Game) int {
 
 	stopTime := time.Now().Add(tlim)
 
-	var ply int
+	var ply c.Ply
 	ctx := searchContext{toMax: s.ToMax, h: s.Heuristic, timedCloser: closeAfter(tlim)}
 	for dlim := 1; ; dlim++ {
 		// We can only assign the result of a search (variable ply0) to the best known ply so far (variable ply)
@@ -114,19 +114,19 @@ const (
 	lossValue = -1_000_000
 )
 
-func (ctx searchContext) search(g *c.Game, depthLeft int, alpha float64, beta float64) (float64, int) {
+func (ctx searchContext) search(g *c.Game, depthLeft int, alpha float64, beta float64) (float64, c.Ply) {
 	res := g.Result()
 	if res.Over() {
 		if !res.HasWinner() {
-			return drawValue, 0
+			return drawValue, nil
 		} else if ctx.toMax == res.Winner() {
-			return winValue, 0
+			return winValue, nil
 		} else {
-			return lossValue, 0
+			return lossValue, nil
 		}
 	}
 	if ctx.closed() || depthLeft <= 0 {
-		return ctx.h(g.Board(), ctx.toMax), 0
+		return ctx.h(g.Board(), ctx.toMax), nil
 	}
 
 	plies := g.Plies()
@@ -139,40 +139,40 @@ func (ctx searchContext) search(g *c.Game, depthLeft int, alpha float64, beta fl
 		value = math.Inf(-1)
 	}
 
-	var plyIndex int
+	var ply c.Ply
 
 	// TODO: check whether the alpha-beta search is messing with the algorithm somehow
 	// (like making one AI that should be better than the other always lose)
 
-	for subIndex, subPly := range plies {
+	for _, subPly := range plies {
 		undoInfo, _ := g.DoPly(subPly)
 
 		subValue, _ := ctx.search(g, depthLeft-1, alpha, beta)
 
 		if maximizeTurn {
 			if subValue > value {
-				plyIndex, value = subIndex, subValue
+				ply, value = subPly, subValue
 				alpha = math.Max(alpha, subValue)
 			}
 			if subValue >= beta {
 				g.UndoPly(undoInfo)
-				return value, plyIndex
+				return value, ply
 			}
 		} else {
 			if subValue <= value {
-				plyIndex, value = subIndex, subValue
+				ply, value = subPly, subValue
 				beta = math.Min(beta, subValue)
 			}
 			if subValue <= alpha {
 				g.UndoPly(undoInfo)
-				return value, plyIndex
+				return value, ply
 			}
 		}
 
 		g.UndoPly(undoInfo)
 	}
 
-	return value, plyIndex
+	return value, ply
 }
 
 func shuffle(a []c.Ply) []c.Ply {

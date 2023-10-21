@@ -97,27 +97,7 @@ func (g *Game) gameState() GameState {
 	return g.state
 }
 
-func (g *Game) DoPly(player core.Color, v int, i int) error {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
-	s0 := g.gameState()
-	if s0.Result.Over() {
-		return errors.New("do ply: game already over")
-	}
-	if v != g.v {
-		return errors.New("do ply: stale game state version")
-	}
-	if s0.ToPlay != player {
-		return errors.New("do ply: not your turn")
-	}
-
-	plies := s0.Plies
-	if i < 0 || i >= len(plies) {
-		return errors.New("do ply: ply index out of bounds")
-	}
-
-	ply := plies[i]
+func (g *Game) doPlyInner(ply core.Ply) error {
 	if _, err := g.u.DoPly(ply); err != nil {
 		return fmt.Errorf("do ply: %v", err)
 	}
@@ -132,6 +112,52 @@ func (g *Game) DoPly(player core.Color, v int, i int) error {
 				g.Detach(c)
 			}
 		}(c, s1)
+	}
+
+	return nil
+}
+
+func (g *Game) validatePly(player core.Color, v int) error {
+	s := g.gameState()
+	if s.Result.Over() {
+		return errors.New("do ply: game already over")
+	}
+	if v != g.v {
+		return errors.New("do ply: stale game state version")
+	}
+	if s.ToPlay != player {
+		return errors.New("do ply: not your turn")
+	}
+	return nil
+}
+
+func (g *Game) DoPlyGiven(player core.Color, v int, ply core.Ply) error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if err := g.validatePly(player, v); err != nil {
+		return err
+	}
+	if err := g.doPlyInner(ply); err != nil {
+		return fmt.Errorf("do ply: %v", err)
+	}
+	return nil
+}
+
+func (g *Game) DoPlyIndex(player core.Color, v int, i int) error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	if err := g.validatePly(player, v); err != nil {
+		return err
+	}
+
+	s := g.gameState()
+	plies := s.Plies
+	if i < 0 || i >= len(plies) {
+		return errors.New("do ply: ply index out of bounds")
+	}
+	if err := g.doPlyInner(plies[i]); err != nil {
+		return fmt.Errorf("do ply: %v", err)
 	}
 
 	return nil

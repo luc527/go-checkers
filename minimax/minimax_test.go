@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luc527/go_checkers/core"
 	c "github.com/luc527/go_checkers/core"
 )
 
@@ -29,13 +30,13 @@ func TestDoUndoMinimax(t *testing.T) {
 	for !g.Result().Over() {
 		states = append(states, g.Copy())
 
-		var ply int
+		var ply core.Ply
 		if g.ToPlay() == c.WhiteColor {
 			ply = whiteMm.Search(g)
 		} else {
 			ply = blackMm.Search(g)
 		}
-		undo, err := g.DoPly(g.Plies()[ply])
+		undo, err := g.DoPly(ply)
 		if err != nil {
 			t.Fail()
 		}
@@ -75,7 +76,7 @@ func TestTimeLimitedSearcher(t *testing.T) {
 
 	sig := make(chan struct{})
 
-	ply := make(chan int)
+	ply := make(chan core.Ply)
 	go func() {
 		for range sig {
 			ply <- ai.Search(g)
@@ -97,8 +98,8 @@ func TestTimeLimitedSearcher(t *testing.T) {
 		case <-time.After(150 * time.Millisecond):
 			t.Logf("Time limited searcher took too long!")
 			t.Fail()
-		case i := <-ply:
-			g.DoPly(g.Plies()[i])
+		case p := <-ply:
+			g.DoPly(p)
 		}
 
 		if g.Result().Over() {
