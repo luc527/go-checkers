@@ -2,6 +2,7 @@ package conc
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/luc527/go_checkers/core"
@@ -96,29 +97,33 @@ func (g *Game) gameState() GameState {
 	return g.state
 }
 
-func (g *Game) DoPly(v int, i int) error {
+func (g *Game) DoPly(player core.Color, v int, i int) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	if g.gameState().Result.Over() {
-		return errors.New("game already over")
+	s0 := g.gameState()
+	if s0.Result.Over() {
+		return errors.New("do ply: game already over")
 	}
 	if v != g.v {
-		return errors.New("stale game state version")
+		return errors.New("do ply: stale game state version")
+	}
+	if s0.ToPlay != player {
+		return errors.New("do ply: not your turn")
 	}
 
-	plies := g.gameState().Plies
+	plies := s0.Plies
 	if i < 0 || i >= len(plies) {
-		return errors.New("ply index out of bounds")
+		return errors.New("do ply: ply index out of bounds")
 	}
 
 	ply := plies[i]
 	if _, err := g.u.DoPly(ply); err != nil {
-		return err
+		return fmt.Errorf("do ply: %v", err)
 	}
 
 	g.v++
-	state := g.gameState()
+	s1 := g.gameState()
 
 	for c := range g.cs {
 		go func(c chan GameState, s GameState) {
@@ -126,7 +131,7 @@ func (g *Game) DoPly(v int, i int) error {
 			if s.Result.Over() {
 				g.Detach(c)
 			}
-		}(c, state)
+		}(c, s1)
 	}
 
 	return nil
