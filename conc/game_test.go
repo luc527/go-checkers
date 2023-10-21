@@ -235,7 +235,3 @@ func TestConcurrentObservers(t *testing.T) {
 		}
 	}
 }
-
-func TestThatFails(t *testing.T) {
-	t.FailNow()
-}
