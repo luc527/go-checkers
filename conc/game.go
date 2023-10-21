@@ -136,3 +136,9 @@ func (g *Game) DoPly(player core.Color, v int, i int) error {
 
 	return nil
 }
+
+func (g *Game) UnderlyingGame() *core.Game {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.u.Copy()
+}
