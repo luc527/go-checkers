@@ -29,13 +29,13 @@ func TestDoUndoMinimax(t *testing.T) {
 	for !g.Result().Over() {
 		states = append(states, g.Copy())
 
-		var ply c.Ply
+		var ply int
 		if g.ToPlay() == c.WhiteColor {
 			ply = whiteMm.Search(g)
 		} else {
 			ply = blackMm.Search(g)
 		}
-		undo, err := g.DoPly(ply)
+		undo, err := g.DoPly(g.Plies()[ply])
 		if err != nil {
 			t.Fail()
 		}
@@ -75,7 +75,7 @@ func TestTimeLimitedSearcher(t *testing.T) {
 
 	sig := make(chan struct{})
 
-	ply := make(chan c.Ply)
+	ply := make(chan int)
 	go func() {
 		for range sig {
 			ply <- ai.Search(g)
@@ -97,8 +97,8 @@ func TestTimeLimitedSearcher(t *testing.T) {
 		case <-time.After(150 * time.Millisecond):
 			t.Logf("Time limited searcher took too long!")
 			t.Fail()
-		case p := <-ply:
-			g.DoPly(p)
+		case i := <-ply:
+			g.DoPly(g.Plies()[i])
 		}
 
 		if g.Result().Over() {
