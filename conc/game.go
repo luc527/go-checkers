@@ -24,8 +24,8 @@ type Game struct {
 	v     int                     // current iteration of the game (v for "version")
 }
 
-func NewConcurrentGame(cr core.CaptureRule, br core.BestRule) *Game {
-	u := core.NewGame(cr, br)
+func NewConcurrentGame() *Game {
+	u := core.NewGame()
 	return newConcurrentGame(u)
 }
 

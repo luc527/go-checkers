@@ -9,8 +9,6 @@ import (
 	"github.com/luc527/go_checkers/core"
 )
 
-// TODO: redo tests using CurrState() and NextStates()
-
 func assertMatches(t *testing.T, s GameState, g *core.Game) {
 	if !s.Board.Equals(g.Board()) {
 		t.Log("boards don't match")
@@ -59,7 +57,7 @@ func assertClosed(t *testing.T, o <-chan GameState) {
 }
 
 func TestAttachDetach(t *testing.T) {
-	g := newConcurrentGame(core.NewStandardGame())
+	g := newConcurrentGame(core.NewGame())
 	var s GameState
 
 	s = g.CurrentState()
@@ -79,7 +77,7 @@ func TestAttachDetach(t *testing.T) {
 }
 
 func TestAttachDetachAll(t *testing.T) {
-	g := newConcurrentGame(core.NewStandardGame())
+	g := newConcurrentGame(core.NewGame())
 
 	const n = 10
 
@@ -108,7 +106,7 @@ func TestAttachDetachAll(t *testing.T) {
 }
 
 func TestPlayUntilOver(t *testing.T) {
-	g := newConcurrentGame(core.NewStandardGame())
+	g := newConcurrentGame(core.NewGame())
 
 	o := g.NextStates()
 
@@ -139,7 +137,7 @@ func TestPlayUntilOver(t *testing.T) {
 }
 
 func TestPlyErrors(t *testing.T) {
-	g := newConcurrentGame(core.NewStandardGame())
+	g := newConcurrentGame(core.NewGame())
 	o := g.NextStates()
 
 	// Don't really care what the states are here,
@@ -178,7 +176,7 @@ func TestPlyErrors(t *testing.T) {
 }
 
 func TestConcurrentObservers(t *testing.T) {
-	g := newConcurrentGame(core.NewStandardGame())
+	g := newConcurrentGame(core.NewGame())
 
 	const n = 8
 

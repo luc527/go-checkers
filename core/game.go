@@ -85,8 +85,6 @@ type UndoInfo struct {
 
 type Game struct {
 	stagnantTurnsToDraw int16 // stagnant here means no captures and no pawn moves
-	captureRule         CaptureRule
-	bestRule            BestRule
 	board               *Board
 	toPlay              Color
 	state               gameState
@@ -103,7 +101,7 @@ func (g *Game) String() string {
 	)
 }
 
-func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDraw int16, initialBoard *Board, initalPlayer Color) *Game {
+func NewCustomGame(stagnantTurnsToDraw int16, initialBoard *Board, initalPlayer Color) *Game {
 	var g Game
 
 	if initialBoard == nil {
@@ -113,8 +111,6 @@ func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDr
 		g.board = initialBoard
 	}
 
-	g.captureRule = captureRule
-	g.bestRule = bestRule
 	g.stagnantTurnsToDraw = stagnantTurnsToDraw
 
 	g.toPlay = initalPlayer
@@ -129,12 +125,8 @@ func NewCustomGame(captureRule CaptureRule, bestRule BestRule, stagnantTurnsToDr
 	return &g
 }
 
-func NewStandardGame() *Game {
-	return NewCustomGame(CapturesMandatory, BestNotMandatory, 20, nil, WhiteColor)
-}
-
-func NewGame(captureRule CaptureRule, bestRule BestRule) *Game {
-	return NewCustomGame(captureRule, bestRule, 20, nil, WhiteColor)
+func NewGame() *Game {
+	return NewCustomGame(20, nil, WhiteColor)
 }
 
 func (g *Game) Board() *Board {
@@ -214,8 +206,6 @@ func (g *Game) Copy() *Game {
 			plies:                g.state.plies,
 		},
 		stagnantTurnsToDraw: g.stagnantTurnsToDraw,
-		captureRule:         g.captureRule,
-		bestRule:            g.bestRule,
 		board:               g.board.Copy(),
 		toPlay:              g.toPlay,
 	}
@@ -229,9 +219,7 @@ func (g *Game) Equals(o *Game) bool {
 		return false
 	}
 
-	return g.captureRule == o.captureRule &&
-		g.bestRule == o.bestRule &&
-		g.toPlay == o.toPlay &&
+	return g.toPlay == o.toPlay &&
 		g.state.turnsInSpecialEnding == o.state.turnsInSpecialEnding &&
 		g.state.turnsSinceCapture == o.state.turnsSinceCapture &&
 		g.state.turnsSincePawnMove == o.state.turnsSincePawnMove &&
@@ -280,7 +268,7 @@ func (g *Game) BoardChanged(ply Ply) {
 }
 
 func (g *Game) generatePlies() []Ply {
-	return GeneratePlies(make([]Ply, 0, 10), g.board, g.toPlay, g.captureRule, g.bestRule)
+	return GeneratePlies(make([]Ply, 0, 10), g.board, g.toPlay)
 }
 
 func (g *Game) Plies() []Ply {

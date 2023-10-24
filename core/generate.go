@@ -359,51 +359,10 @@ func generateCapturePlies(ps []Ply, b *Board, player Color) []Ply {
 	return ps
 }
 
-func GeneratePlies(ps []Ply, b *Board, player Color, captureRule CaptureRule, bestRule BestRule) []Ply {
-
+func GeneratePlies(ps []Ply, b *Board, player Color) []Ply {
 	ps = generateCapturePlies(ps, b, player)
-
-	capturesMandatory := captureRule == CapturesMandatory
-	bestMandatory := bestRule == BestMandatory
-
-	if len(ps) == 0 || (!capturesMandatory && !bestMandatory) {
-		// could be just len(ps) == 0 || !capturesMandatory, making the logic more obvious:
-		// the && !bestMandatory is just for efficiency:
-		// if the best moves are mandatory and we have captures (len(ps)==0 false)
-		// then the captures are always going to be better than simple plies
-		// so it would be a waste to generate them
-
+	if len(ps) == 0 {
 		ps = generateSimplePlies(ps, b, player)
 	}
-
-	if len(ps) > 0 && bestMandatory {
-		maxCaptureCount := 0
-		fstCaptureCount := 0
-
-		for k, p := range ps {
-			captureCount := p.countCaptures()
-			if k == 0 {
-				fstCaptureCount = captureCount
-			}
-			if captureCount > maxCaptureCount {
-				maxCaptureCount = captureCount
-			}
-		}
-
-		// only allocate best []Ply if really needed
-
-		needToFilterBest := fstCaptureCount != maxCaptureCount
-
-		if needToFilterBest {
-			var best []Ply
-			for _, p := range ps {
-				if p.countCaptures() == maxCaptureCount {
-					best = append(best, p)
-				}
-			}
-			ps = best
-		}
-	}
-
 	return ps
 }

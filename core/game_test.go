@@ -7,7 +7,7 @@ import (
 )
 
 func TestDoUndoState(t *testing.T) {
-	g := NewStandardGame()
+	g := NewGame()
 
 	var states []*Game
 	var undos []*UndoInfo
@@ -56,7 +56,7 @@ func TestWhiteWinsByNoBlackPieces(t *testing.T) {
 		...o
 	`)
 	t.Log("\n" + b.String())
-	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
+	g := NewCustomGame(20, b, WhiteColor)
 	assertGameResult(t, g, WhiteWonResult)
 }
 
@@ -70,7 +70,7 @@ func TestBlackWinsByNoWhitePieces(t *testing.T) {
 		.
 	`)
 	t.Log("\n" + b.String())
-	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
+	g := NewCustomGame(20, b, WhiteColor)
 	assertGameResult(t, g, BlackWonResult)
 }
 
@@ -86,7 +86,7 @@ func TestWhiteWinsByNoBlackPlies(t *testing.T) {
 		x.o
 	`)
 	t.Log("\n" + b.String())
-	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, BlackColor)
+	g := NewCustomGame(20, b, BlackColor)
 	assertGameResult(t, g, WhiteWonResult)
 }
 
@@ -100,7 +100,7 @@ func TestBlackWinsByNoWhitePlies(t *testing.T) {
 		.....o
 	`)
 	t.Log("\n" + b.String())
-	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
+	g := NewCustomGame(20, b, WhiteColor)
 	t.Log()
 	assertGameResult(t, g, BlackWonResult)
 }
@@ -129,7 +129,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 		ooooooo
 	`)
 
-	g := NewCustomGame(CapturesMandatory, BestMandatory, 3, b, WhiteColor)
+	g := NewCustomGame(3, b, WhiteColor)
 	assertGameResult(t, g, PlayingResult)
 
 	var err error
@@ -278,7 +278,7 @@ func TestDrawByNoCaptureNorKingMovesForNTurns(t *testing.T) {
 }
 
 func assertSpecialEnding(t *testing.T, b *Board) {
-	g := NewCustomGame(CapturesNotMandatory, BestNotMandatory, 20, b, WhiteColor)
+	g := NewCustomGame(20, b, WhiteColor)
 	t.Log("\n" + g.Board().String())
 	// 1 turn in special ending
 	assertGameResult(t, g, PlayingResult)
@@ -403,7 +403,7 @@ func TestGameEquals(t *testing.T) {
 		t.Fail()
 	}
 
-	g := NewStandardGame()
+	g := NewGame()
 	if nilGame.Equals(g) || g.Equals(nilGame) {
 		t.Log("Nil game should not be equal to actual game")
 		t.Fail()

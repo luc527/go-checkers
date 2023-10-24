@@ -10,7 +10,7 @@ import (
 )
 
 func TestDoUndoMinimax(t *testing.T) {
-	g := c.NewGame(c.CapturesMandatory, c.BestMandatory)
+	g := c.NewGame()
 
 	whiteMm := DepthLimitedSearcher{
 		ToMax:      c.WhiteColor,
@@ -72,7 +72,7 @@ func TestTimeLimitedSearcher(t *testing.T) {
 		Heuristic: UnweightedCountHeuristic,
 		TimeLimit: 100 * time.Millisecond,
 	}
-	g := c.NewStandardGame()
+	g := c.NewGame()
 
 	sig := make(chan struct{})
 
