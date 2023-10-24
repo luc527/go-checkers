@@ -21,7 +21,7 @@ func TestUnweightedCountHeuristic(t *testing.T) {
 		.@.x
 	`)
 	t.Log("\n" + b.String())
-	g := c.NewCustomGame(c.CapturesMandatory, c.BestMandatory, 5, b, c.WhiteColor)
+	g := c.NewCustomGame(5, b, c.WhiteColor)
 
 	// 5 whites - 3 blacks = 2
 	assertHeuristicValue(t, UnweightedCountHeuristic, g, c.WhiteColor, 2)
@@ -38,7 +38,7 @@ func TestWeightedCountHeuristic(t *testing.T) {
 		.#.o
 	`)
 	t.Log("\n" + b.String())
-	g := c.NewCustomGame(c.CapturesMandatory, c.BestMandatory, 5, b, c.WhiteColor)
+	g := c.NewCustomGame(5, b, c.WhiteColor)
 
 	// 2 white pawns + 1 white king - 3 black kings - 2 black pawns
 	// 2 + 2 - 6 - 2
