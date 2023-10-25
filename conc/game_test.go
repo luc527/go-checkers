@@ -233,3 +233,34 @@ func TestConcurrentObservers(t *testing.T) {
 		}
 	}
 }
+
+func TestPlayUntilOverWithDoPlyGiven(t *testing.T) {
+	g := newConcurrentGame(core.NewGame())
+
+	o := g.NextStates()
+
+	s := g.CurrentState()
+	r := rand.Intn(len(s.Plies))
+	g.DoPlyIndex(s.ToPlay, s.Version, r)
+
+	i := 0
+	for {
+		i++
+		if i == 1000 {
+			t.Log("game took too long to finish")
+			t.FailNow()
+		}
+
+		s = assertHasPendingState(t, o)
+		assertMatches(t, s, g.u)
+
+		if s.Result.Over() {
+			break
+		}
+
+		r := rand.Intn(len(s.Plies))
+		g.DoPlyGiven(s.ToPlay, s.Version, s.Plies[r])
+	}
+
+	assertClosed(t, o)
+}
