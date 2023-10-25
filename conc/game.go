@@ -59,11 +59,8 @@ func (g *Game) NextStates() chan GameState {
 }
 
 func (g *Game) detach(c chan GameState) {
-	// check to avoid closing twice (closing a closed channel panics)
-	if _, ok := g.cs[c]; ok {
-		delete(g.cs, c)
-		close(c)
-	}
+	delete(g.cs, c)
+	close(c)
 }
 
 func (g *Game) Detach(c chan GameState) {
@@ -72,7 +69,9 @@ func (g *Game) Detach(c chan GameState) {
 	}
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	g.detach(c)
+	if _, ok := g.cs[c]; ok {
+		g.detach(c)
+	}
 }
 
 func (g *Game) DetachAll() {
@@ -97,21 +96,29 @@ func (g *Game) gameState() GameState {
 	return g.state
 }
 
+func (g *Game) sendState(c chan GameState, s GameState) {
+	g.mu.Lock()
+	if _, ok := g.cs[c]; ok {
+		g.mu.Unlock()
+		c <- s
+		if s.Result.Over() {
+			g.Detach(c)
+		}
+	} else {
+		g.mu.Unlock()
+	}
+}
+
 func (g *Game) doPlyInner(ply core.Ply) error {
 	if _, err := g.u.DoPly(ply); err != nil {
 		return fmt.Errorf("do ply: %v", err)
 	}
 
 	g.v++
-	s1 := g.gameState()
+	s := g.gameState()
 
 	for c := range g.cs {
-		go func(c chan GameState, s GameState) {
-			c <- s
-			if s.Result.Over() {
-				g.Detach(c)
-			}
-		}(c, s1)
+		go g.sendState(c, s)
 	}
 
 	return nil
