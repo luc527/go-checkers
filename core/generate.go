@@ -37,16 +37,6 @@ func (p Ply) String() string {
 	return instructionsToString(p)
 }
 
-func (p Ply) countCaptures() int {
-	c := 0
-	for _, i := range p {
-		if i.t == CaptureInstruction {
-			c++
-		}
-	}
-	return c
-}
-
 func (p Ply) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	sep := ""

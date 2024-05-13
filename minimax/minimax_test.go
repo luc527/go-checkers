@@ -86,7 +86,11 @@ func TestTimeLimitedSearcher(t *testing.T) {
 	for {
 		plies := g.Plies()
 		r := rand.Intn(len(plies))
-		g.DoPly(plies[r])
+
+		if _, err := g.DoPly(plies[r]); err != nil {
+			t.Log(err)
+			t.FailNow()
+		}
 
 		if g.Result().Over() {
 			close(sig)
@@ -99,7 +103,10 @@ func TestTimeLimitedSearcher(t *testing.T) {
 			t.Logf("Time limited searcher took too long!")
 			t.Fail()
 		case p := <-ply:
-			g.DoPly(p)
+			if _, err := g.DoPly(p); err != nil {
+				t.Log(err)
+				t.FailNow()
+			}
 		}
 
 		if g.Result().Over() {

@@ -98,7 +98,10 @@ func TestMakeCrownInstruction(t *testing.T) {
 	i := MakeCrownInstruction(row, col)
 	is := []Instruction{i}
 
-	PerformInstructions(b, is)
+	if err := PerformInstructions(b, is); err != nil {
+		t.Log(err)
+		t.FailNow()
+	}
 
 	_, newKind := b.Get(row, col)
 	if newKind != KingKind {
@@ -128,7 +131,10 @@ func TestMakeMoveInstruction(t *testing.T) {
 	i := MakeMoveInstruction(frow, fcol, trow, tcol)
 	is := []Instruction{i}
 
-	PerformInstructions(b, is)
+	if err := PerformInstructions(b, is); err != nil {
+		t.Log(err)
+		t.FailNow()
+	}
 
 	if b.IsOccupied(frow, fcol) {
 		t.Errorf("after move, source should be empty")
@@ -174,7 +180,10 @@ func TestMakeCaptureInstruction(t *testing.T) {
 	i := MakeCaptureInstruction(row, col, color, kind)
 	is := []Instruction{i}
 
-	PerformInstructions(b, is)
+	if err := PerformInstructions(b, is); err != nil {
+		t.Log(err)
+		t.FailNow()
+	}
 
 	t.Log("After capture:")
 	t.Log(b)
@@ -225,7 +234,10 @@ func TestInsSequence(t *testing.T) {
 		MakeCrownInstruction(3, 5),
 	}
 
-	PerformInstructions(b, is)
+	if err := PerformInstructions(b, is); err != nil {
+		t.Log(err)
+		t.FailNow()
+	}
 
 	t.Log("After:")
 	t.Log("\n" + b.String())
